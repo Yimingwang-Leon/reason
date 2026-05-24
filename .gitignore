@@ -1,0 +1,39 @@
+# Secrets
+env.json
+
+# Large or derived data
+data/train.csv
+data/test.csv
+data/train_cat.csv
+data/train_split.csv
+data/holdout.csv
+
+# Cloned upstream reference (5.9 GB)
+external/
+
+# Pipeline outputs
+reasoning/
+corpus/
+corpus.jsonl
+training/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Claude Code session files
+.claude/
+
+# Log files
+*.log

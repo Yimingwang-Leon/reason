@@ -1,0 +1,32 @@
+# Local dev (Mac arm64, no CUDA). Training/serving happens on remote GPU envs.
+# CUDA-only packages (vllm, flash-attn, bitsandbytes, unsloth, triton) are
+# pinned in remote envs separately.
+
+# data + analysis
+pandas>=2.2
+numpy>=1.26
+sympy>=1.13
+
+# HF training stack (works on CPU/MPS; we author scripts locally, run remote)
+torch>=2.4
+transformers>=5.3      # KV-cache bug is fixed in 5.3+; do NOT use trust_remote_code
+peft>=0.13             # LoRA config + saving
+datasets>=3.0
+accelerate>=1.0
+trl>=0.12              # SFT / GRPO trainers
+safetensors>=0.4
+huggingface_hub>=0.26
+
+# kaggle CLI (already installed via conda, listed for reproducibility)
+kaggle>=1.6
+
+# Tinker SDK — MUST pin 0.16.1 (huikang's version).
+# 0.22.0 has a regression: get_checkpoint_archive_url_from_tinker_path
+# hits a 60s gateway timeout on every call, making downloads impossible.
+# 0.16.1 returns the URL in ~1s. CLI will warn "outdated" — ignore.
+tinker==0.16.1
+
+# notebook / inspection
+jupyter>=1.1
+ipykernel>=6.29
+matplotlib>=3.9
