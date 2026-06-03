@@ -6,6 +6,7 @@ Skips problems without a successful CoT in reasoning/<id>.txt.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from tokenizers import Tokenizer  # type: ignore[import-untyped]
@@ -61,6 +62,16 @@ def main() -> None:
                 n_skip += 1
                 continue
             cot = cot_path.read_text().rstrip("\n")
+            # Fix: replace the last \boxed{...} in the CoT with the ground-truth
+            # answer.  Reasoners like gravity/unit_conversion truncate intermediate
+            # values and produce a boxed answer that differs from p.answer, creating
+            # contradictory supervision when corpus.py appends \boxed{p.answer} after
+            # </think>.  Patching here is safer than touching individual reasoners.
+            last_boxed = re.search(r'\\boxed\{[^}]*\}(?!.*\\boxed\{)', cot, re.DOTALL)
+            if last_boxed:
+                correct_boxed = f'\\boxed{{{p.answer}}}'
+                if last_boxed.group(0) != correct_boxed:
+                    cot = cot[:last_boxed.start()] + correct_boxed + cot[last_boxed.end():]
             completion = f"{cot}\n</think>\n\\boxed{{{p.answer}}}<|im_end|>"
             comp_ids = tok.encode(completion, add_special_tokens=False).ids
             prompt_ids = tokenize_prompt(p.prompt, chat_tok)

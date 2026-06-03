@@ -14,18 +14,22 @@ from pathlib import Path
 from src.problems import load_problems
 from src.reasoners.bit_manipulation import reasoning_bit_manipulation
 from src.reasoners.cipher import reasoning_cipher
+from src.reasoners.cryptarithm_deduce import reasoning_cryptarithm_deduce
+from src.reasoners.equation_numeric_deduce import reasoning_equation_numeric_deduce
 from src.reasoners.gravity import reasoning_gravity
 from src.reasoners.numeral import reasoning_numeral
 from src.reasoners.store_types import Problem
 from src.reasoners.unit_conversion import reasoning_unit_conversion
 
-# Phase 2 + Phase 3 wired. cryptarithm / equation_numeric come in Phase 5 / 4.
+# Phase 5: all 7 categories wired.
 REASONERS = {
     "numeral": reasoning_numeral,
     "cipher": reasoning_cipher,
     "gravity": reasoning_gravity,
     "unit_conversion": reasoning_unit_conversion,
     "bit_manipulation": reasoning_bit_manipulation,
+    "equation_numeric_deduce": reasoning_equation_numeric_deduce,
+    "cryptarithm_deduce": reasoning_cryptarithm_deduce,
 }
 
 REASONING_DIR = Path(__file__).resolve().parent.parent / "reasoning"
