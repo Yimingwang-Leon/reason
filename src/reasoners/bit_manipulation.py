@@ -377,8 +377,7 @@ def _emit_apply(
         answer_bits.append(result)
 
     lines.append("")
-    lines.append("I will now return the answer in \\boxed{}")
-    lines.append(f"The answer in \\boxed{{–}} is \\boxed{{{''.join(answer_bits)}}}")
+    lines.append(f"The answer is \\boxed{{{''.join(answer_bits)}}}")
 
 
 def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:

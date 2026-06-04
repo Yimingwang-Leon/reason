@@ -67,6 +67,13 @@ class Cfg:
     eps: float = 1e-8
     weight_decay: float = 0.0
     grad_clip_norm: float = 1e9
+    # Min-logprob curriculum (champion's R-lever). Off by default; enable for
+    # multi-epoch runs. Each epoch >0 reweights tokens by branch_weight(prev_logprob)
+    # so gradient concentrates on the still-hard tokens.
+    curriculum: bool = False
+    branch_logprob: float = 0.01
+    first_cutoff_weight: float = 0.5
+    save_every_epoch: bool = True   # late-checkpoint selection
 
 
 def _load_env() -> None:
@@ -104,8 +111,11 @@ def _load_examples(max_examples: int | None) -> list[dict]:
     return examples
 
 
-def _build_datum(tokens: list[int], mask: list[int]):
-    """Build a tinker.Datum from token list + train-mask."""
+def _build_datum(tokens: list[int], mask: list[int], weights: list[float] | None = None):
+    """Build a tinker.Datum from token list + train-mask.
+
+    weights (optional, len==len(tokens)-1) overrides the per-target-token loss
+    weights; used by the curriculum. Defaults to the binary completion mask."""
     import tinker
     if len(tokens) < 2:
         return None
@@ -113,8 +123,9 @@ def _build_datum(tokens: list[int], mask: list[int]):
         chunks=[tinker.EncodedTextChunk(tokens=tokens[:-1])]
     )
     target_tokens = tokens[1:]
-    # weight=1.0 on completion tokens (mask==1), 0.0 on prompt
-    weights = [float(m) for m in mask[1:]]
+    # weight=1.0 on completion tokens (mask==1), 0.0 on prompt (unless overridden)
+    if weights is None:
+        weights = [float(m) for m in mask[1:]]
     return tinker.Datum(
         model_input=model_input,
         loss_fn_inputs={
@@ -126,6 +137,62 @@ def _build_datum(tokens: list[int], mask: list[int]):
             ),
         },
     )
+
+
+def _branch_weight(logprob: float, branch_logprob: float) -> float:
+    """min(1, |logprob|/branch_logprob). Tokens the model is already confident on
+    (logprob ~ 0) get a small weight; hard/low-logprob tokens keep weight ~1, so the
+    gradient concentrates on the hardest tokens (the min-logprob curriculum)."""
+    return min(1.0, abs(logprob) / branch_logprob)
+
+
+def _curriculum_weights(
+    base_mask: list[float],
+    prev_logprobs: list[float] | None,
+    epoch: int,
+    branch_logprob: float,
+    first_cutoff_weight: float,
+) -> list[float]:
+    """Reweight completion-token weights for the min-logprob curriculum.
+
+    new_w = base_mask * branch_weight(prev_logprob) * cutoff(epoch).
+    Epoch 0 (no prev logprobs) returns base_mask * first_cutoff_weight (the gentle
+    calibration pass). Pure -> unit-testable without Tinker.
+    """
+    cutoff = first_cutoff_weight if epoch == 0 else 1.0
+    if prev_logprobs is None:
+        return [m * cutoff for m in base_mask]
+    return [
+        m * _branch_weight(lp, branch_logprob) * cutoff
+        for m, lp in zip(base_mask, prev_logprobs)
+    ]
+
+
+def _masked_nll(pairs: list[tuple[list[float], list[float]]]) -> float:
+    """Mean per-example masked NLL from (logprobs, weights) pairs.
+
+    Tinker returns per-target-token logprobs (<=0). NLL = -sum(lp*w)/sum(w) per
+    example, masking to completion tokens via the weights, then averaged. Pure +
+    side-effect-free so the telemetry math is unit-testable without a Tinker call.
+    """
+    per_ex: list[float] = []
+    for lp, w in pairs:
+        tot = sum(w)
+        if tot > 0:
+            per_ex.append(-sum(l * wi for l, wi in zip(lp, w)) / tot)
+    return sum(per_ex) / len(per_ex) if per_ex else float("nan")
+
+
+def _extract_nll_pairs(loss_fn_outputs, data) -> list[tuple[list[float], list[float]]]:
+    """Pull (logprobs, weights) from a fwd_bwd result. loss_fn_outputs[i] is a dict
+    {"logprobs": TensorData}; weights live on each Datum's loss_fn_inputs."""
+    pairs = []
+    for out, datum in zip(loss_fn_outputs, data):
+        lp_td = out["logprobs"] if isinstance(out, dict) else getattr(out, "logprobs")
+        lp = list(lp_td.data)
+        w = list(datum.loss_fn_inputs["weights"].data)
+        pairs.append((lp, w))
+    return pairs
 
 
 def _stratified_batches(
@@ -182,18 +249,31 @@ async def main_async(cfg: Cfg) -> None:
 
     metrics_f = open(log_path / "metrics.jsonl", "w")
     step = 0
+    prev_lp: dict[str, list[float]] = {}   # problem_id -> last epoch's per-target logprobs
+    epoch_ckpts: dict[int, str] = {}
     for epoch in range(cfg.num_epochs):
         epoch_t0 = time.time()
         batches = _stratified_batches(examples, cfg.batch_size, seed=epoch)
+        new_lp: dict[str, list[float]] = {}
+        cat_nll_sum: dict[str, float] = {}
+        cat_nll_n: dict[str, int] = {}
         for batch_indices in batches:
-            data = []
+            data, batch_ids, batch_base = [], [], []
             for i in batch_indices:
                 ex = examples[i]
                 tokens = ex["tokens"][:cfg.max_length]
                 mask = ex["mask"][:cfg.max_length]
-                d = _build_datum(tokens, mask)
+                base = [float(m) for m in mask[1:]]
+                weights = None
+                if cfg.curriculum:
+                    weights = _curriculum_weights(
+                        base, prev_lp.get(ex["problem_id"]), epoch,
+                        cfg.branch_logprob, cfg.first_cutoff_weight)
+                d = _build_datum(tokens, mask, weights)
                 if d is not None:
                     data.append(d)
+                    batch_ids.append(ex["problem_id"])
+                    batch_base.append((ex["category"], base))
             if not data:
                 continue
 
@@ -216,13 +296,24 @@ async def main_async(cfg: Cfg) -> None:
             await optim_future.result_async()
             elapsed = time.time() - t0
 
-            # Per-batch loss (mean over loss tokens)
+            # Telemetry uses the BASE mask (pure per-token NLL), independent of the
+            # curriculum gradient weights. Also stash logprobs for next epoch.
             try:
-                losses = [-sum(lp.data) / max(1, len(lp.data))
-                          for lp in fwd_bwd_result.loss_fn_outputs
-                          if hasattr(lp, "data")]
-                mean_nll = sum(losses) / max(1, len(losses)) if losses else float("nan")
-            except Exception:
+                logprobs = [
+                    list((o["logprobs"] if isinstance(o, dict) else o.logprobs).data)
+                    for o in fwd_bwd_result.loss_fn_outputs
+                ]
+                tel_pairs = [(lp, base) for lp, (_, base) in zip(logprobs, batch_base)]
+                mean_nll = _masked_nll(tel_pairs)
+                for pid, lp in zip(batch_ids, logprobs):
+                    new_lp[pid] = lp
+                for (cat, base), lp in zip(batch_base, logprobs):
+                    one = _masked_nll([(lp, base)])
+                    if one == one:  # not nan
+                        cat_nll_sum[cat] = cat_nll_sum.get(cat, 0.0) + one
+                        cat_nll_n[cat] = cat_nll_n.get(cat, 0) + 1
+            except Exception as e:
+                logger.warning(f"nll telemetry read failed: {e}")
                 mean_nll = float("nan")
 
             logger.info(
@@ -236,16 +327,33 @@ async def main_async(cfg: Cfg) -> None:
             }) + "\n")
             metrics_f.flush()
             step += 1
+
+        # Per-category telemetry for the epoch (find weak sub-skills).
+        per_cat = {c: round(cat_nll_sum[c] / cat_nll_n[c], 5)
+                   for c in sorted(cat_nll_sum) if cat_nll_n.get(c)}
+        metrics_f.write(json.dumps({"epoch_summary": epoch, "per_cat_nll": per_cat}) + "\n")
+        metrics_f.flush()
+        logger.info(f"Epoch {epoch} per-cat nll: {per_cat}")
+        prev_lp = new_lp   # this epoch's logprobs drive next epoch's curriculum weights
+
+        # Late-checkpoint selection: save each epoch so the best can be picked.
+        if cfg.save_every_epoch and epoch < cfg.num_epochs - 1:
+            sf = await training_client.save_weights_for_sampler_async(name=f"epoch{epoch}")
+            sr = await sf.result_async()
+            epoch_ckpts[epoch] = sr.path if hasattr(sr, "path") else str(sr)
+            logger.info(f"Saved epoch{epoch} checkpoint: {epoch_ckpts[epoch]}")
         logger.info(f"Epoch {epoch} done in {time.time() - epoch_t0:.1f}s")
     metrics_f.close()
 
-    # Tinker 0.22+ API: save_weights_for_sampler returns the tinker:// path
-    # that upload_adapter.py needs to download the LoRA weights.
+    # Final checkpoint. save_weights_for_sampler returns the tinker:// path that
+    # upload_adapter.py / build_submission.py download.
     save_future = await training_client.save_weights_for_sampler_async(name="final")
     save_resp = await save_future.result_async()
     tinker_path = save_resp.path if hasattr(save_resp, "path") else str(save_resp)
     logger.info(f"Saved weights: {tinker_path}")
     (log_path / "tinker_path.txt").write_text(tinker_path + "\n")
+    if epoch_ckpts:
+        (log_path / "epoch_checkpoints.json").write_text(json.dumps(epoch_ckpts, indent=2))
     print(f"[train_tinker] DONE. tinker path: {tinker_path}")
     print(f"           (saved to {log_path}/tinker_path.txt)")
 
@@ -262,6 +370,10 @@ def main() -> None:
                         help="disable train_attn (Phase 2/3 used this; default is on)")
     parser.add_argument("--no-mlp", action="store_true")
     parser.add_argument("--train-unembed", action="store_true")
+    parser.add_argument("--curriculum", action="store_true",
+                        help="min-logprob curriculum (reweight hard tokens each epoch)")
+    parser.add_argument("--branch-logprob", type=float, default=0.01)
+    parser.add_argument("--first-cutoff", type=float, default=0.5)
     args = parser.parse_args()
 
     cfg = Cfg(
@@ -274,6 +386,9 @@ def main() -> None:
         train_attn=not args.no_attn,
         train_mlp=not args.no_mlp,
         train_unembed=args.train_unembed,
+        curriculum=args.curriculum,
+        branch_logprob=args.branch_logprob,
+        first_cutoff_weight=args.first_cutoff,
     )
     logging.basicConfig(
         level=logging.INFO,

@@ -53,6 +53,5 @@ def reasoning_numeral(problem: Problem) -> str:
     spaced = " ".join(parts)
     lines.append(f"Result: {spaced} -> {{{computed}}}")
     lines.append("")
-    lines.append("I will now return the answer in \\boxed{}")
-    lines.append(f"The answer in \\boxed{{–}} is \\boxed{{{computed}}}")
+    lines.append(f"The answer is \\boxed{{{computed}}}")
     return "\n".join(lines)

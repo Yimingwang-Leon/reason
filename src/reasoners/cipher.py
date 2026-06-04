@@ -376,6 +376,5 @@ def reasoning_cipher(problem: Problem) -> str | None:
 
     computed = " ".join(decoded_words)
     lines.append("")
-    lines.append("I will now return the answer in \\boxed{}")
-    lines.append("The answer in \\boxed{–} is \\boxed{%s}" % computed)
+    lines.append("The answer is \\boxed{%s}" % computed)
     return "\n".join(lines)

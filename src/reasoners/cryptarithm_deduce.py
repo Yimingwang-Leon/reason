@@ -224,8 +224,7 @@ def reasoning_cryptarithm_deduce(problem: Problem) -> str | None:
     if rule_fn is None:
         lines.append("No consistent rule found for query operator. Cannot determine answer.")
         lines.append("")
-        lines.append("I will now return the answer in \\boxed{}")
-        lines.append("The answer in \\boxed{–} is \\boxed{?}")
+        lines.append("The answer is \\boxed{?}")
         return "\n".join(lines)
 
     try:
@@ -236,8 +235,7 @@ def reasoning_cryptarithm_deduce(problem: Problem) -> str | None:
     desc = _describe(rule_name, q_a, q_b)
     lines.append(f"Applying rule '{rule_name}': {desc} = {repr(result)}")
     lines.append("")
-    lines.append("I will now return the answer in \\boxed{}")
-    lines.append(f"The answer in \\boxed{{–}} is \\boxed{{{result}}}")
+    lines.append(f"The answer is \\boxed{{{result}}}")
     return "\n".join(lines)
 
 
