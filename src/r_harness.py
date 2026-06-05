@@ -82,24 +82,40 @@ def compute_R(oracle: dict, model: dict) -> dict:
 
 
 def sample_adapter(probs: list[Problem], adapter_path: str) -> dict[str, str]:
-    """Greedy-decode each holdout prompt through the Tinker adapter. DEFERRED:
-    costs sampling $ and needs a real checkpoint. Lazy tinker import keeps the
-    rest of this module (and the unit tests) free of any Tinker call."""
-    import tinker  # noqa: F401  (lazy: no network unless this fn is called)
-    from src.train_tinker import _load_env, BASE_MODEL
+    """Greedy-decode each holdout prompt through the Tinker adapter. Costs sampling $;
+    lazy tinker import keeps the rest of the module free of any Tinker call.
+
+    Prompts are tokenized with OUR training format (corpus.tokenize_prompt: chat
+    template + boxed suffix + enable_thinking) so this measures the SFT realization
+    R (model reproduces the reasoner CoT it was trained on). max_tokens=7680 matches
+    the grader's generation cap exactly."""
+    import tinker
+    from transformers import AutoTokenizer
+    from src.train_tinker import _load_env
+    from src.corpus import tokenize_prompt, BASE_MODEL
     _load_env()
+    chat_tok = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
     sc = tinker.ServiceClient()
     sampler = sc.create_sampling_client(base_model=BASE_MODEL, model_path=adapter_path)
-    outputs: dict[str, str] = {}
+    sp = tinker.SamplingParams(max_tokens=7680, temperature=0.0, top_p=1.0)
     df = pd.read_csv(HOLDOUT).set_index("id")
-    for p in probs:
-        prompt = str(df.loc[p.id, "prompt"])
-        # MUST match the grader's GENERATION cap (7680) so measured R reflects
-        # production; an 8192 budget over-states R on long bit_manip traces.
-        resp = sampler.sample(prompt=prompt, sampling_params={"temperature": 0.0,
-                                                              "max_tokens": 7680})
-        outputs[p.id] = resp.text if hasattr(resp, "text") else str(resp)
+    outputs: dict[str, str] = {}
+    for i, p in enumerate(probs):
+        ids = tokenize_prompt(str(df.loc[p.id, "prompt"]), chat_tok)
+        mi = tinker.ModelInput.from_ints(ids)
+        resp = sampler.sample(prompt=mi, num_samples=1, sampling_params=sp).result()
+        outputs[p.id] = chat_tok.decode(resp.sequences[0].tokens)
+        if (i + 1) % 20 == 0:
+            print(f"  sampled {i + 1}/{len(probs)}")
     return outputs
+
+
+def stratified_subset(probs: list[Problem], per_cat: int) -> list[Problem]:
+    from collections import defaultdict
+    by = defaultdict(list)
+    for p in probs:
+        by[p.category].append(p)
+    return [p for c in sorted(by) for p in by[c][:per_cat]]
 
 
 def main() -> None:
@@ -108,10 +124,15 @@ def main() -> None:
                     help="free: compute oracle accuracy denominator only")
     ap.add_argument("--adapter", default=None,
                     help="tinker:// path; greedy-decode holdout (COSTS $)")
+    ap.add_argument("--per-cat", type=int, default=None,
+                    help="stratified subset: this many problems per category (cheap diagnostic)")
     ap.add_argument("--out", default=str(ROOT / "training" / "r_report.json"))
     args = ap.parse_args()
 
     probs = load_holdout()
+    if args.per_cat:
+        probs = stratified_subset(probs, args.per_cat)
+        print(f"(diagnostic subset: {args.per_cat}/category = {len(probs)} problems)")
     oracle = oracle_accuracy(probs)
     print(f"Holdout: {len(probs)} problems")
     print(f"{'category':<26} {'oracle_acc':>10}")

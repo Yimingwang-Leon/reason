@@ -22,6 +22,8 @@ import math
 import os
 import random
 import time
+
+import numpy as np
 from datetime import datetime
 from pathlib import Path
 
@@ -74,6 +76,12 @@ class Cfg:
     branch_logprob: float = 0.01
     first_cutoff_weight: float = 0.5
     save_every_epoch: bool = True   # late-checkpoint selection
+    test_resume_after_epoch0: bool = False  # smoke: validate resume round-trip on real state
+    # Hard spend ceiling. Clean 3-epoch ~= $30 (432 steps) + ~$0.4 save surcharges, so
+    # 33 lets a clean run finish while capping resume-redos; real $ stays <~$35 (<$40
+    # wallet). usd_per_step from the run-004 anchor ($10/144 step, same per-step compute).
+    budget_usd: float = 33.0
+    usd_per_step: float = 10.0 / 144.0
 
 
 def _load_env() -> None:
@@ -159,27 +167,33 @@ def _curriculum_weights(
     Epoch 0 (no prev logprobs) returns base_mask * first_cutoff_weight (the gentle
     calibration pass). Pure -> unit-testable without Tinker.
     """
+    # numpy-vectorized: the per-token math runs in C and RELEASES the GIL, so the
+    # Tinker SDK's background heartbeat thread is not starved. The pure-Python
+    # per-token version caused ~0.2s of GIL-held work per example which (over a
+    # 64-example batch) stalled the heartbeat and got run-005 v1's session killed.
     cutoff = first_cutoff_weight if epoch == 0 else 1.0
+    base = np.asarray(base_mask, dtype=np.float64)
     if prev_logprobs is None:
-        return [m * cutoff for m in base_mask]
-    return [
-        m * _branch_weight(lp, branch_logprob) * cutoff
-        for m, lp in zip(base_mask, prev_logprobs)
-    ]
+        return (base * cutoff).tolist()
+    bw = np.minimum(1.0, np.abs(np.asarray(prev_logprobs, dtype=np.float64)) / branch_logprob)
+    return (base * bw * cutoff).tolist()
 
 
 def _masked_nll(pairs: list[tuple[list[float], list[float]]]) -> float:
     """Mean per-example masked NLL from (logprobs, weights) pairs.
 
     Tinker returns per-target-token logprobs (<=0). NLL = -sum(lp*w)/sum(w) per
-    example, masking to completion tokens via the weights, then averaged. Pure +
-    side-effect-free so the telemetry math is unit-testable without a Tinker call.
+    example, masking to completion tokens via the weights, then averaged. numpy
+    inner math releases the GIL (heartbeat-safe). Pure + side-effect-free so the
+    telemetry math is unit-testable without a Tinker call.
     """
     per_ex: list[float] = []
     for lp, w in pairs:
-        tot = sum(w)
+        wa = np.asarray(w, dtype=np.float64)
+        tot = wa.sum()
         if tot > 0:
-            per_ex.append(-sum(l * wi for l, wi in zip(lp, w)) / tot)
+            la = np.asarray(lp, dtype=np.float64)
+            per_ex.append(float(-(la * wa).sum() / tot))
     return sum(per_ex) / len(per_ex) if per_ex else float("nan")
 
 
@@ -248,114 +262,217 @@ async def main_async(cfg: Cfg) -> None:
     logger.info(f"Created Tinker LoRA training client: {cfg.base_model} rank={cfg.lora_rank}")
 
     metrics_f = open(log_path / "metrics.jsonl", "w")
-    step = 0
     prev_lp: dict[str, list[float]] = {}   # problem_id -> last epoch's per-target logprobs
     epoch_ckpts: dict[int, str] = {}
-    for epoch in range(cfg.num_epochs):
-        epoch_t0 = time.time()
-        batches = _stratified_batches(examples, cfg.batch_size, seed=epoch)
-        new_lp: dict[str, list[float]] = {}
-        cat_nll_sum: dict[str, float] = {}
-        cat_nll_n: dict[str, int] = {}
-        for batch_indices in batches:
-            data, batch_ids, batch_base = [], [], []
-            for i in batch_indices:
-                ex = examples[i]
-                tokens = ex["tokens"][:cfg.max_length]
-                mask = ex["mask"][:cfg.max_length]
-                base = [float(m) for m in mask[1:]]
-                weights = None
-                if cfg.curriculum:
-                    weights = _curriculum_weights(
-                        base, prev_lp.get(ex["problem_id"]), epoch,
-                        cfg.branch_logprob, cfg.first_cutoff_weight)
-                d = _build_datum(tokens, mask, weights)
-                if d is not None:
-                    data.append(d)
-                    batch_ids.append(ex["problem_id"])
-                    batch_base.append((ex["category"], base))
-            if not data:
-                continue
+    state_path: str | None = None          # last saved TRAINING state (incl. optimizer)
+    # Session-death / stall errors -> resume from state. In tinker 0.22.3 the run-005
+    # death class (SidecarDiedError / InternalServerError / RequestFailedError / stall)
+    # are ALL subclasses of tinker.TinkerError, so catch that broadly (+ Timeout types).
+    RESUME_ERRORS = (tinker.TinkerError, tinker.Timeout, TimeoutError, ConnectionError)
+    # ...but these are permanent (config/auth) and must fail fast, not retry-spin:
+    NON_RETRYABLE = (tinker.AuthenticationError, tinker.BadRequestError, tinker.NotFoundError,
+                     tinker.PermissionDeniedError, tinker.UnprocessableEntityError, tinker.ConflictError)
+    MAX_RESUMES = 8                         # secondary anti-spin guard; the $ budget below is the real cap
+    # HARD CEILING: total estimated spend (incl. resume-redos AND save/create ops) cannot
+    # exceed cfg.budget_usd. spent is estimated per executed step from the run-004 anchor
+    # ($10/144 step, train_attn=True; curriculum is client-side so per-step compute matches).
+    spent_usd = 0.0
+    budget_hit = False
 
-            # Step-linear LR decay
-            lr = cfg.learning_rate * (1.0 - step / max(1, total_steps))
-
-            t0 = time.time()
-            fwd_bwd_future = await training_client.forward_backward_async(
-                data, loss_fn="cross_entropy",
-            )
-            optim_future = await training_client.optim_step_async(
-                tinker.AdamParams(
-                    learning_rate=lr,
-                    beta1=cfg.beta1, beta2=cfg.beta2,
-                    eps=cfg.eps, weight_decay=cfg.weight_decay,
-                    grad_clip_norm=cfg.grad_clip_norm,
-                )
-            )
-            fwd_bwd_result = await fwd_bwd_future.result_async()
-            await optim_future.result_async()
-            elapsed = time.time() - t0
-
-            # Telemetry uses the BASE mask (pure per-token NLL), independent of the
-            # curriculum gradient weights. Also stash logprobs for next epoch.
+    async def _resume_client():
+        """Rebuild the training client after a session death: from the last saved state
+        (with optimizer) if we have one, else fresh from base (epoch 0). Retries with
+        growing backoff because the network is flakiest right after a death; raises only
+        if every attempt fails."""
+        last_err = None
+        for attempt in range(5):
             try:
-                logprobs = [
-                    list((o["logprobs"] if isinstance(o, dict) else o.logprobs).data)
-                    for o in fwd_bwd_result.loss_fn_outputs
-                ]
-                tel_pairs = [(lp, base) for lp, (_, base) in zip(logprobs, batch_base)]
-                mean_nll = _masked_nll(tel_pairs)
-                for pid, lp in zip(batch_ids, logprobs):
-                    new_lp[pid] = lp
-                for (cat, base), lp in zip(batch_base, logprobs):
-                    one = _masked_nll([(lp, base)])
-                    if one == one:  # not nan
-                        cat_nll_sum[cat] = cat_nll_sum.get(cat, 0.0) + one
-                        cat_nll_n[cat] = cat_nll_n.get(cat, 0) + 1
-            except Exception as e:
-                logger.warning(f"nll telemetry read failed: {e}")
-                mean_nll = float("nan")
+                await asyncio.sleep(min(5 * (attempt + 1), 30))
+                if state_path is not None:
+                    logger.info(f"RESUME: rebuilding from state {state_path} (attempt {attempt+1}/5)")
+                    return await sc.create_training_client_from_state_with_optimizer_async(state_path)
+                logger.info(f"RESUME: no state yet (epoch 0) -> fresh client (attempt {attempt+1}/5)")
+                return await sc.create_lora_training_client_async(
+                    base_model=cfg.base_model, rank=cfg.lora_rank, train_mlp=cfg.train_mlp,
+                    train_attn=cfg.train_attn, train_unembed=cfg.train_unembed)
+            except Exception as e:    # reconnect itself can fail when the network is flaky
+                last_err = e
+                logger.warning(f"RESUME reconnect attempt {attempt+1}/5 failed: {e}")
+        raise RuntimeError(f"could not reconnect after 5 attempts") from last_err
 
-            logger.info(
-                f"epoch={epoch} step={step}/{total_steps} lr={lr:.2e} "
-                f"n={len(data)} nll={mean_nll:.4f} t={elapsed:.1f}s"
-            )
-            metrics_f.write(json.dumps({
-                "epoch": epoch, "step": step, "lr": lr, "n": len(data),
-                "nll_per_token": mean_nll, "elapsed_s": elapsed,
-                "time": datetime.now().isoformat(),
-            }) + "\n")
-            metrics_f.flush()
-            step += 1
+    for epoch in range(cfg.num_epochs):
+        resumes = 0
+        while True:    # retry this epoch from the last clean state on session death
+            epoch_t0 = time.time()
+            step = epoch * n_batches       # deterministic step (LR reproducible on resume)
+            batches = _stratified_batches(examples, cfg.batch_size, seed=epoch)
+            new_lp: dict[str, list[float]] = {}
+            cat_nll_sum: dict[str, float] = {}
+            cat_nll_n: dict[str, int] = {}
+            try:
+                for batch_indices in batches:
+                    data, batch_ids, batch_base = [], [], []
+                    for i in batch_indices:
+                        ex = examples[i]
+                        tokens = ex["tokens"][:cfg.max_length]
+                        mask = ex["mask"][:cfg.max_length]
+                        base = [float(m) for m in mask[1:]]
+                        weights = None
+                        if cfg.curriculum:
+                            weights = _curriculum_weights(
+                                base, prev_lp.get(ex["problem_id"]), epoch,
+                                cfg.branch_logprob, cfg.first_cutoff_weight)
+                        d = _build_datum(tokens, mask, weights)
+                        if d is not None:
+                            data.append(d)
+                            batch_ids.append(ex["problem_id"])
+                            batch_base.append((ex["category"], base))
+                    if not data:
+                        continue
 
-        # Per-category telemetry for the epoch (find weak sub-skills).
+                    lr = cfg.learning_rate * (1.0 - step / max(1, total_steps))
+                    t0 = time.time()
+                    fwd_bwd_future = await training_client.forward_backward_async(
+                        data, loss_fn="cross_entropy")
+                    optim_future = await training_client.optim_step_async(
+                        tinker.AdamParams(
+                            learning_rate=lr, beta1=cfg.beta1, beta2=cfg.beta2,
+                            eps=cfg.eps, weight_decay=cfg.weight_decay,
+                            grad_clip_norm=cfg.grad_clip_norm))
+                    fwd_bwd_result = await fwd_bwd_future.result_async()
+                    await optim_future.result_async()
+                    elapsed = time.time() - t0
+
+                    # Telemetry on BASE mask (pure per-token NLL); stash logprobs for
+                    # next epoch's curriculum. numpy-vectorized -> heartbeat-safe.
+                    try:
+                        # float32 numpy arrays (single objects, ~7x less memory than
+                        # Python float lists, no per-element GC) -> prev_lp/new_lp held
+                        # across epochs for the curriculum no longer trigger GC
+                        # stop-the-world pauses that starve the SDK heartbeat thread
+                        # (the real cause of run-005 v1's session death).
+                        logprobs = [
+                            np.asarray((o["logprobs"] if isinstance(o, dict) else o.logprobs).data,
+                                       dtype=np.float32)
+                            for o in fwd_bwd_result.loss_fn_outputs]
+                        mean_nll = _masked_nll(
+                            [(lp, base) for lp, (_, base) in zip(logprobs, batch_base)])
+                        for pid, lp in zip(batch_ids, logprobs):
+                            new_lp[pid] = lp
+                        for (cat, base), lp in zip(batch_base, logprobs):
+                            one = _masked_nll([(lp, base)])
+                            if one == one:
+                                cat_nll_sum[cat] = cat_nll_sum.get(cat, 0.0) + one
+                                cat_nll_n[cat] = cat_nll_n.get(cat, 0) + 1
+                    except Exception as e:
+                        logger.warning(f"nll telemetry read failed: {e}")
+                        mean_nll = float("nan")
+
+                    logger.info(
+                        f"epoch={epoch} step={step}/{total_steps} lr={lr:.2e} "
+                        f"n={len(data)} nll={mean_nll:.4f} t={elapsed:.1f}s")
+                    metrics_f.write(json.dumps({
+                        "epoch": epoch, "step": step, "lr": lr, "n": len(data),
+                        "nll_per_token": mean_nll, "elapsed_s": elapsed,
+                        "time": datetime.now().isoformat()}) + "\n")
+                    metrics_f.flush()
+                    step += 1
+                    spent_usd += cfg.usd_per_step
+                    if spent_usd >= cfg.budget_usd:
+                        budget_hit = True
+                        break    # break batch loop -> stop everything below
+                break    # epoch completed (or budget hit) without a session death
+
+            except RESUME_ERRORS as e:
+                if isinstance(e, NON_RETRYABLE):
+                    metrics_f.close()    # config/auth error -> retrying won't help, fail fast
+                    raise
+                resumes += 1
+                spent_usd += cfg.usd_per_step   # the dead+reconnect round-trip costs something
+                logger.warning(f"epoch {epoch}: session died ~step {step} "
+                               f"({type(e).__name__}: {e}). resume {resumes}/{MAX_RESUMES}")
+                if resumes > MAX_RESUMES or spent_usd >= cfg.budget_usd:
+                    metrics_f.close()
+                    raise RuntimeError(
+                        f"epoch {epoch} aborted (resumes={resumes}, ~${spent_usd:.1f}); "
+                        f"recover from last state: {state_path}, epoch ckpts: {epoch_ckpts}") from e
+                training_client = await _resume_client()   # retry the epoch from clean state
+
+        if budget_hit:
+            logger.warning(f"BUDGET ${cfg.budget_usd:.0f} reached (~${spent_usd:.1f} est) during "
+                           f"epoch {epoch}; stopping early and saving current weights as final.")
+            break
+
+        # ---- epoch succeeded ----
         per_cat = {c: round(cat_nll_sum[c] / cat_nll_n[c], 5)
                    for c in sorted(cat_nll_sum) if cat_nll_n.get(c)}
         metrics_f.write(json.dumps({"epoch_summary": epoch, "per_cat_nll": per_cat}) + "\n")
         metrics_f.flush()
         logger.info(f"Epoch {epoch} per-cat nll: {per_cat}")
-        prev_lp = new_lp   # this epoch's logprobs drive next epoch's curriculum weights
+        prev_lp = new_lp
 
-        # Late-checkpoint selection: save each epoch so the best can be picked.
+        # Save TRAINING state (with optimizer) so a later death resumes from here.
+        try:
+            ssf = await training_client.save_state_async(name=f"state_ep{epoch}", overwrite=True)
+            ssr = await ssf.result_async()
+            state_path = ssr.path if hasattr(ssr, "path") else str(ssr)
+            spent_usd += cfg.usd_per_step    # surcharge: save ops are billed too
+            logger.info(f"saved training state ep{epoch}: {state_path}")
+        except Exception as e:
+            logger.warning(f"save_state ep{epoch} failed: {e} (resume falls back to prior state)")
+
+        # Sampler-weights checkpoint per epoch (the LB-submittable adapters).
+        # Wrapped: a transient save blip must not crash the run (state_ep{epoch} is
+        # already saved above, so the epoch's work is not lost regardless).
         if cfg.save_every_epoch and epoch < cfg.num_epochs - 1:
-            sf = await training_client.save_weights_for_sampler_async(name=f"epoch{epoch}")
-            sr = await sf.result_async()
-            epoch_ckpts[epoch] = sr.path if hasattr(sr, "path") else str(sr)
-            logger.info(f"Saved epoch{epoch} checkpoint: {epoch_ckpts[epoch]}")
+            try:
+                sf = await training_client.save_weights_for_sampler_async(name=f"epoch{epoch}")
+                sr = await sf.result_async()
+                epoch_ckpts[epoch] = sr.path if hasattr(sr, "path") else str(sr)
+                spent_usd += cfg.usd_per_step    # surcharge
+                # persist immediately so a later crash can't strand recoverable paths
+                (log_path / "epoch_checkpoints.json").write_text(json.dumps(epoch_ckpts, indent=2))
+                logger.info(f"Saved epoch{epoch} checkpoint: {epoch_ckpts[epoch]}")
+            except Exception as e:
+                logger.warning(f"save_weights epoch{epoch} failed: {e} (state_ep{epoch} kept)")
+
+        # Smoke validation hook: prove the resume round-trip works on real state.
+        if cfg.test_resume_after_epoch0 and epoch == 0 and state_path is not None:
+            logger.info("[test-resume] rebuilding client from saved state to validate resume...")
+            training_client = await sc.create_training_client_from_state_with_optimizer_async(state_path)
+            logger.info("[test-resume] resume round-trip OK")
+
         logger.info(f"Epoch {epoch} done in {time.time() - epoch_t0:.1f}s")
     metrics_f.close()
 
-    # Final checkpoint. save_weights_for_sampler returns the tinker:// path that
-    # upload_adapter.py / build_submission.py download.
-    save_future = await training_client.save_weights_for_sampler_async(name="final")
-    save_resp = await save_future.result_async()
-    tinker_path = save_resp.path if hasattr(save_resp, "path") else str(save_resp)
-    logger.info(f"Saved weights: {tinker_path}")
-    (log_path / "tinker_path.txt").write_text(tinker_path + "\n")
+    # Final checkpoint, with retry-from-state so a blip at the finish line (the exact
+    # run-005 failure class, most likely after a long session) doesn't lose the whole
+    # run. epoch_checkpoints.json is already persisted incrementally above.
     if epoch_ckpts:
         (log_path / "epoch_checkpoints.json").write_text(json.dumps(epoch_ckpts, indent=2))
-    print(f"[train_tinker] DONE. tinker path: {tinker_path}")
-    print(f"           (saved to {log_path}/tinker_path.txt)")
+    tinker_path = None
+    for attempt in range(4):
+        try:
+            sf = await training_client.save_weights_for_sampler_async(name="final")
+            sr = await sf.result_async()
+            tinker_path = sr.path if hasattr(sr, "path") else str(sr)
+            break
+        except Exception as e:
+            logger.warning(f"final save attempt {attempt+1}/4 failed: {e}")
+            if attempt < 3:
+                try:
+                    training_client = await _resume_client()   # rebuild from last state, retry
+                except Exception as e2:
+                    logger.warning(f"reconnect for final save failed: {e2}")
+    if tinker_path:
+        (log_path / "tinker_path.txt").write_text(tinker_path + "\n")
+        logger.info(f"Saved weights: {tinker_path}")
+        print(f"[train_tinker] DONE. tinker path: {tinker_path}")
+        print(f"           (saved to {log_path}/tinker_path.txt)")
+    else:
+        logger.error(f"FINAL SAVE FAILED after retries. Recover: resume from {state_path} "
+                     f"and save_weights, or use epoch checkpoints {epoch_ckpts}.")
+        print(f"[train_tinker] FINAL SAVE FAILED. last state={state_path} epochs={epoch_ckpts}")
 
 
 def main() -> None:
@@ -374,6 +491,10 @@ def main() -> None:
                         help="min-logprob curriculum (reweight hard tokens each epoch)")
     parser.add_argument("--branch-logprob", type=float, default=0.01)
     parser.add_argument("--first-cutoff", type=float, default=0.5)
+    parser.add_argument("--test-resume", action="store_true",
+                        help="smoke: deliberately resume from state after epoch 0 to validate it")
+    parser.add_argument("--budget-usd", type=float, default=33.0,
+                        help="hard spend ceiling; training stops + saves before exceeding this")
     args = parser.parse_args()
 
     cfg = Cfg(
@@ -389,6 +510,8 @@ def main() -> None:
         curriculum=args.curriculum,
         branch_logprob=args.branch_logprob,
         first_cutoff_weight=args.first_cutoff,
+        test_resume_after_epoch0=args.test_resume,
+        budget_usd=args.budget_usd,
     )
     logging.basicConfig(
         level=logging.INFO,

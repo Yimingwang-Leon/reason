@@ -20,11 +20,10 @@ huggingface_hub>=0.26
 # kaggle CLI (already installed via conda, listed for reproducibility)
 kaggle>=1.6
 
-# Tinker SDK — MUST pin 0.16.1 (huikang's version).
-# 0.22.0 has a regression: get_checkpoint_archive_url_from_tinker_path
-# hits a 60s gateway timeout on every call, making downloads impossible.
-# 0.16.1 returns the URL in ~1s. CLI will warn "outdated" — ignore.
-tinker==0.16.1
+# Tinker SDK — pin 0.22.3. 0.16.1 is now server-deprecated (create_session 400s).
+# The old 0.22.0 download regression (get_checkpoint_archive_url 60s timeout) is
+# FIXED in 0.22.3 (verified: run-004 downloaded a 1.4GB checkpoint cleanly).
+tinker==0.22.3
 
 # notebook / inspection
 jupyter>=1.1
