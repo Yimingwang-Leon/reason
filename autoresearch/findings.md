@@ -1,5 +1,7 @@
 # Findings — Nemotron Reasoning Challenge: chasing 0.87 / 0.89
 
+> **STATUS 2026-06-05: CONCLUDED (free research exhausted).** Honest ceiling ~0.85-0.86 (paid, unguaranteed). Guaranteed 0.86 = free public notebook. 0.89 unreachable. H2 closed (brace-cap +0.16pp). Cron stopped.
+
 **Optimization target:** offline `oracle` (reasoner solve-rate on data/holdout.csv, 1899 problems) and projected LB = oracle × R.
 **Current best:** LB 0.84 (run-005, 2ep=3ep). Offline oracle 89.0% (committed f083ffe). R = 0.84/0.877 = **0.958**.
 
