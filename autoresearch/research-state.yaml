@@ -47,6 +47,14 @@ paid_experiments_queue:
     train: "python -m src.train_tinker --run-name run-006 --num-epochs 2 --curriculum --train-unembed"
     cost_usd: ~25-30 (lm_head adds params)
     projected: "floor ~0.85; STACK = curriculum + 89pct oracle + H3 + lm_head. lm_head is the field's 0.86 delta we were missing (train_unembed was off). Best shot at 0.86-0.87. NOT guaranteed 0.87 (above public ceiling); NOT 0.89."
-    status: BEST_SHOT_AT_0.87 — stacks all levers incl lm_head (H4). Paid ~$25-30. PRE-RUN CHECK: verify build_submission emits lm_head LoRA correctly. User demands min 0.87; this is the legitimate attempt but cannot be guaranteed.
+    status: PLAN — wait for bit_manip workflow (w31vc4juf) to confirm bit_manip oracle (target ~98%; others did it, our agents at ~88-89% so far, NOT yet cracked). Then run-006 = bit_manip-98% corpus + lm_head(train_unembed) + curriculum. lm_head re-included: user will MANUALLY submit via Kaggle notebook (file-upload 400s on lm_head adapters, but notebook route accepts them — that's how public 0.86 is on the board). Projection: bit_manip-98% alone ~0.87 (oracle 90.7% x R 0.958); + lm_head R-boost ~0.87-0.88. Cost ~$25-35. Gate: only spend once bit_manip oracle is verified offline to project >=0.87.
 
-next_action: 0.86 floor adapter submitting (leegongman). run-006 (=+lm_head stack) is the paid shot at 0.87, awaiting user go + ~$15-20 top-up.
+key_facts_2026-06-05_late:
+  - 0.87 is a CROWDED band (~17 teams), REACHABLE; 0.89 single outlier. NOT a plateau above public.
+  - crypt CONFIRMED dead: public "97%" solvers are gold-conditioned (conditioned_on_answer); real no-gold ~10%. Do not spend on crypt.
+  - dedup lever N/A to us: our train_cat.csv is 100% unique (9500/9500). We're ahead of the duplicate-heavy public 0.85 corpus on this.
+  - brace-cap: host fixed \boxed{} metric 2026-05-08 to extract answers containing '}'; our corpus still drops brace rows (re-add = minor crypt gain).
+  - lm_head: submittable via NOTEBOOK route (public 0.86 proves it); our CLI file-upload 400s on it. User submits manually.
+  - THE lever to 0.87 = bit_manipulation 88%->~98% (huikang: "0.87 achievable without crypt"; Taha 98.9%, lkevincc 99.4%). Free. Workflow w31vc4juf attacking it.
+
+next_action: await bit_manip workflow result; verify oracle offline; if projects >=0.87, propose run-006 (bit_manip + lm_head, manual notebook submit) for user go.
