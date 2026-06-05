@@ -47,6 +47,6 @@ paid_experiments_queue:
     train: "python -m src.train_tinker --run-name run-006 --num-epochs 2 --curriculum"
     cost_usd: ~20
     projected: "floor ~0.85 (oracle realization at R 0.958); upside 0.86-0.87 if H3 lifts crypt at greedy. NOT 0.89."
-    status: AWAITING_USER_APPROVAL (budget ~$10, needs ~$10-15 top-up)
+    status: NOT_RECOMMENDED — projects only ~0.853 (floor); cannot GUARANTEE 0.86 (R unmeasurable). User rule: guarantee 0.86 or do not spend. => skip run-006 until offline projection clearly exceeds 0.86. Guaranteed 0.86 = free public notebook (user forks+submits).
 
 next_action: H3 built+staged+committed (0d75a54). Free work continues: H2 brace-cap workaround, H4 recipe-delta analysis. Paid run-006 queued for user.
