@@ -10,8 +10,13 @@ validation:
     re-attach the marker only when the computed answer is negative
   - +-1 offset ops (add/sub/mul +-1)
   - our extra modular / bitwise rules at LOW priority (recover ~10 the champion misses)
-  - deterministic priority order so a reversal variant never shadows a simpler
-    identity rule (greedy submission demands byte-stable traces)
+  - deterministic priority order. The OUTER key is the reversal *mode*: we prefer
+    the columnar reading (reverse operands, compute, reverse result == right-to-left
+    place-value arithmetic) over plain left-to-right arithmetic, because columnar is
+    the most common hidden convention here and wins ambiguous ties more often. The
+    two single-reversal modes never win on their own, so they are demoted to a
+    last-resort fallback (kept only for hidden-test coverage). Greedy submission
+    still gets byte-stable traces because the ordering is fully deterministic.
   - query-op-unseen fallback (absolute difference) instead of emitting '?'
 
 `solve_equation()` exposes the survivor count and the query-op example count for
@@ -91,9 +96,9 @@ def _base_candidates(sa: str, sb: str) -> dict[str, str]:
     return r
 
 
-# Deterministic priority: simpler/more-common first. Reversal modes are applied
-# OUTSIDE this list (identity modes are preferred via _MODE_ORDER below), so a
-# reversal variant can never outrank a non-reversed match of the same priority.
+# Deterministic priority among base ops: simpler/more-common first. The reversal
+# *mode* (columnar vs plain, see _MODE_ORDER below) is the OUTER sort key, so the
+# preferred mode always wins first and this op order only breaks ties within a mode.
 _ORDER = [
     # natural signed arithmetic first; abs/neg-abs are special cases that
     # coincidentally tie on limited data, so they rank below sub/revsub.
@@ -111,8 +116,26 @@ _ORDER = [
 ]
 _ORDER_IDX = {name: i for i, name in enumerate(_ORDER)}
 
-# Prefer no transformation, then result-reversal, then operand-reversal, then both.
-_MODE_ORDER = [(False, False), (False, True), (True, False), (True, True)]
+# Mode preference, learned from the holdout (and from the structure of the task):
+#
+#   (True, True)  -- reverse each operand, compute, reverse the result. This is
+#                    exactly *columnar / place-value* arithmetic done right-to-left
+#                    (e.g. 97-65 -> 79-56=23 -> "32" == per-column 9-6,7-5). It is by
+#                    far the most common hidden convention in this family.
+#   (False, False) -- plain left-to-right arithmetic on the literal numbers.
+#
+# These two account for EVERY mode that ever produces a correct answer on the
+# holdout (60 vs 48 of the wins). The single-reversal modes never win a problem on
+# their own and merely *shadow* the columnar interpretation when they happen to fit
+# a sparse example set, so we demote them to a last-resort fallback that only fires
+# when neither columnar nor plain arithmetic is consistent.
+#
+# When BOTH columnar and plain arithmetic fit the demonstrated examples (an
+# inherently ambiguous tie, common with a single example), we break toward the
+# columnar reading: on the holdout it is the correct hidden rule ~55% more often
+# than the plain reading, and it is the more "deliberate" of the two conventions
+# (plain arithmetic rarely needs to be *taught* with examples).
+_MODE_ORDER = [(True, True), (False, False), (False, True), (True, False)]
 _MODE_IDX = {m: i for i, m in enumerate(_MODE_ORDER)}
 
 

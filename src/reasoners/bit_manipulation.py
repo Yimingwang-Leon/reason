@@ -329,6 +329,190 @@ def _evaluate_rule(bits: str, rule: RuleCandidate) -> str:
     raise ValueError(f"Unknown family {rule.family}")
 
 
+# Family preference for resolving ambiguous fills: simpler rules win ties.
+_RESOLVE_FAM_RANK: Dict[str, int] = {
+    fam: idx
+    for idx, fam in enumerate(
+        ("I", "NOT", "0", "1", "XOR", "OR", "AND", "XOR-NOT", "OR-NOT", "AND-NOT")
+    )
+}
+
+
+def _all_consistent_per_bit(
+    all_matches: Dict[str, List[List[RuleCandidate]]],
+) -> List[List[RuleCandidate]]:
+    """Flatten all per-section consistent candidates into one list per output bit.
+
+    A candidate is consistent if its column equals the output column across every
+    example (that is exactly what `all_matches` records). Returns, for each output
+    bit, the full deduplicated candidate list in deterministic family/operand order.
+    """
+    per_bit: List[List[RuleCandidate]] = []
+    for bit in range(N_BITS):
+        seen: set[Tuple[str, Optional[int], Optional[int]]] = set()
+        cands: List[RuleCandidate] = []
+        for section in SECTION_ORDER:
+            for c in all_matches[section][bit]:
+                key = (c.family, c.primary, c.secondary)
+                if key in seen:
+                    continue
+                seen.add(key)
+                cands.append(c)
+        cands.sort(
+            key=lambda c: (
+                _RESOLVE_FAM_RANK.get(c.family, 99),
+                c.primary if c.primary is not None else -1,
+                c.secondary if c.secondary is not None else -1,
+            )
+        )
+        per_bit.append(cands)
+    return per_bit
+
+
+def _spine_rule_at(
+    fam: str, p_off: int, q_off: Optional[int], bit: int
+) -> Tuple[str, Optional[int], Optional[int]]:
+    """Rule key produced by a stride-1 spine pattern at a given output bit."""
+    p = (p_off + bit) % N_BITS
+    if q_off is None:
+        return (fam, p, None)
+    return (fam, p, (q_off + bit) % N_BITS)
+
+
+def _longest_spines(
+    per_bit: List[List[RuleCandidate]],
+) -> List[Tuple[int, str, int, Optional[int]]]:
+    """Find stride-1 spine patterns ordered by longest contiguous coverage.
+
+    A spine is (family, primary_offset, secondary_offset) such that for a run of
+    consecutive output bits the operands advance by +1 each step and the resulting
+    rule is consistent. Returns (max_run, family, p_off, q_off) tuples sorted by
+    (max contiguous run desc, family rank, offsets) — most reliable spine first.
+    """
+    sets = [
+        {(c.family, c.primary, c.secondary) for c in cands} for cands in per_bit
+    ]
+    scored: List[Tuple[int, int, int, int, Tuple[str, int, Optional[int]]]] = []
+    # Unary spines.
+    for fam in ("I", "NOT"):
+        for off in range(N_BITS):
+            best_run = 0
+            bit = 0
+            while bit < N_BITS:
+                if _spine_rule_at(fam, off, None, bit) in sets[bit]:
+                    start = bit
+                    while (
+                        bit < N_BITS
+                        and _spine_rule_at(fam, off, None, bit) in sets[bit]
+                    ):
+                        bit += 1
+                    best_run = max(best_run, bit - start)
+                else:
+                    bit += 1
+            if best_run > 0:
+                scored.append(
+                    (best_run, _RESOLVE_FAM_RANK[fam], off, 0, (fam, off, None))
+                )
+    # Binary spines.
+    for fam in PAIR_FAMILIES:
+        for p_off in range(N_BITS):
+            for d in range(1, N_BITS):
+                q_off = (p_off + d) % N_BITS
+                best_run = 0
+                bit = 0
+                while bit < N_BITS:
+                    if _spine_rule_at(fam, p_off, q_off, bit) in sets[bit]:
+                        start = bit
+                        while (
+                            bit < N_BITS
+                            and _spine_rule_at(fam, p_off, q_off, bit) in sets[bit]
+                        ):
+                            bit += 1
+                        best_run = max(best_run, bit - start)
+                    else:
+                        bit += 1
+                if best_run > 0:
+                    scored.append(
+                        (
+                            best_run,
+                            _RESOLVE_FAM_RANK.get(fam, 99),
+                            p_off,
+                            q_off,
+                            (fam, p_off, q_off),
+                        )
+                    )
+    # Longest run first; then simpler family; then smallest offsets (deterministic).
+    scored.sort(key=lambda s: (-s[0], s[1], s[2], s[3]))
+    return [(s[0], s[4][0], s[4][1], s[4][2]) for s in scored]
+
+
+def _spine_covers_with_neighbor(
+    fam: str,
+    p_off: int,
+    q_off: Optional[int],
+    bit: int,
+    sets: List[set],
+) -> bool:
+    """True if `bit` sits in a contiguous stride run of length >= 2 for this spine.
+
+    Requiring an adjacent matching bit rules out length-1 "spines" that are just an
+    isolated coincidental candidate carrying no real positional evidence.
+    """
+    here = _spine_rule_at(fam, p_off, q_off, bit) in sets[bit]
+    if not here:
+        return False
+    left = bit > 0 and _spine_rule_at(fam, p_off, q_off, bit - 1) in sets[bit - 1]
+    right = (
+        bit < N_BITS - 1
+        and _spine_rule_at(fam, p_off, q_off, bit + 1) in sets[bit + 1]
+    )
+    return left or right
+
+
+def _resolve_default(
+    bit: int,
+    per_bit: List[List[RuleCandidate]],
+    spines: List[Tuple[int, str, int, Optional[int]]],
+    question_bits: str,
+) -> Optional[RuleCandidate]:
+    """Choose a consistent rule for a bit the main pass left as DEFAULT.
+
+    Priority: (1) extend a dominant stride spine (length >= 2) if it continues
+    through this bit; (2) if a strict majority of all consistent candidates agree on
+    the output value, use the simplest such candidate. Returns None when neither
+    signal is strong enough (keep the conservative DEFAULT rather than risk a
+    coincidental match).
+    """
+    cands = per_bit[bit]
+    if not cands:
+        return None
+    cand_by_key = {(c.family, c.primary, c.secondary): c for c in cands}
+    sets = [
+        {(c.family, c.primary, c.secondary) for c in pb} for pb in per_bit
+    ]
+    # (1) Spine continuation — only spines that form a length>=2 run through `bit`.
+    for run_len, fam, p_off, q_off in spines:
+        if run_len < 2:
+            break  # spines are sorted longest-first; nothing useful remains
+        if not _spine_covers_with_neighbor(fam, p_off, q_off, bit, sets):
+            continue
+        key = _spine_rule_at(fam, p_off, q_off, bit)
+        if key in cand_by_key:
+            return cand_by_key[key]
+    # (2) Majority value among all consistent candidates.
+    votes: Dict[str, int] = {}
+    for c in cands:
+        v = _evaluate_rule(question_bits, c)
+        votes[v] = votes.get(v, 0) + 1
+    total = sum(votes.values())
+    top_val, top_n = max(votes.items(), key=lambda kv: (kv[1], kv[0]))
+    if top_n * 2 > total:
+        for c in cands:  # cands already sorted simplest-first
+            if _evaluate_rule(question_bits, c) == top_val:
+                return c
+    return None
+
+
 def _emit_apply(
     lines: List[str], question_bits: str, vector: List[RuleCandidate]
 ) -> None:
@@ -987,6 +1171,28 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
                     best[i] = default_cand
         else:
             lines.append(f"{i} {best[i].expr}")
+    lines.append("")
+
+    # Resolve any bit still left as DEFAULT using the full consistent-candidate set:
+    # extend the dominant stride spine, else take the majority value. This recovers
+    # boundary/middle bits the left/right anchoring could not reach.
+    per_bit_all = _all_consistent_per_bit(all_matches)
+    spines = _longest_spines(per_bit_all)
+    lines.append("")
+    lines.append("Resolving defaults")
+    any_default = False
+    for i in range(N_BITS):
+        if not best[i].is_default:
+            continue
+        any_default = True
+        repl = _resolve_default(i, per_bit_all, spines, question_bits)
+        if repl is not None:
+            best[i] = repl
+            lines.append(f"{i} {repl.expr}")
+        else:
+            lines.append(f"{i} keep default 1")
+    if not any_default:
+        lines.append("none")
     lines.append("")
 
     # Check if we have any non-default rules
