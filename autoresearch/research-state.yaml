@@ -40,5 +40,13 @@ hypotheses:
     desc: Augmenter sub-skill drills raise R on long-CoT cats
     status: pending (paid validation)
 
-paid_experiments_queue: []   # populated when an offline-validated hypothesis is ready; user approves each
-next_action: read H1 result; if high -> H3 generator build; if low -> H2 brace workaround + conclude crypt cap
+paid_experiments_queue:
+  - id: run-006
+    desc: "Retrain on 89.0%-oracle corpus + H3 cryptarithm_synth augmenter. Banks the already-unrealized oracle gain (87.7->89.0) AND tests the H3 crypt meta-skill bet."
+    build: "python -m src.corpus"
+    train: "python -m src.train_tinker --run-name run-006 --num-epochs 2 --curriculum"
+    cost_usd: ~20
+    projected: "floor ~0.85 (oracle realization at R 0.958); upside 0.86-0.87 if H3 lifts crypt at greedy. NOT 0.89."
+    status: AWAITING_USER_APPROVAL (budget ~$10, needs ~$10-15 top-up)
+
+next_action: H3 built+staged+committed (0d75a54). Free work continues: H2 brace-cap workaround, H4 recipe-delta analysis. Paid run-006 queued for user.
