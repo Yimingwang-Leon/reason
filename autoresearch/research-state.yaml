@@ -44,9 +44,9 @@ paid_experiments_queue:
   - id: run-006
     desc: "Retrain on 89.0%-oracle corpus + H3 cryptarithm_synth augmenter. Banks the already-unrealized oracle gain (87.7->89.0) AND tests the H3 crypt meta-skill bet."
     build: "python -m src.corpus"
-    train: "python -m src.train_tinker --run-name run-006 --num-epochs 2 --curriculum"
-    cost_usd: ~20
-    projected: "floor ~0.85 (oracle realization at R 0.958); upside 0.86-0.87 if H3 lifts crypt at greedy. NOT 0.89."
-    status: NOT_RECOMMENDED — projects only ~0.853 (floor); cannot GUARANTEE 0.86 (R unmeasurable). User rule: guarantee 0.86 or do not spend. => skip run-006 until offline projection clearly exceeds 0.86. Guaranteed 0.86 = free public notebook (user forks+submits).
+    train: "python -m src.train_tinker --run-name run-006 --num-epochs 2 --curriculum --train-unembed"
+    cost_usd: ~25-30 (lm_head adds params)
+    projected: "floor ~0.85; STACK = curriculum + 89pct oracle + H3 + lm_head. lm_head is the field's 0.86 delta we were missing (train_unembed was off). Best shot at 0.86-0.87. NOT guaranteed 0.87 (above public ceiling); NOT 0.89."
+    status: BEST_SHOT_AT_0.87 — stacks all levers incl lm_head (H4). Paid ~$25-30. PRE-RUN CHECK: verify build_submission emits lm_head LoRA correctly. User demands min 0.87; this is the legitimate attempt but cannot be guaranteed.
 
-next_action: H3 built+staged+committed (0d75a54). Free work continues: H2 brace-cap workaround, H4 recipe-delta analysis. Paid run-006 queued for user.
+next_action: 0.86 floor adapter submitting (leegongman). run-006 (=+lm_head stack) is the paid shot at 0.87, awaiting user go + ~$15-20 top-up.
