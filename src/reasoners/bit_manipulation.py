@@ -1,17 +1,319 @@
 """Reasoning generator for 8-bit bit-manipulation tasks.
 
-The output follows the legacy trace style used by the existing reasoning files,
-with a strict-validity filter for candidate assignment vectors.
+Two-stage solver:
+
+1. STRUCTURAL search (primary). Each problem is a single global transform of the
+   8-bit word. We search, in simplicity order, a library of position-relative
+   primitives that *extrapolate* to unseen inputs by construction (they are
+   closed-form boolean/shift formulas, not memorised truth tables):
+       - unary: identity, circular rotate L/R by k, logical shift L/R by k,
+         bitwise NOT, full reverse, plus one-step compositions of those;
+       - binary: OP(u1(x), u2(x)) for OP in XOR/AND/OR/XNOR/NAND/NOR and the
+         NOT-second variants, with u1, u2 unary primitives;
+       - ternary: XOR3 / majority of three rotations, and templates such as
+         multiplex (a&b)|(~a&c), (a&b)|c, (a|b)&c, (a&b)^c, ...
+   The first formula consistent with *every* example wins (Occam / simplicity
+   prior); it is evaluated on the query directly, so it generalises even when the
+   query's bit pattern never appears among the examples.
+
+2. LEGACY per-bit fallback. When no global structural formula fits, fall back to
+   the column-matching trace (kept verbatim below as ``_reasoning_legacy``).
 """
 
 from __future__ import annotations
 
+import itertools as _it
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Sequence, Tuple
 
 from .store_types import Problem
 
 N_BITS = 8
+
+_MASK = 0xFF
+
+
+def _bits_to_int(bits: str) -> int:
+    """MSB-first 8-bit string -> int (string index 0 is the high bit)."""
+    v = 0
+    for ch in bits:
+        v = (v << 1) | (1 if ch == "1" else 0)
+    return v
+
+
+def _int_to_bits(v: int) -> str:
+    return "".join(str((v >> (N_BITS - 1 - j)) & 1) for j in range(N_BITS))
+
+
+def _u_rotl(v: int, k: int) -> int:
+    k %= N_BITS
+    if k == 0:
+        return v & _MASK
+    return ((v << k) | (v >> (N_BITS - k))) & _MASK
+
+
+def _u_rotr(v: int, k: int) -> int:
+    return _u_rotl(v, (N_BITS - (k % N_BITS)) % N_BITS)
+
+
+def _u_shl(v: int, k: int) -> int:
+    return (v << k) & _MASK
+
+
+def _u_shr(v: int, k: int) -> int:
+    return (v >> k) & _MASK
+
+
+def _u_not(v: int) -> int:
+    return (~v) & _MASK
+
+
+def _u_rev(v: int) -> int:
+    r = 0
+    for j in range(N_BITS):
+        r = (r << 1) | ((v >> j) & 1)
+    return r
+
+
+def _unary_atoms() -> List[Tuple[str, object, int]]:
+    """Unary primitives ordered by cost (lower == simpler == preferred)."""
+    atoms: List[Tuple[str, object, int]] = [("identity", lambda v: v & _MASK, 0)]
+    for k in range(1, N_BITS):
+        atoms.append((f"rotate-left-{k}", (lambda v, k=k: _u_rotl(v, k)), 1))
+        atoms.append((f"rotate-right-{k}", (lambda v, k=k: _u_rotr(v, k)), 1))
+    for k in range(1, N_BITS):
+        atoms.append((f"shift-left-{k}", (lambda v, k=k: _u_shl(v, k)), 2))
+        atoms.append((f"shift-right-{k}", (lambda v, k=k: _u_shr(v, k)), 2))
+    atoms.append(("NOT", _u_not, 2))
+    atoms.append(("reverse", _u_rev, 3))
+    return atoms
+
+
+_UATOM = _unary_atoms()
+
+
+def _unary_ext() -> List[Tuple[str, object, int]]:
+    """Unary operands for binary ops: atoms plus 'atom then NOT'."""
+    ext = list(_UATOM)
+    for name, fn, cost in _UATOM:
+        if name in ("identity", "NOT"):
+            continue
+        ext.append((f"NOT({name})", (lambda v, fn=fn: _u_not(fn(v))), cost + 2))
+    return ext
+
+
+_UEXT = _unary_ext()
+
+_BINOPS: List[Tuple[str, object, int]] = [
+    ("XOR", lambda a, b: a ^ b, 1),
+    ("AND", lambda a, b: a & b, 1),
+    ("OR", lambda a, b: a | b, 1),
+    ("XNOR", lambda a, b: _u_not(a ^ b), 2),
+    ("AND-NOT", lambda a, b: a & _u_not(b), 2),
+    ("OR-NOT", lambda a, b: a | _u_not(b), 2),
+    ("NAND", lambda a, b: _u_not(a & b), 2),
+    ("NOR", lambda a, b: _u_not(a | b), 2),
+]
+
+_TERNARY: List[Tuple[str, object]] = [
+    ("MUX(sel={0}, then={1}, else={2})", lambda a, b, c: (a & b) | (_u_not(a) & c)),
+    ("({0} AND {1}) OR {2}", lambda a, b, c: (a & b) | c),
+    ("({0} OR {1}) AND {2}", lambda a, b, c: (a | b) & c),
+    ("({0} AND {1}) XOR {2}", lambda a, b, c: (a & b) ^ c),
+    ("({0} OR {1}) XOR {2}", lambda a, b, c: (a | b) ^ c),
+    ("({0} AND-NOT {1}) OR {2}", lambda a, b, c: (a & _u_not(b)) | c),
+]
+
+# Atoms used as ternary operands (drop the rarely-useful full reverse to bound cost).
+_TATOM = [(n, f) for (n, f, c) in _UATOM if n != "reverse"]
+
+
+class _Rule:
+    """A discovered global transform: label, evaluator, cost."""
+
+    __slots__ = ("kind", "label", "fn", "cost")
+
+    def __init__(self, kind: str, label: str, fn: object, cost: int):
+        self.kind = kind
+        self.label = label
+        self.fn = fn
+        self.cost = cost
+
+    def apply(self, v: int) -> int:
+        return self.fn(v) & _MASK  # type: ignore[operator]
+
+
+def _search_unary(ivs: List[int], ovs: List[int]) -> List[_Rule]:
+    rules: List[_Rule] = []
+    n = len(ivs)
+    for name, fn, cost in _UATOM:
+        if all(fn(ivs[e]) == ovs[e] for e in range(n)):
+            rules.append(_Rule("unary", name, fn, cost))
+    return rules
+
+
+def _search_unary_compose(ivs: List[int], ovs: List[int]) -> List[_Rule]:
+    rules: List[_Rule] = []
+    n = len(ivs)
+    for n1, f1, c1 in _UATOM:
+        t = [f1(ivs[e]) for e in range(n)]
+        for n2, f2, c2 in _UATOM:
+            if n2 == "identity":
+                continue
+            if all(f2(t[e]) == ovs[e] for e in range(n)):
+                rules.append(
+                    _Rule(
+                        "compose",
+                        f"{n1} then {n2}",
+                        (lambda v, f1=f1, f2=f2: f2(f1(v))),
+                        c1 + c2 + 1,
+                    )
+                )
+    return rules
+
+
+def _search_binary(ivs: List[int], ovs: List[int]) -> List[_Rule]:
+    rules: List[_Rule] = []
+    n = len(ivs)
+    for bn, bf, bc in _BINOPS:
+        for n1, f1, c1 in _UEXT:
+            t1 = [f1(ivs[e]) for e in range(n)]
+            for n2, f2, c2 in _UEXT:
+                if all(bf(t1[e], f2(ivs[e])) == ovs[e] for e in range(n)):
+                    rules.append(
+                        _Rule(
+                            "binary",
+                            f"{bn}({n1}, {n2})",
+                            (lambda v, f1=f1, f2=f2, bf=bf: bf(f1(v), f2(v))),
+                            bc + c1 + c2 + 3,
+                        )
+                    )
+    return rules
+
+
+def _search_ternary(ivs: List[int], ovs: List[int]) -> List[_Rule]:
+    n = len(ivs)
+    atoms = [(name, fn) for (name, fn, _c) in _UATOM]
+    for combo in _it.combinations(range(len(atoms)), 3):
+        f1 = atoms[combo[0]][1]
+        f2 = atoms[combo[1]][1]
+        f3 = atoms[combo[2]][1]
+        if all(f1(ivs[e]) ^ f2(ivs[e]) ^ f3(ivs[e]) == ovs[e] for e in range(n)):
+            label = (
+                f"XOR3({atoms[combo[0]][0]}, {atoms[combo[1]][0]}, "
+                f"{atoms[combo[2]][0]})"
+            )
+            return [
+                _Rule(
+                    "ternary",
+                    label,
+                    (lambda v, f1=f1, f2=f2, f3=f3: f1(v) ^ f2(v) ^ f3(v)),
+                    10,
+                )
+            ]
+    for combo in _it.combinations(range(len(atoms)), 3):
+        f1 = atoms[combo[0]][1]
+        f2 = atoms[combo[1]][1]
+        f3 = atoms[combo[2]][1]
+
+        def _maj(v: int, f1=f1, f2=f2, f3=f3) -> int:
+            return (f1(v) & f2(v)) | (f1(v) & f3(v)) | (f2(v) & f3(v))
+
+        if all(_maj(ivs[e]) == ovs[e] for e in range(n)):
+            label = (
+                f"MAJ({atoms[combo[0]][0]}, {atoms[combo[1]][0]}, "
+                f"{atoms[combo[2]][0]})"
+            )
+            return [_Rule("ternary", label, _maj, 11)]
+    return []
+
+
+def _search_ternary_templates(ivs: List[int], ovs: List[int]) -> List[_Rule]:
+    n = len(ivs)
+    for fmt, tf in _TERNARY:
+        for na, fa in _TATOM:
+            ta = [fa(ivs[e]) for e in range(n)]
+            for nb, fb in _TATOM:
+                tb = [fb(ivs[e]) for e in range(n)]
+                for nc, fc in _TATOM:
+                    if all(
+                        tf(ta[e], tb[e], fc(ivs[e])) == ovs[e] for e in range(n)
+                    ):
+                        return [
+                            _Rule(
+                                "template",
+                                fmt.format(na, nb, nc),
+                                (
+                                    lambda v, fa=fa, fb=fb, fc=fc, tf=tf: tf(
+                                        fa(v), fb(v), fc(v)
+                                    )
+                                ),
+                                20,
+                            )
+                        ]
+    return []
+
+
+def _find_structural_rule(
+    inputs: List[str], outputs: List[str]
+) -> Optional[_Rule]:
+    """Return the simplest global transform consistent with all examples, else None."""
+    ivs = [_bits_to_int(b) for b in inputs]
+    ovs = [_bits_to_int(b) for b in outputs]
+
+    rules = _search_unary(ivs, ovs)
+    rules += _search_unary_compose(ivs, ovs)
+    rules += _search_binary(ivs, ovs)
+    if rules:
+        rules.sort(key=lambda r: (r.cost, r.label))
+        return rules[0]
+
+    tern = _search_ternary(ivs, ovs)
+    if tern:
+        return tern[0]
+
+    tmpl = _search_ternary_templates(ivs, ovs)
+    if tmpl:
+        return tmpl[0]
+    return None
+
+
+def _structural_trace(
+    inputs: List[str], outputs: List[str], question_bits: str, rule: _Rule
+) -> str:
+    """Deterministic CoT for a discovered global structural rule."""
+    lines: List[str] = []
+    lines.append(
+        "We need to deduce the single bit-manipulation rule that maps each "
+        "8-bit input to its output."
+    )
+    lines.append("I will put my final answer inside \\boxed{}.")
+    lines.append("")
+    lines.append("Examples (input -> output):")
+    for inp, out in zip(inputs, outputs):
+        lines.append(f"  {inp} -> {out}")
+    lines.append("")
+    lines.append(
+        "Searching position-relative operations (rotations, shifts, NOT, "
+        "reverse and their boolean combinations), simplest first."
+    )
+    lines.append(
+        f"The simplest rule consistent with every example is: {rule.label}."
+    )
+    lines.append("")
+    lines.append("Verifying the rule on each example:")
+    for inp, out in zip(inputs, outputs):
+        got = _int_to_bits(rule.apply(_bits_to_int(inp)))
+        mark = "ok" if got == out else "MISMATCH"
+        lines.append(f"  {inp} -> {got} (expected {out}) {mark}")
+    lines.append("")
+    answer = _int_to_bits(rule.apply(_bits_to_int(question_bits)))
+    lines.append(f"Applying {rule.label} to the query {question_bits}:")
+    lines.append(f"  {question_bits} -> {answer}")
+    lines.append("")
+    lines.append(f"The answer is \\boxed{{{answer}}}")
+    return "\n".join(lines)
+
 
 SYM_FAMILIES = ("XOR", "OR", "AND")
 ASYM_FAMILIES = ("AND-NOT", "XOR-NOT", "OR-NOT")
@@ -564,7 +866,7 @@ def _emit_apply(
     lines.append(f"The answer is \\boxed{{{''.join(answer_bits)}}}")
 
 
-def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
+def _reasoning_legacy(problem: Problem) -> Optional[str]:
     examples = problem.examples
     if not examples:
         return None
@@ -1208,3 +1510,28 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
     _emit_apply(lines, question_bits, best)
 
     return "\n".join(lines)
+
+
+def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
+    """Solve an 8-bit transform problem.
+
+    Primary path: find the simplest global structural formula (rotate/shift/NOT/
+    reverse plus boolean combinations) consistent with all examples, then evaluate
+    it on the query. Such formulas extrapolate to unseen bit patterns by
+    construction. Fall back to the legacy per-bit column-matching trace when no
+    global formula fits.
+    """
+    examples = problem.examples
+    if not examples:
+        return None
+
+    inputs = [_normalize_bits(ex.input_value) for ex in examples]
+    outputs = [_normalize_bits(ex.output_value) for ex in examples]
+    question_bits = _normalize_bits(problem.question)
+
+    if question_bits and all(inputs) and all(outputs) and len(inputs) == len(outputs):
+        rule = _find_structural_rule(inputs, outputs)
+        if rule is not None:
+            return _structural_trace(inputs, outputs, question_bits, rule)
+
+    return _reasoning_legacy(problem)
