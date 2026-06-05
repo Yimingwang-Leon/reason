@@ -1,0 +1,44 @@
+project: nemotron-reasoning-087
+question: >
+  Break the 0.87 LB plateau (chase 0.89) on the NVIDIA Nemotron Model Reasoning
+  Challenge. The only lever is raising cryptarithm_deduce oracle above its ~13%
+  (everything else is maxed) and/or pushing realization R toward 1.0.
+
+target_metric: offline_oracle  # on data/holdout.csv (1899 problems); LB = oracle x R, R~0.958
+baseline:
+  lb: 0.84
+  oracle: 0.890
+  R: 0.958
+current_best:
+  lb: 0.84
+  oracle: 0.890
+  commit: f083ffe
+
+constraints:
+  base_model: NemotronH-30B (fixed)
+  lora_rank_max: 32
+  decode: greedy temp=0
+  answer_format: \boxed{}
+  tinker_budget_usd: ~10   # 2ep retrain ~$20; NEVER auto-spend, queue for user approval
+  offline_work: free and unlimited
+
+hypotheses:
+  H1:
+    desc: Does crypt fit a clean per-problem arithmetic generator WITH answers (Z3, full model space)?
+    status: DONE — degenerate. Non-injective fits 100% (trivial/loose); injective ~2%. Predict-from-examples (real metric) = ~13% (agentB). Ciphers are non-injective + underdetermined -> SOLVING is capped ~13-16%. Signal: base~11, op=add dominates.
+    conclusion: crypt cannot be SOLVED reliably; only H3 (teach meta-skill via synthetic data) can possibly raise it.
+  H2:
+    desc: Brace-cap workaround — dodge \boxed{} truncation for the 24% brace answers (1 free submission to test grader fallback)
+    status: pending
+  H3:
+    desc: Synthetic cipher-deduction corpus teaches the meta-skill -> crypt at greedy beats the 13% solver ceiling
+    status: pending (paid validation)
+  H4:
+    desc: Recipe deltas (lm_head if eval-supported, MoE-tie) close 0.84->0.86 gap vs public recipe
+    status: pending (paid validation)
+  H5:
+    desc: Augmenter sub-skill drills raise R on long-CoT cats
+    status: pending (paid validation)
+
+paid_experiments_queue: []   # populated when an offline-validated hypothesis is ready; user approves each
+next_action: read H1 result; if high -> H3 generator build; if low -> H2 brace workaround + conclude crypt cap

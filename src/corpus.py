@@ -39,6 +39,7 @@ AUGMENTER_ALLOWLIST = {
     "equation_reversal",
     "equation_arith",
     "equation_digitwise",
+    "cryptarithm_synth",   # H3: teach cipher-deduction meta-skill (known-answer synthetic)
 }
 
 
