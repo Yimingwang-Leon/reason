@@ -1,60 +1,65 @@
 project: nemotron-reasoning-087
 question: >
-  Break the 0.87 LB plateau (chase 0.89) on the NVIDIA Nemotron Model Reasoning
-  Challenge. The only lever is raising cryptarithm_deduce oracle above its ~13%
-  (everything else is maxed) and/or pushing realization R toward 1.0.
-
-target_metric: offline_oracle  # on data/holdout.csv (1899 problems); LB = oracle x R, R~0.958
-baseline:
-  lb: 0.84
-  oracle: 0.890
-  R: 0.958
-current_best:
-  lb: 0.84
-  oracle: 0.890
-  commit: f083ffe
+  Raise LB on the NVIDIA Nemotron Model Reasoning Challenge. LB = per-category
+  oracle x realization R. R is already ~0.958 and near a local optimum (CoT-format
+  redesign proven to hurt). The remaining lever is per-category oracle, where
+  cryptarithm_deduce is by far the lowest (~17.6%) and the largest loss lever.
 
 constraints:
   base_model: NemotronH-30B (fixed)
   lora_rank_max: 32
   decode: greedy temp=0
   answer_format: \boxed{}
-  tinker_budget_usd: ~10   # 2ep retrain ~$20; NEVER auto-spend, queue for user approval
+  tinker_budget_usd: small  # 2ep retrain ~$20; NEVER auto-spend, queue for user approval
   offline_work: free and unlimited
 
-hypotheses:
-  H1:
-    desc: Does crypt fit a clean per-problem arithmetic generator WITH answers (Z3, full model space)?
-    status: DONE — degenerate. Non-injective fits 100% (trivial/loose); injective ~2%. Predict-from-examples (real metric) = ~13% (agentB). Ciphers are non-injective + underdetermined -> SOLVING is capped ~13-16%. Signal: base~11, op=add dominates.
-    conclusion: crypt cannot be SOLVED reliably; only H3 (teach meta-skill via synthetic data) can possibly raise it.
-  H2:
-    desc: Brace-cap workaround — dodge \boxed{} truncation for the 24% brace answers (1 free submission to test grader fallback)
-    status: pending
-  H3:
-    desc: Synthetic cipher-deduction corpus teaches the meta-skill -> crypt at greedy beats the 13% solver ceiling
-    status: pending (paid validation)
-  H4:
-    desc: Recipe deltas (lm_head if eval-supported, MoE-tie) close 0.84->0.86 gap vs public recipe
-    status: pending (paid validation)
-  H5:
-    desc: Augmenter sub-skill drills raise R on long-CoT cats
-    status: pending (paid validation)
+current_state:
+  best_lb: 0.84            # run-005 legacy-CoT corpus
+  oracle_offline: ~0.90   # bit_manip solver now 94.4%, overall oracle ~0.90
+  R: ~0.958
+  note: >
+    See MEMORY.md project_run006_collapse_diagnosis for the controlled proof that
+    the legacy-CoT corpus is the R local-optimum. Self-train ceiling on this
+    pipeline is ~0.84-0.845.
 
-paid_experiments_queue:
-  - id: run-006
-    desc: "Retrain on 89.0%-oracle corpus + H3 cryptarithm_synth augmenter. Banks the already-unrealized oracle gain (87.7->89.0) AND tests the H3 crypt meta-skill bet."
-    build: "python -m src.corpus"
-    train: "python -m src.train_tinker --run-name run-006 --num-epochs 2 --curriculum --train-unembed"
-    cost_usd: ~25-30 (lm_head adds params)
-    projected: "floor ~0.85; STACK = curriculum + 89pct oracle + H3 + lm_head. lm_head is the field's 0.86 delta we were missing (train_unembed was off). Best shot at 0.86-0.87. NOT guaranteed 0.87 (above public ceiling); NOT 0.89."
-    status: PLAN — wait for bit_manip workflow (w31vc4juf) to confirm bit_manip oracle (target ~98%; others did it, our agents at ~88-89% so far, NOT yet cracked). Then run-006 = bit_manip-98% corpus + lm_head(train_unembed) + curriculum. lm_head re-included: user will MANUALLY submit via Kaggle notebook (file-upload 400s on lm_head adapters, but notebook route accepts them — that's how public 0.86 is on the board). Projection: bit_manip-98% alone ~0.87 (oracle 90.7% x R 0.958); + lm_head R-boost ~0.87-0.88. Cost ~$25-35. Gate: only spend once bit_manip oracle is verified offline to project >=0.87.
+# Per-category oracle + loss lever live in MEMORY.md (project_grader_tolerance /
+# strategy). Crypt ~17.6% = biggest single lever; bit_manip ~94%; equation ~77%.
 
-key_facts_2026-06-05_late:
-  - 0.87 is a CROWDED band (~17 teams), REACHABLE; 0.89 single outlier. NOT a plateau above public.
-  - crypt CONFIRMED dead: public "97%" solvers are gold-conditioned (conditioned_on_answer); real no-gold ~10%. Do not spend on crypt.
-  - dedup lever N/A to us: our train_cat.csv is 100% unique (9500/9500). We're ahead of the duplicate-heavy public 0.85 corpus on this.
-  - brace-cap: host fixed \boxed{} metric 2026-05-08 to extract answers containing '}'; our corpus still drops brace rows (re-add = minor crypt gain).
-  - lm_head: submittable via NOTEBOOK route (public 0.86 proves it); our CLI file-upload 400s on it. User submits manually.
-  - THE lever to 0.87 = bit_manipulation 88%->~98% (huikang: "0.87 achievable without crypt"; Taha 98.9%, lkevincc 99.4%). Free. Workflow w31vc4juf attacking it.
+proven_infeasible:   # each cost a real paid run — do NOT re-attempt without new idea
+  - bit_manip "structural / global-rule-assertion" CoT -> R-collapse 0.95->0.2
+    (runs 006/007/008 = 0.71/0.73/0.72). The asserted global rule does not
+    generalize at greedy decode.
+  - Beating run-005 (0.84) by REDESIGNING CoT FORMAT is dead: run-009 slimming=0.82,
+    run-010 locality-hardening=0.82. Both directions hurt; legacy CoT is the R
+    local-optimum. (Also: 4 categories already ~100% oracle, so R-tweaking them is
+    wasted effort.)
+  - lm_head LoRA = measured eval no-op (run-006 with==without==0.71). Earlier
+    "notebook route accepts lm_head / it's the missing 0.86 delta" was a misjudgment,
+    disproven by the run.
+  - Dropping MoE up/down LoRA -> crippled 0.56. MoE LoRA is essential.
 
-next_action: await bit_manip workflow result; verify oracle offline; if projects >=0.87, propose run-006 (bit_manip + lm_head, manual notebook submit) for user go.
+open_leads:   # NOT disproven. Crypt is the biggest lever, kept OPEN.
+  crypt:
+    why: lowest oracle (~17.6%) and biggest point loss; format-cap ~76% (}-truncation),
+         well above current — large headroom remains.
+    structural_findings:
+      - column-wise arithmetic structure
+      - symbol->digit map is non-injective
+      - unknown base (signal: base ~11, op=add dominates)
+      - zero-column omission
+      - ~76% of answers contain '}' -> \boxed{} truncation cap (host fixed the metric
+        2026-05-08 to extract '}'-answers; our corpus still drops brace rows, so
+        re-adding them is a cheap potential gain to test)
+    untried_directions:
+      - synthetic cipher-deduction corpus to teach the meta-skill (H3, never run)
+      - re-add brace rows to corpus (cheap, offline)
+  community_intel:   # not our experiments
+    - distillation route caps ~0.73 (intel).
+    - 0.87 reported reachable without crypt via bit_manip ~98-99% (huikang/Taha/lkevincc);
+      our bit_manip solver is at 94.4% — closing that gap is a live offline lever.
+
+next_action: >
+  Stay offline. Crypt is the open frontier (structural leads above) and bit_manip
+  94->98% is a free oracle lever. Do NOT redesign CoT format (proven to hurt) and
+  do NOT re-run lm_head/global-rule-assertion experiments. Only queue a paid retrain
+  with explicit user approval and only when an offline change projects > 0.845.

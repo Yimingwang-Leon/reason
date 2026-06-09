@@ -1,319 +1,17 @@
 """Reasoning generator for 8-bit bit-manipulation tasks.
 
-Two-stage solver:
-
-1. STRUCTURAL search (primary). Each problem is a single global transform of the
-   8-bit word. We search, in simplicity order, a library of position-relative
-   primitives that *extrapolate* to unseen inputs by construction (they are
-   closed-form boolean/shift formulas, not memorised truth tables):
-       - unary: identity, circular rotate L/R by k, logical shift L/R by k,
-         bitwise NOT, full reverse, plus one-step compositions of those;
-       - binary: OP(u1(x), u2(x)) for OP in XOR/AND/OR/XNOR/NAND/NOR and the
-         NOT-second variants, with u1, u2 unary primitives;
-       - ternary: XOR3 / majority of three rotations, and templates such as
-         multiplex (a&b)|(~a&c), (a&b)|c, (a|b)&c, (a&b)^c, ...
-   The first formula consistent with *every* example wins (Occam / simplicity
-   prior); it is evaluated on the query directly, so it generalises even when the
-   query's bit pattern never appears among the examples.
-
-2. LEGACY per-bit fallback. When no global structural formula fits, fall back to
-   the column-matching trace (kept verbatim below as ``_reasoning_legacy``).
+The output follows the legacy trace style used by the existing reasoning files,
+with a strict-validity filter for candidate assignment vectors.
 """
 
 from __future__ import annotations
 
-import itertools as _it
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Sequence, Tuple
 
 from .store_types import Problem
 
 N_BITS = 8
-
-_MASK = 0xFF
-
-
-def _bits_to_int(bits: str) -> int:
-    """MSB-first 8-bit string -> int (string index 0 is the high bit)."""
-    v = 0
-    for ch in bits:
-        v = (v << 1) | (1 if ch == "1" else 0)
-    return v
-
-
-def _int_to_bits(v: int) -> str:
-    return "".join(str((v >> (N_BITS - 1 - j)) & 1) for j in range(N_BITS))
-
-
-def _u_rotl(v: int, k: int) -> int:
-    k %= N_BITS
-    if k == 0:
-        return v & _MASK
-    return ((v << k) | (v >> (N_BITS - k))) & _MASK
-
-
-def _u_rotr(v: int, k: int) -> int:
-    return _u_rotl(v, (N_BITS - (k % N_BITS)) % N_BITS)
-
-
-def _u_shl(v: int, k: int) -> int:
-    return (v << k) & _MASK
-
-
-def _u_shr(v: int, k: int) -> int:
-    return (v >> k) & _MASK
-
-
-def _u_not(v: int) -> int:
-    return (~v) & _MASK
-
-
-def _u_rev(v: int) -> int:
-    r = 0
-    for j in range(N_BITS):
-        r = (r << 1) | ((v >> j) & 1)
-    return r
-
-
-def _unary_atoms() -> List[Tuple[str, object, int]]:
-    """Unary primitives ordered by cost (lower == simpler == preferred)."""
-    atoms: List[Tuple[str, object, int]] = [("identity", lambda v: v & _MASK, 0)]
-    for k in range(1, N_BITS):
-        atoms.append((f"rotate-left-{k}", (lambda v, k=k: _u_rotl(v, k)), 1))
-        atoms.append((f"rotate-right-{k}", (lambda v, k=k: _u_rotr(v, k)), 1))
-    for k in range(1, N_BITS):
-        atoms.append((f"shift-left-{k}", (lambda v, k=k: _u_shl(v, k)), 2))
-        atoms.append((f"shift-right-{k}", (lambda v, k=k: _u_shr(v, k)), 2))
-    atoms.append(("NOT", _u_not, 2))
-    atoms.append(("reverse", _u_rev, 3))
-    return atoms
-
-
-_UATOM = _unary_atoms()
-
-
-def _unary_ext() -> List[Tuple[str, object, int]]:
-    """Unary operands for binary ops: atoms plus 'atom then NOT'."""
-    ext = list(_UATOM)
-    for name, fn, cost in _UATOM:
-        if name in ("identity", "NOT"):
-            continue
-        ext.append((f"NOT({name})", (lambda v, fn=fn: _u_not(fn(v))), cost + 2))
-    return ext
-
-
-_UEXT = _unary_ext()
-
-_BINOPS: List[Tuple[str, object, int]] = [
-    ("XOR", lambda a, b: a ^ b, 1),
-    ("AND", lambda a, b: a & b, 1),
-    ("OR", lambda a, b: a | b, 1),
-    ("XNOR", lambda a, b: _u_not(a ^ b), 2),
-    ("AND-NOT", lambda a, b: a & _u_not(b), 2),
-    ("OR-NOT", lambda a, b: a | _u_not(b), 2),
-    ("NAND", lambda a, b: _u_not(a & b), 2),
-    ("NOR", lambda a, b: _u_not(a | b), 2),
-]
-
-_TERNARY: List[Tuple[str, object]] = [
-    ("MUX(sel={0}, then={1}, else={2})", lambda a, b, c: (a & b) | (_u_not(a) & c)),
-    ("({0} AND {1}) OR {2}", lambda a, b, c: (a & b) | c),
-    ("({0} OR {1}) AND {2}", lambda a, b, c: (a | b) & c),
-    ("({0} AND {1}) XOR {2}", lambda a, b, c: (a & b) ^ c),
-    ("({0} OR {1}) XOR {2}", lambda a, b, c: (a | b) ^ c),
-    ("({0} AND-NOT {1}) OR {2}", lambda a, b, c: (a & _u_not(b)) | c),
-]
-
-# Atoms used as ternary operands (drop the rarely-useful full reverse to bound cost).
-_TATOM = [(n, f) for (n, f, c) in _UATOM if n != "reverse"]
-
-
-class _Rule:
-    """A discovered global transform: label, evaluator, cost."""
-
-    __slots__ = ("kind", "label", "fn", "cost")
-
-    def __init__(self, kind: str, label: str, fn: object, cost: int):
-        self.kind = kind
-        self.label = label
-        self.fn = fn
-        self.cost = cost
-
-    def apply(self, v: int) -> int:
-        return self.fn(v) & _MASK  # type: ignore[operator]
-
-
-def _search_unary(ivs: List[int], ovs: List[int]) -> List[_Rule]:
-    rules: List[_Rule] = []
-    n = len(ivs)
-    for name, fn, cost in _UATOM:
-        if all(fn(ivs[e]) == ovs[e] for e in range(n)):
-            rules.append(_Rule("unary", name, fn, cost))
-    return rules
-
-
-def _search_unary_compose(ivs: List[int], ovs: List[int]) -> List[_Rule]:
-    rules: List[_Rule] = []
-    n = len(ivs)
-    for n1, f1, c1 in _UATOM:
-        t = [f1(ivs[e]) for e in range(n)]
-        for n2, f2, c2 in _UATOM:
-            if n2 == "identity":
-                continue
-            if all(f2(t[e]) == ovs[e] for e in range(n)):
-                rules.append(
-                    _Rule(
-                        "compose",
-                        f"{n1} then {n2}",
-                        (lambda v, f1=f1, f2=f2: f2(f1(v))),
-                        c1 + c2 + 1,
-                    )
-                )
-    return rules
-
-
-def _search_binary(ivs: List[int], ovs: List[int]) -> List[_Rule]:
-    rules: List[_Rule] = []
-    n = len(ivs)
-    for bn, bf, bc in _BINOPS:
-        for n1, f1, c1 in _UEXT:
-            t1 = [f1(ivs[e]) for e in range(n)]
-            for n2, f2, c2 in _UEXT:
-                if all(bf(t1[e], f2(ivs[e])) == ovs[e] for e in range(n)):
-                    rules.append(
-                        _Rule(
-                            "binary",
-                            f"{bn}({n1}, {n2})",
-                            (lambda v, f1=f1, f2=f2, bf=bf: bf(f1(v), f2(v))),
-                            bc + c1 + c2 + 3,
-                        )
-                    )
-    return rules
-
-
-def _search_ternary(ivs: List[int], ovs: List[int]) -> List[_Rule]:
-    n = len(ivs)
-    atoms = [(name, fn) for (name, fn, _c) in _UATOM]
-    for combo in _it.combinations(range(len(atoms)), 3):
-        f1 = atoms[combo[0]][1]
-        f2 = atoms[combo[1]][1]
-        f3 = atoms[combo[2]][1]
-        if all(f1(ivs[e]) ^ f2(ivs[e]) ^ f3(ivs[e]) == ovs[e] for e in range(n)):
-            label = (
-                f"XOR3({atoms[combo[0]][0]}, {atoms[combo[1]][0]}, "
-                f"{atoms[combo[2]][0]})"
-            )
-            return [
-                _Rule(
-                    "ternary",
-                    label,
-                    (lambda v, f1=f1, f2=f2, f3=f3: f1(v) ^ f2(v) ^ f3(v)),
-                    10,
-                )
-            ]
-    for combo in _it.combinations(range(len(atoms)), 3):
-        f1 = atoms[combo[0]][1]
-        f2 = atoms[combo[1]][1]
-        f3 = atoms[combo[2]][1]
-
-        def _maj(v: int, f1=f1, f2=f2, f3=f3) -> int:
-            return (f1(v) & f2(v)) | (f1(v) & f3(v)) | (f2(v) & f3(v))
-
-        if all(_maj(ivs[e]) == ovs[e] for e in range(n)):
-            label = (
-                f"MAJ({atoms[combo[0]][0]}, {atoms[combo[1]][0]}, "
-                f"{atoms[combo[2]][0]})"
-            )
-            return [_Rule("ternary", label, _maj, 11)]
-    return []
-
-
-def _search_ternary_templates(ivs: List[int], ovs: List[int]) -> List[_Rule]:
-    n = len(ivs)
-    for fmt, tf in _TERNARY:
-        for na, fa in _TATOM:
-            ta = [fa(ivs[e]) for e in range(n)]
-            for nb, fb in _TATOM:
-                tb = [fb(ivs[e]) for e in range(n)]
-                for nc, fc in _TATOM:
-                    if all(
-                        tf(ta[e], tb[e], fc(ivs[e])) == ovs[e] for e in range(n)
-                    ):
-                        return [
-                            _Rule(
-                                "template",
-                                fmt.format(na, nb, nc),
-                                (
-                                    lambda v, fa=fa, fb=fb, fc=fc, tf=tf: tf(
-                                        fa(v), fb(v), fc(v)
-                                    )
-                                ),
-                                20,
-                            )
-                        ]
-    return []
-
-
-def _find_structural_rule(
-    inputs: List[str], outputs: List[str]
-) -> Optional[_Rule]:
-    """Return the simplest global transform consistent with all examples, else None."""
-    ivs = [_bits_to_int(b) for b in inputs]
-    ovs = [_bits_to_int(b) for b in outputs]
-
-    rules = _search_unary(ivs, ovs)
-    rules += _search_unary_compose(ivs, ovs)
-    rules += _search_binary(ivs, ovs)
-    if rules:
-        rules.sort(key=lambda r: (r.cost, r.label))
-        return rules[0]
-
-    tern = _search_ternary(ivs, ovs)
-    if tern:
-        return tern[0]
-
-    tmpl = _search_ternary_templates(ivs, ovs)
-    if tmpl:
-        return tmpl[0]
-    return None
-
-
-def _structural_trace(
-    inputs: List[str], outputs: List[str], question_bits: str, rule: _Rule
-) -> str:
-    """Deterministic CoT for a discovered global structural rule."""
-    lines: List[str] = []
-    lines.append(
-        "We need to deduce the single bit-manipulation rule that maps each "
-        "8-bit input to its output."
-    )
-    lines.append("I will put my final answer inside \\boxed{}.")
-    lines.append("")
-    lines.append("Examples (input -> output):")
-    for inp, out in zip(inputs, outputs):
-        lines.append(f"  {inp} -> {out}")
-    lines.append("")
-    lines.append(
-        "Searching position-relative operations (rotations, shifts, NOT, "
-        "reverse and their boolean combinations), simplest first."
-    )
-    lines.append(
-        f"The simplest rule consistent with every example is: {rule.label}."
-    )
-    lines.append("")
-    lines.append("Verifying the rule on each example:")
-    for inp, out in zip(inputs, outputs):
-        got = _int_to_bits(rule.apply(_bits_to_int(inp)))
-        mark = "ok" if got == out else "MISMATCH"
-        lines.append(f"  {inp} -> {got} (expected {out}) {mark}")
-    lines.append("")
-    answer = _int_to_bits(rule.apply(_bits_to_int(question_bits)))
-    lines.append(f"Applying {rule.label} to the query {question_bits}:")
-    lines.append(f"  {question_bits} -> {answer}")
-    lines.append("")
-    lines.append(f"The answer is \\boxed{{{answer}}}")
-    return "\n".join(lines)
-
 
 SYM_FAMILIES = ("XOR", "OR", "AND")
 ASYM_FAMILIES = ("AND-NOT", "XOR-NOT", "OR-NOT")
@@ -560,14 +258,17 @@ def _lr_from_matches(
     right_run = max(all_right_runs, key=lambda t: len(t[0])) if all_right_runs else ([], None)
 
     left_lines = (
-        [_format_list(chain, failed=failed) for chain, failed in all_left_runs]
+        [
+            _format_list(chain, failed=failed, with_len=True)
+            for chain, failed in all_left_runs
+        ]
         if all_left_runs
         else ["none"]
     )
     left_best = _format_list(left_run[0], with_count=True)
     right_lines = (
         [
-            _format_list(list(reversed(chain)), failed=failed)
+            _format_list(list(reversed(chain)), failed=failed, with_len=True)
             for chain, failed in all_right_runs
         ]
         if all_right_runs
@@ -582,6 +283,7 @@ def _format_list(
     cands: List[RuleCandidate],
     with_count: bool = False,
     failed: Optional[str] = None,
+    with_len: bool = False,
 ) -> str:
     if not cands:
         return "none"
@@ -596,7 +298,26 @@ def _format_list(
     parts = [_compact_rule(c) for c in cands]
     if failed:
         parts.append(failed)
+    # EDIT 1 (R4): print each run's length verbatim so the per-section winner is
+    # a copy of the printed max (first run achieving it = append order), not a
+    # count the reader must derive by tallying pairs before the x/y marker.
+    if with_len:
+        parts.append(f"len={len(cands)}")
     return " ".join(parts)
+
+
+def _count_from_best(best: str) -> int:
+    """Length of the winning run, copied from the ': N' suffix of a Best string.
+
+    'none' -> 0. This is the same count printed as ': N' on the Best line, so the
+    'longest=N' verdict is a verbatim copy, never a re-derived tally.
+    """
+    if best == "none":
+        return 0
+    try:
+        return int(best.rsplit(": ", 1)[-1])
+    except ValueError:
+        return 0
 
 
 def _compact_rule(c: RuleCandidate) -> str:
@@ -631,190 +352,6 @@ def _evaluate_rule(bits: str, rule: RuleCandidate) -> str:
     raise ValueError(f"Unknown family {rule.family}")
 
 
-# Family preference for resolving ambiguous fills: simpler rules win ties.
-_RESOLVE_FAM_RANK: Dict[str, int] = {
-    fam: idx
-    for idx, fam in enumerate(
-        ("I", "NOT", "0", "1", "XOR", "OR", "AND", "XOR-NOT", "OR-NOT", "AND-NOT")
-    )
-}
-
-
-def _all_consistent_per_bit(
-    all_matches: Dict[str, List[List[RuleCandidate]]],
-) -> List[List[RuleCandidate]]:
-    """Flatten all per-section consistent candidates into one list per output bit.
-
-    A candidate is consistent if its column equals the output column across every
-    example (that is exactly what `all_matches` records). Returns, for each output
-    bit, the full deduplicated candidate list in deterministic family/operand order.
-    """
-    per_bit: List[List[RuleCandidate]] = []
-    for bit in range(N_BITS):
-        seen: set[Tuple[str, Optional[int], Optional[int]]] = set()
-        cands: List[RuleCandidate] = []
-        for section in SECTION_ORDER:
-            for c in all_matches[section][bit]:
-                key = (c.family, c.primary, c.secondary)
-                if key in seen:
-                    continue
-                seen.add(key)
-                cands.append(c)
-        cands.sort(
-            key=lambda c: (
-                _RESOLVE_FAM_RANK.get(c.family, 99),
-                c.primary if c.primary is not None else -1,
-                c.secondary if c.secondary is not None else -1,
-            )
-        )
-        per_bit.append(cands)
-    return per_bit
-
-
-def _spine_rule_at(
-    fam: str, p_off: int, q_off: Optional[int], bit: int
-) -> Tuple[str, Optional[int], Optional[int]]:
-    """Rule key produced by a stride-1 spine pattern at a given output bit."""
-    p = (p_off + bit) % N_BITS
-    if q_off is None:
-        return (fam, p, None)
-    return (fam, p, (q_off + bit) % N_BITS)
-
-
-def _longest_spines(
-    per_bit: List[List[RuleCandidate]],
-) -> List[Tuple[int, str, int, Optional[int]]]:
-    """Find stride-1 spine patterns ordered by longest contiguous coverage.
-
-    A spine is (family, primary_offset, secondary_offset) such that for a run of
-    consecutive output bits the operands advance by +1 each step and the resulting
-    rule is consistent. Returns (max_run, family, p_off, q_off) tuples sorted by
-    (max contiguous run desc, family rank, offsets) — most reliable spine first.
-    """
-    sets = [
-        {(c.family, c.primary, c.secondary) for c in cands} for cands in per_bit
-    ]
-    scored: List[Tuple[int, int, int, int, Tuple[str, int, Optional[int]]]] = []
-    # Unary spines.
-    for fam in ("I", "NOT"):
-        for off in range(N_BITS):
-            best_run = 0
-            bit = 0
-            while bit < N_BITS:
-                if _spine_rule_at(fam, off, None, bit) in sets[bit]:
-                    start = bit
-                    while (
-                        bit < N_BITS
-                        and _spine_rule_at(fam, off, None, bit) in sets[bit]
-                    ):
-                        bit += 1
-                    best_run = max(best_run, bit - start)
-                else:
-                    bit += 1
-            if best_run > 0:
-                scored.append(
-                    (best_run, _RESOLVE_FAM_RANK[fam], off, 0, (fam, off, None))
-                )
-    # Binary spines.
-    for fam in PAIR_FAMILIES:
-        for p_off in range(N_BITS):
-            for d in range(1, N_BITS):
-                q_off = (p_off + d) % N_BITS
-                best_run = 0
-                bit = 0
-                while bit < N_BITS:
-                    if _spine_rule_at(fam, p_off, q_off, bit) in sets[bit]:
-                        start = bit
-                        while (
-                            bit < N_BITS
-                            and _spine_rule_at(fam, p_off, q_off, bit) in sets[bit]
-                        ):
-                            bit += 1
-                        best_run = max(best_run, bit - start)
-                    else:
-                        bit += 1
-                if best_run > 0:
-                    scored.append(
-                        (
-                            best_run,
-                            _RESOLVE_FAM_RANK.get(fam, 99),
-                            p_off,
-                            q_off,
-                            (fam, p_off, q_off),
-                        )
-                    )
-    # Longest run first; then simpler family; then smallest offsets (deterministic).
-    scored.sort(key=lambda s: (-s[0], s[1], s[2], s[3]))
-    return [(s[0], s[4][0], s[4][1], s[4][2]) for s in scored]
-
-
-def _spine_covers_with_neighbor(
-    fam: str,
-    p_off: int,
-    q_off: Optional[int],
-    bit: int,
-    sets: List[set],
-) -> bool:
-    """True if `bit` sits in a contiguous stride run of length >= 2 for this spine.
-
-    Requiring an adjacent matching bit rules out length-1 "spines" that are just an
-    isolated coincidental candidate carrying no real positional evidence.
-    """
-    here = _spine_rule_at(fam, p_off, q_off, bit) in sets[bit]
-    if not here:
-        return False
-    left = bit > 0 and _spine_rule_at(fam, p_off, q_off, bit - 1) in sets[bit - 1]
-    right = (
-        bit < N_BITS - 1
-        and _spine_rule_at(fam, p_off, q_off, bit + 1) in sets[bit + 1]
-    )
-    return left or right
-
-
-def _resolve_default(
-    bit: int,
-    per_bit: List[List[RuleCandidate]],
-    spines: List[Tuple[int, str, int, Optional[int]]],
-    question_bits: str,
-) -> Optional[RuleCandidate]:
-    """Choose a consistent rule for a bit the main pass left as DEFAULT.
-
-    Priority: (1) extend a dominant stride spine (length >= 2) if it continues
-    through this bit; (2) if a strict majority of all consistent candidates agree on
-    the output value, use the simplest such candidate. Returns None when neither
-    signal is strong enough (keep the conservative DEFAULT rather than risk a
-    coincidental match).
-    """
-    cands = per_bit[bit]
-    if not cands:
-        return None
-    cand_by_key = {(c.family, c.primary, c.secondary): c for c in cands}
-    sets = [
-        {(c.family, c.primary, c.secondary) for c in pb} for pb in per_bit
-    ]
-    # (1) Spine continuation — only spines that form a length>=2 run through `bit`.
-    for run_len, fam, p_off, q_off in spines:
-        if run_len < 2:
-            break  # spines are sorted longest-first; nothing useful remains
-        if not _spine_covers_with_neighbor(fam, p_off, q_off, bit, sets):
-            continue
-        key = _spine_rule_at(fam, p_off, q_off, bit)
-        if key in cand_by_key:
-            return cand_by_key[key]
-    # (2) Majority value among all consistent candidates.
-    votes: Dict[str, int] = {}
-    for c in cands:
-        v = _evaluate_rule(question_bits, c)
-        votes[v] = votes.get(v, 0) + 1
-    total = sum(votes.values())
-    top_val, top_n = max(votes.items(), key=lambda kv: (kv[1], kv[0]))
-    if top_n * 2 > total:
-        for c in cands:  # cands already sorted simplest-first
-            if _evaluate_rule(question_bits, c) == top_val:
-                return c
-    return None
-
-
 def _emit_apply(
     lines: List[str], question_bits: str, vector: List[RuleCandidate]
 ) -> None:
@@ -824,6 +361,11 @@ def _emit_apply(
         lines.append(f"{i} {bit}")
     lines.append("Output")
 
+    # EDIT 4 (R2 anchor): each Output line re-states the operand bit(s) inline,
+    # copied verbatim from the Input block above, so the 1-bit op reads adjacent
+    # literals (regime-1/2 copy) instead of a long-range retrieval. The trailing
+    # " = <result>" tail and the appended answer_bits value are byte-identical to
+    # the legacy line, so the boxed answer (built from answer_bits) is unchanged.
     answer_bits: List[str] = []
     for i, rule in enumerate(vector):
         if rule.family == "DEFAULT":
@@ -837,14 +379,16 @@ def _emit_apply(
         if rule.family == "I":
             assert rule.primary is not None
             val = question_bits[rule.primary]
-            lines.append(f"{i} {rule.expr} = {val}")
+            lines.append(f"{i} {rule.expr}: bit{rule.primary}={val} = {val}")
             answer_bits.append(val)
             continue
         if rule.family == "NOT":
             assert rule.primary is not None
             val = question_bits[rule.primary]
             nval = _bit_not(val)
-            lines.append(f"{i} {rule.expr} = NOT({val}) = {nval}")
+            lines.append(
+                f"{i} {rule.expr}: bit{rule.primary}={val} NOT({val}) = {nval}"
+            )
             answer_bits.append(nval)
             continue
 
@@ -853,20 +397,27 @@ def _emit_apply(
         b = question_bits[rule.secondary]
         if rule.family in SYM_FAMILIES:
             result = _evaluate_rule(question_bits, rule)
-            lines.append(f"{i} {rule.expr} = {rule.family}({a},{b}) = {result}")
+            lines.append(
+                f"{i} {rule.expr}: bit{rule.primary}={a} bit{rule.secondary}={b} "
+                f"{rule.family}({a},{b}) = {result}"
+            )
             answer_bits.append(result)
             continue
 
         base = rule.family.split("-")[0]
+        nb = _bit_not(b)
         result = _evaluate_rule(question_bits, rule)
-        lines.append(f"{i} {rule.expr} = {base}({a},NOT({b})) = {result}")
+        lines.append(
+            f"{i} {rule.expr}: bit{rule.primary}={a} bit{rule.secondary}={b} "
+            f"NOT(bit{rule.secondary})={nb} {base}({a},{nb}) = {result}"
+        )
         answer_bits.append(result)
 
     lines.append("")
     lines.append(f"The answer is \\boxed{{{''.join(answer_bits)}}}")
 
 
-def _reasoning_legacy(problem: Problem) -> Optional[str]:
+def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
     examples = problem.examples
     if not examples:
         return None
@@ -1013,11 +564,12 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
     lines.append("")
 
     # 2) output examples
+    # Each row is the full 8-bit output; the per-bit columns are derived once
+    # below in "Output bit columns", so we do not re-unroll bit-by-bit here
+    # (that was a verbatim digit restatement, pure drift surface, never re-read).
     for i, out in enumerate(outputs):
         lines.append(f"Output {i}: {out}")
-        for bit in range(N_BITS):
-            lines.append(f"{bit} {out[bit]}")
-        lines.append("")
+    lines.append("")
 
     # 3) output bit columns
     lines.append("Output bit columns (with bitsum as hash)")
@@ -1026,13 +578,11 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
             f"{bit} {output_columns[bit]} {_column_hash(output_columns[bit], n_examples)}"
         )
 
-    # 4) input examples
+    # 4) input examples (full 8-bit rows; per-bit columns derived where needed)
     lines.append("")
     for i, inp in enumerate(inputs):
         lines.append(f"Input {i}: {inp}")
-        for bit in range(N_BITS):
-            lines.append(f"{bit} {inp[bit]}")
-        lines.append("")
+    lines.append("")
 
     # 5) Operation sections (raw data + matching + LRM)
     lines.append("When matching output")
@@ -1059,7 +609,11 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
                 if prev_diff is not None and diff != prev_diff:
                     lines.append("")
                 prev_diff = diff
-            line = f"{rec.label} {rec.col} {rec.hash_}"
+            # The per-candidate column bits ARE the evidence and stay verbatim;
+            # the trailing bitsum hash is a derived summary that is never re-read
+            # downstream (selection is driven solely by the match list), so we
+            # drop it here to cut ~1 token/row across the high-volume pair rows.
+            line = f"{rec.label} {rec.col}"
             if rec.matches:
                 line += " match " + " ".join(str(i) for i in rec.matches)
             lines.append(line)
@@ -1087,11 +641,15 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
         lines.append("Left")
         for ll in left_lines:
             lines.append(ll)
+        # EDIT 1 (R4): the winner is the first run (append order) reaching the max
+        # of the printed len= values; "first" names that deterministic tie-break.
+        lines.append(f"longest={_count_from_best(left_best)} first")
         lines.append(f"Best: {left_best}")
         lines.append("")
         lines.append("Right")
         for rl in right_lines:
             lines.append(rl)
+        lines.append(f"longest={_count_from_best(right_best)} first")
         lines.append(f"Best: {right_best}")
         lines.append("")
 
@@ -1437,16 +995,23 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
         lines.append(f"{i} {pref_display} - {', '.join(checks)}")
     lines.append("")
 
-    # Perfect match: first category that covers ALL pending bits wins
+    # Perfect match: first category (SECTION_ORDER) covering ALL pending bits wins.
+    # EDIT 3 (R4): print the literal pending set and each category's covered set so
+    # the yes/no verdict is a printed-set==printed-set copy, not an inferred
+    # equality; the chosen category is the first 'yes' (first-in-SECTION_ORDER).
+    pending_str = " ".join(str(i) for i in pending_indices) if pending_indices else "none"
     lines.append("Perfect match")
+    lines.append(f"Pending bits: {pending_str}")
     chosen_cat: Optional[str] = None
     for cat in SECTION_ORDER:
+        covered = [i for i in pending_indices if i in per_bit_cat[cat]]
+        covered_str = " ".join(str(i) for i in covered) if covered else "none"
         is_perfect = (
             chosen_cat is None
             and bool(pending_indices)
-            and all(i in per_bit_cat[cat] for i in pending_indices)
+            and covered == pending_indices
         )
-        lines.append(f"{cat} {'yes' if is_perfect else 'no'}")
+        lines.append(f"{cat} covers: {covered_str} {'yes' if is_perfect else 'no'}")
         if is_perfect:
             chosen_cat = cat
     lines.append("")
@@ -1475,28 +1040,6 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
             lines.append(f"{i} {best[i].expr}")
     lines.append("")
 
-    # Resolve any bit still left as DEFAULT using the full consistent-candidate set:
-    # extend the dominant stride spine, else take the majority value. This recovers
-    # boundary/middle bits the left/right anchoring could not reach.
-    per_bit_all = _all_consistent_per_bit(all_matches)
-    spines = _longest_spines(per_bit_all)
-    lines.append("")
-    lines.append("Resolving defaults")
-    any_default = False
-    for i in range(N_BITS):
-        if not best[i].is_default:
-            continue
-        any_default = True
-        repl = _resolve_default(i, per_bit_all, spines, question_bits)
-        if repl is not None:
-            best[i] = repl
-            lines.append(f"{i} {repl.expr}")
-        else:
-            lines.append(f"{i} keep default 1")
-    if not any_default:
-        lines.append("none")
-    lines.append("")
-
     # Check if we have any non-default rules
     if all(r.is_default for r in best):
         return None
@@ -1510,28 +1053,3 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
     _emit_apply(lines, question_bits, best)
 
     return "\n".join(lines)
-
-
-def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
-    """Solve an 8-bit transform problem.
-
-    Primary path: find the simplest global structural formula (rotate/shift/NOT/
-    reverse plus boolean combinations) consistent with all examples, then evaluate
-    it on the query. Such formulas extrapolate to unseen bit patterns by
-    construction. Fall back to the legacy per-bit column-matching trace when no
-    global formula fits.
-    """
-    examples = problem.examples
-    if not examples:
-        return None
-
-    inputs = [_normalize_bits(ex.input_value) for ex in examples]
-    outputs = [_normalize_bits(ex.output_value) for ex in examples]
-    question_bits = _normalize_bits(problem.question)
-
-    if question_bits and all(inputs) and all(outputs) and len(inputs) == len(outputs):
-        rule = _find_structural_rule(inputs, outputs)
-        if rule is not None:
-            return _structural_trace(inputs, outputs, question_bits, rule)
-
-    return _reasoning_legacy(problem)

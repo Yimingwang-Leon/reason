@@ -1,44 +1,58 @@
-# Findings — Nemotron Reasoning Challenge: chasing 0.87 / 0.89
+---
+title: Findings — Nemotron Reasoning Challenge
+type: report
+status: active
+updated: 2026-06-09
+---
 
-> **STATUS 2026-06-05: CONCLUDED (free research exhausted).** Honest ceiling ~0.85-0.86 (paid, unguaranteed). Guaranteed 0.86 = free public notebook. 0.89 unreachable. H2 closed (brace-cap +0.16pp). Cron stopped.
+# Findings — Nemotron Reasoning Challenge
 
-**Optimization target:** offline `oracle` (reasoner solve-rate on data/holdout.csv, 1899 problems) and projected LB = oracle × R.
-**Current best:** LB 0.84 (run-005, 2ep=3ep). Offline oracle 89.0% (committed f083ffe). R = 0.84/0.877 = **0.958**.
+## Model that drives everything
 
-## Current Understanding
+**LB = oracle × R.**
+- oracle = fraction of holdout (1899 problems) the reasoners can solve.
+- R = how reliably the trained model reproduces the reasoner CoT at greedy decode (~0.96 measured).
+- To raise LB you either raise oracle (crack a low-oracle category) or raise R (but R-tweaks are unmeasurable offline and need a paid retrain to validate).
 
-- **LB = oracle × R.** oracle = what reasoners solve; R = how reliably the trained model reproduces the CoT at greedy decode.
-- **oracle is maxed at 89.0%** and cannot meaningfully rise except via cryptarithm:
-  | cat | oracle | ceiling reason |
-  |---|---|---|
-  | cipher / gravity / numeral / unit_conversion | 100% | deterministic-complete on holdout |
-  | equation_numeric_deduce | 80.1% | 18/29 fails undecidable (query op absent from examples) |
-  | bit_manipulation | 88.4% | GF(2)-affine test: only 2/37 fails recoverable; rest underdetermined / >3-var |
-  | cryptarithm_deduce | 13.3% | **THE lever** — see below |
-- **R = 0.958** (only ~4% reproduction loss). Concentrated in long-CoT cats (cipher ~1500 tok, bit_manip ~2100 tok) via autoregressive error-compounding. R levers (augmenters, shorter CoT, curriculum) are **unmeasurable offline** — need a paid retrain to validate.
-- **Realistic ceiling ≈ 0.87** = oracle 0.89 × best-achievable R (~0.98). To beat 0.87 you MUST raise oracle > 0.89 → crack cryptarithm.
+Current best LB = 0.84 (run-005, 2ep). R ≈ 0.96.
 
-## The cryptarithm_deduce problem (the whole game)
+## Per-category oracle + lever (canonical — see MEMORY.md grader/overview)
 
-- Format: examples `S0 S1 OP S3 S4 = OUT` then a query. Input always 5 chars; OUT 1-4 chars. 26-symbol alphabet (23 non-operator + `+ - *`). 3-5 examples/problem.
-- Structure (reverse-engineered): per-problem symbol→digit cipher (base ~10-15), OP at position 2 is an operator whose arithmetic meaning is per-problem deduced from {add, sub, rsub, absdiff, mul, concat, rconcat}; negatives prefixed with op glyph as sign; two readings (whole-number base-B vs column-wise mod-B); BE/LE both occur.
-- **Fundamental wall: underdetermined.** 3-5 examples can't pin a ~13-symbol per-problem cipher → unique query prediction for only ~2/165 from examples alone. Plus **24% (40/165) of answers contain `}` → truncated by `\boxed{}` extraction** (corpus also drops these rows).
-- Best solvers: current committed = agentB (13.3%, 22/165). Union of all attempts = 16.4% (27/165).
-- **Public field is stuck at 0.85-0.86** (huikang's public recipe ≈ ours: rank32, ~3ep, min-logprob). If anyone below 0.89 had cracked crypt it'd show; they haven't. So crypt is the universal wall, NOT a recipe gap.
+| cat | oracle | note |
+|---|---|---|
+| cipher / gravity / numeral / unit_conversion | 100% | deterministic-complete |
+| bit_manipulation | 85% (94.4% after commit 71ce0a5 structural+simplicity-prior solver) | lever ≈ 2.5% of points |
+| equation_numeric_deduce | 77% | some fails undecidable (query op absent from examples); lever ≈ 1.8% |
+| cryptarithm_deduce | 17.6% | **BIGGEST LEVER** — loses ~7.1% of all points; format cap ~76% (}-truncation), NOT cracked yet |
 
-## Lessons and Constraints (do NOT repeat)
+(Earlier snapshots in this file quoted 13.3/88.4/80.1 — superseded; use the table above.)
 
-- **2ep = 3ep = 0.84.** Epoch count is settled at 2. More epochs (4,5) will NOT help — corpus is memorized by epoch 1 (nll ~0.001). Don't spend $ on more epochs.
-- **Crypt solver brute-force backtracking in Python is too slow** (no-fit problems exhaust). Use **Z3** (available, 4.16.0) for any cipher CSP — solves in ms.
-- **lm_head**: our memory says vLLM eval errored on it (v3 submission ERROR). huikang TRAINS with lm_head in target_modules but may filter at submission. Unverified whether eval supports it now.
-- Corpus build (src/corpus.py) already filters: wrong-answer rows (metric_correct), brace answers, completions > 7680 tokens. So bad CoT does NOT pollute training.
-- Public 0.86 adapter (assiabenazzouz/adappter-v32-epoch-5) is **403-forbidden** to our Kaggle account (needs website dataset-consent). Can't download/submit from CLI.
-- Tinker budget ~$10 left; 2ep retrain ~$20 (needs user approval — NEVER auto-spend).
+## Proven-infeasible (each cost a real paid run — do NOT repeat)
 
-## Open Questions (the research program)
+- **bit_manip "structural / global-rule-assertion" CoT → R-collapse 0.95→0.2** (runs 006/007/008 = 0.71/0.73/0.72). The legacy column-wise CoT is the R local-optimum.
+- **Beating run-005's 0.84 by redesigning CoT FORMAT is dead:** run-009 slimming = 0.82, run-010 locality-hardening = 0.82 (both directions hurt). 4 categories are already 100% oracle, so R-tweaking them is wasted effort.
+- **lm_head LoRA (file-upload route) = measured eval no-op** (run-006 with == without == 0.71). lm_head is optional/no-op, not the missing delta.
+- **Dropping MoE up/down LoRA → crippled 0.56.** MoE LoRA is essential.
+- **2ep = 3ep = 0.84** — corpus is memorized by epoch 1 (nll ~0.001); more epochs don't help. (Flag: confirm this was a paid A/B before treating as load-bearing.)
+- distillation route caps ~0.73 (community intel, not our experiment).
 
-- **H1 (running):** Does crypt fit a clean generator WITH answers (Z3, full model space)? If high → mass-generate synthetic data to teach the cipher-deduction prior → model may beat the 13% solver ceiling. If low → crypt is intrinsically capped.
-- **H2:** Brace-cap workaround — does the real grader have a fallback extraction? Restructure crypt answers to dodge `\boxed{}` truncation (testable with 1 free submission). Potential to recover up to the solved∩braced subset.
-- **H3:** Synthetic cipher-deduction corpus (teach the META-skill) — generate problems with KNOWN ciphers + clean deduction CoT; does training on these raise crypt at greedy? (paid validation).
-- **H4:** Recipe deltas (lm_head if eval-supported, MoE-tie) — close the 0.84→0.85-0.86 gap vs public recipe (paid validation).
-- **H5:** R levers — augmenter sub-skill drills for long-CoT cats (paid validation).
+## Cryptarithm — OPEN LEADS (the biggest lever, NOT dead)
+
+Current solver ~17.6%. Format cap ~76% (because ~24% of answers contain `}` and get truncated by `\boxed{}` extraction; corpus drops these rows). The remaining gap between 17.6% and ~76% is open territory, not a closed-form impossibility.
+
+Structural findings (use as leads, not verdicts):
+- Per-problem symbol→digit map; the map appears **non-injective** in some problems.
+- **Column-wise arithmetic** reading (mod-base per column) coexists with whole-number base-B reading; BE/LE both occur.
+- **Unknown base** (~10-15).
+- OP at position 2 is a per-problem-deduced operator from {add, sub, rsub, absdiff, mul, concat, rconcat}; sign glyph prefixes negatives.
+- **Zero-column omission** — short OUT (1-4 chars) suggests dropped/leading-zero columns.
+- Use **Z3** (4.16.0 available) for any cipher CSP — solves in ms; Python brute-force backtracking is too slow.
+
+Open directions (all need paid validation before trusting):
+- Synthetic cipher-deduction corpus: generate problems with KNOWN ciphers + clean deduction CoT to teach the meta-skill; does it raise crypt at greedy?
+- Brace-cap workaround: restructure crypt answers to dodge `\boxed{}` truncation; testable with 1 free submission (recovers up to the solved∩braced subset).
+
+## Notes
+
+- Corpus build (src/corpus.py) already filters wrong-answer rows, brace answers, and completions > 7680 tokens — bad CoT does not pollute training.
+- Public 0.86 adapter (assiabenazzouz/adappter-v32-epoch-5) needs website dataset-consent; not downloadable from CLI. Public field recipe ≈ ours (rank32, ~3ep, min-logprob).

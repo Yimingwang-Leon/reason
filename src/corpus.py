@@ -36,10 +36,16 @@ PROMPT_SUFFIX = (
 # formats / the abandoned cryptarithm skill and are wired-but-excluded until a paid
 # run or the offline R-harness shows they help.
 AUGMENTER_ALLOWLIST = {
+    # CLEAN run-010 (2026-06-09): run-005's 0.84 baseline composition. The ONLY
+    # change vs run-005 is the 5-category locality-hardened reasoners (max-R, oracle
+    # byte-identical). We deliberately DROP the run-009 champion-copied drills
+    # (spelling/concatenation/splitting/lstrip/matching) — they were tokenized with
+    # the enable_thinking=False template (a regime that never occurs at inference)
+    # and contributed to run-009's 0.82 regression. Keep only our own equation drills
+    # that were present in run-005 @ 0.84 (harmless).
     "equation_reversal",
     "equation_arith",
     "equation_digitwise",
-    "cryptarithm_synth",   # H3: teach cipher-deduction meta-skill (known-answer synthetic)
 }
 
 
@@ -84,6 +90,65 @@ def _load_augmenters() -> list:
     return mods
 
 
+MATH_REPLAY_PATH = Path("/tmp/replaymath/nemotron_math_1gb.jsonl")
+MATH_REPLAY_TARGET_TOKENS = 2_000_000
+MATH_REPLAY_MAX_SEQ = 8192
+
+
+def add_math_replay(chat_tok) -> tuple[int, int]:
+    """Append a general-math reasoning REPLAY mix (curb-forgetting regularizer; the
+    public 0.85->0.86 lever, mohamedamr992). Tokenized with the SAME chat template
+    as the rest of the corpus (consistent), completion-only mask, accumulated to
+    ~2M trainable tokens. Appends {tokens,mask} segments + index rows (category
+    'math_replay'). Gated by env ADD_MATH_REPLAY=1. Returns (examples, ans_tokens)."""
+    if not MATH_REPLAY_PATH.exists():
+        print(f"[math_replay] {MATH_REPLAY_PATH} not found; skipping")
+        return 0, 0
+
+    def _ids(msgs, add_gen):
+        r = chat_tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=add_gen)
+        return list(r["input_ids"]) if hasattr(r, "input_ids") else list(r)
+
+    kept = tot = 0
+    with open(CORPUS_INDEX, "a") as idx_f, open(MATH_REPLAY_PATH) as fin:
+        for line in fin:
+            try:
+                row = json.loads(line)
+            except Exception:
+                continue
+            msgs = row.get("messages")
+            if not msgs or len(msgs) < 2:
+                continue
+            full = _ids(msgs, False)
+            prompt = _ids(msgs[:-1], True)
+            if len(full) <= len(prompt):
+                continue
+            if len(full) > MATH_REPLAY_MAX_SEQ:
+                full = full[:MATH_REPLAY_MAX_SEQ]
+            plen = min(len(prompt), len(full))
+            mask = [0] * plen + [1] * (len(full) - plen)
+            if not any(mask):
+                continue
+            ans = sum(mask)
+            rid = f"replay_{kept:06d}"
+            d = CORPUS_DIR / rid
+            d.mkdir(parents=True, exist_ok=True)
+            with open(d / "synthetic.jsonl", "w") as f:
+                json.dump({"tokens": full, "mask": mask}, f)
+                f.write("\n")
+            idx_f.write(json.dumps({
+                "problem_id": rid, "category": "math_replay",
+                "token_count": len(full), "unmasked_token_count": ans,
+                "answer": "", "augmenter": True,
+            }) + "\n")
+            kept += 1
+            tot += ans
+            if tot >= MATH_REPLAY_TARGET_TOKENS:
+                break
+    print(f"[math_replay] appended {kept} examples, {tot:,} trainable tokens")
+    return kept, tot
+
+
 def main() -> None:
     tok = Tokenizer.from_file(str(TOKENIZER_PATH))
     chat_tok = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
@@ -118,11 +183,15 @@ def main() -> None:
             # V, removing the CoT<->answer contradiction that previously hit ~40% of
             # traces (100% gravity/unit) and is the prime suspect for the R<1 gap.
             final_answer = extract_answer(cot)
+            # huikang-faithful (2026-06-09): box the CoT's OWN extracted answer even
+            # when it is NOT grader-correct (the 238 hard-tail bit_manip + cross-cat
+            # traces the procedure got wrong but reasoned faithfully). Training the
+            # full procedure distribution teaches deterministic execution -> higher R.
+            # Was: drop non-correct (survivorship bias that stripped the hard tail).
+            # exact_box_mismatch now counts the wrong-but-included traces (report only).
             if not metric_correct(p.answer, final_answer):
-                # reasoning.py only saves grader-correct traces; this must not happen.
                 exact_box_mismatch.append(p.id)
-                continue
-            if final_answer != p.answer:
+            elif final_answer != p.answer:
                 n_self_consistent += 1   # grader-correct but not string-exact to truth
             # Drop answers with a literal brace: \boxed{...} cannot robustly carry a
             # '{'/'}' and a partial/strict-brace grader would mis-extract them.
@@ -221,19 +290,23 @@ def main() -> None:
             # generate() returned data but none survived tokenization => real wiring bug.
             assert mod_used > 0, f"augmenter {mod_name} dropped ALL {len(rows)} rows"
 
-    # P1.5 gate: the new equation augmenters MUST reach the corpus.
-    required_aug = {"equation_reversal", "equation_arith", "equation_digitwise"}
+    # P1.5 gate relaxed (run-009): augmenters intentionally removed for the clean
+    # lm_head corpus, so no augmenter is required to reach the corpus.
+    required_aug: set[str] = set()
     missing = required_aug - set(aug_counts)
     assert not missing, f"required equation augmenters missing from corpus: {missing}"
 
     print(f"Corpus: {n_used} entries used | {n_skip} skipped | {n_trunc} truncated "
           f"| {n_overlong} dropped(completion>{GEN_LIMIT}) | {n_brace_skip} dropped(brace answer)")
     print(f"Self-consistent boxes (own answer, grader-correct but != exact truth): "
-          f"{n_self_consistent} | dropped (not grader-correct, should be 0): "
+          f"{n_self_consistent}")
+    # huikang-faithful inclusion policy (2026-06-09): we INTENTIONALLY keep
+    # wrong-but-self-consistent traces (the procedure ran faithfully and boxed its
+    # own result) to train the full hard-tail procedure distribution -> higher R.
+    # The CoT is internally consistent (reasons to V, boxes V); the box just isn't
+    # grader-correct. This is no longer an error; report the count.
+    print(f"Wrong-but-self-consistent traces INCLUDED (inclusion policy): "
           f"{len(exact_box_mismatch)}")
-    assert not exact_box_mismatch, (
-        f"reasoning.py saved {len(exact_box_mismatch)} non-grader-correct traces: "
-        f"{exact_box_mismatch[:10]}")
     print(f"Unmasked tokens: {total_unmasked:,}")
     for cat in sorted(cat_counts):
         tag = "  [augmenter]" if cat in aug_counts else ""
@@ -244,6 +317,10 @@ def main() -> None:
         print(f"Augmenters with no applicable data (skipped): {', '.join(aug_empty)}")
     print(f"\nIndex: {CORPUS_INDEX}")
     print(f"Per-problem segments: {CORPUS_DIR}/<id>/synthetic.jsonl")
+
+    import os
+    if os.environ.get("ADD_MATH_REPLAY") == "1":
+        add_math_replay(chat_tok)
 
 
 if __name__ == "__main__":

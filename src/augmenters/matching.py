@@ -12,11 +12,13 @@ Each problem has 1 demo example (with both x and y) and 1 test item.
 from __future__ import annotations
 
 import hashlib
-import random
 import re
 from pathlib import Path
 
-REASONING_DIR = Path(__file__).parent.parent / "reasoning"
+# bit_manip CoT traces live at repo-root reasoning/ (written by src/reasoning.py),
+# the same dir corpus.py reads. The previous parent.parent pointed at src/reasoning
+# (one level too deep), which is why this augmenter extracted 0 sections.
+REASONING_DIR = Path(__file__).resolve().parent.parent.parent / "reasoning"
 
 SECTION_NAMES = [
     "Identity",
@@ -224,6 +226,15 @@ def _extract_all_sections() -> list[dict[str, str]]:
     return sections
 
 
+# Roughly how many drills to emit. Sized to sit alongside the other sub-skill
+# augmenters (spelling 648, concatenation/splitting 1500, lstrip 300) rather than
+# swamp them: the matching sub-step is one weakness among several. The cap is a
+# deterministic ceiling on the information-rich (non-sparse) bucket; sparse buckets
+# stay aggressively downsampled so the drills concentrate on real match/Left/Right
+# reasoning rather than trivial "all absent / both none" cases.
+RICH_TARGET = 1000
+
+
 def generate() -> list[dict[str, str]]:
     """Generate bit column matching problems."""
     sections = _extract_all_sections()
@@ -245,10 +256,54 @@ def generate() -> list[dict[str, str]]:
         return True
 
     sections = [s for s in sections if _keep(s)]
+
+    # Cap the information-rich bucket (sections with real matches + non-trivial
+    # Left/Right chains) so one sub-skill does not dominate the SFT mix. Selection
+    # is a deterministic hash threshold, and we round-robin across section names so
+    # every operation family stays represented.
+    rich = [
+        s for s in sections
+        if not s["all_absent"] and not s["both_none"] and not s["few_matches"]
+    ]
+    sparse = [s for s in sections if s not in rich]
+    if len(rich) > RICH_TARGET:
+        def _rank(s: dict) -> tuple[int, int]:
+            h = int(
+                hashlib.sha256(f"rich_{s['file']}_{s['section']}".encode()).hexdigest(),
+                16,
+            )
+            # primary key keeps section families balanced, secondary is the hash
+            return (SECTION_NAMES.index(s["section"]), h)
+
+        # interleave sections by family, then take the first RICH_TARGET by hash
+        by_fam: dict[str, list[dict]] = {name: [] for name in SECTION_NAMES}
+        for s in rich:
+            by_fam[s["section"]].append(s)
+        for name in by_fam:
+            by_fam[name].sort(key=lambda s: int(
+                hashlib.sha256(f"rich_{s['file']}_{s['section']}".encode()).hexdigest(),
+                16,
+            ))
+        kept_rich: list[dict] = []
+        ptrs = {name: 0 for name in SECTION_NAMES}
+        while len(kept_rich) < RICH_TARGET:
+            progressed = False
+            for name in SECTION_NAMES:
+                if ptrs[name] < len(by_fam[name]):
+                    kept_rich.append(by_fam[name][ptrs[name]])
+                    ptrs[name] += 1
+                    progressed = True
+                    if len(kept_rich) >= RICH_TARGET:
+                        break
+            if not progressed:
+                break
+        rich = kept_rich
+
+    sections = sparse + rich
     print(
         f"[matching] After downsampling all-absent ({n_all_absent}), "
-        f"both-none ({n_both_none}), <4 matches ({n_few_matches}): "
-        f"{len(sections)} sections"
+        f"both-none ({n_both_none}), <4 matches ({n_few_matches}) and capping "
+        f"rich bucket to {RICH_TARGET}: {len(sections)} sections"
     )
 
     problems: list[dict[str, str]] = []
