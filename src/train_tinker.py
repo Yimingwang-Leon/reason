@@ -77,6 +77,12 @@ class Cfg:
     first_cutoff_weight: float = 0.5
     save_every_epoch: bool = True   # late-checkpoint selection
     test_resume_after_epoch0: bool = False  # smoke: validate resume round-trip on real state
+    # Cross-process resume (e.g. after a billing pause killed the process): start at
+    # this epoch from this saved training state (incl. optimizer). The epoch loop and
+    # batch shuffles are deterministic (seed=epoch, step=epoch*n_batches), so resuming
+    # at an epoch boundary reproduces the original schedule exactly.
+    start_epoch: int = 0
+    resume_state: str | None = None
     # Hard spend ceiling. Clean 3-epoch ~= $30 (432 steps) + ~$0.4 save surcharges, so
     # 33 lets a clean run finish while capping resume-redos; real $ stays <~$35 (<$40
     # wallet). usd_per_step from the run-004 anchor ($10/144 step, same per-step compute).
@@ -252,23 +258,34 @@ async def main_async(cfg: Cfg) -> None:
                    "n_examples": len(examples)}, f, indent=2)
 
     sc = tinker.ServiceClient()
-    training_client = await sc.create_lora_training_client_async(
-        base_model=cfg.base_model,
-        rank=cfg.lora_rank,
-        train_mlp=cfg.train_mlp,
-        train_attn=cfg.train_attn,
-        train_unembed=cfg.train_unembed,
-    )
-    logger.info(f"Created Tinker LoRA training client: {cfg.base_model} rank={cfg.lora_rank}")
+    if cfg.resume_state:
+        training_client = await sc.create_training_client_from_state_with_optimizer_async(
+            cfg.resume_state)
+        logger.info(f"Resumed Tinker training client from state: {cfg.resume_state}")
+    else:
+        training_client = await sc.create_lora_training_client_async(
+            base_model=cfg.base_model,
+            rank=cfg.lora_rank,
+            train_mlp=cfg.train_mlp,
+            train_attn=cfg.train_attn,
+            train_unembed=cfg.train_unembed,
+        )
+        logger.info(f"Created Tinker LoRA training client: {cfg.base_model} rank={cfg.lora_rank}")
 
-    metrics_f = open(log_path / "metrics.jsonl", "w")
+    metrics_f = open(log_path / "metrics.jsonl", "a" if cfg.start_epoch else "w")
     prev_lp: dict[str, list[float]] = {}   # problem_id -> last epoch's per-target logprobs
     epoch_ckpts: dict[int, str] = {}
-    state_path: str | None = None          # last saved TRAINING state (incl. optimizer)
+    state_path: str | None = cfg.resume_state  # last saved TRAINING state (incl. optimizer)
     # Session-death / stall errors -> resume from state. In tinker 0.22.3 the run-005
     # death class (SidecarDiedError / InternalServerError / RequestFailedError / stall)
     # are ALL subclasses of tinker.TinkerError, so catch that broadly (+ Timeout types).
-    RESUME_ERRORS = (tinker.TinkerError, tinker.Timeout, TimeoutError, ConnectionError)
+    # NOTE: in tinker 0.22.3 `tinker.Timeout` is NOT an exception class; including it
+    # makes `except RESUME_ERRORS` raise TypeError at catch time (this killed run-011's
+    # graceful state-save on the 402 billing pause). Filter defensively.
+    RESUME_ERRORS = tuple(
+        c for c in (tinker.TinkerError, getattr(tinker, "Timeout", None),
+                    TimeoutError, ConnectionError)
+        if isinstance(c, type) and issubclass(c, BaseException))
     # ...but these are permanent (config/auth) and must fail fast, not retry-spin:
     NON_RETRYABLE = (tinker.AuthenticationError, tinker.BadRequestError, tinker.NotFoundError,
                      tinker.PermissionDeniedError, tinker.UnprocessableEntityError, tinker.ConflictError)
@@ -300,7 +317,7 @@ async def main_async(cfg: Cfg) -> None:
                 logger.warning(f"RESUME reconnect attempt {attempt+1}/5 failed: {e}")
         raise RuntimeError(f"could not reconnect after 5 attempts") from last_err
 
-    for epoch in range(cfg.num_epochs):
+    for epoch in range(cfg.start_epoch, cfg.num_epochs):
         resumes = 0
         while True:    # retry this epoch from the last clean state on session death
             epoch_t0 = time.time()
@@ -493,6 +510,9 @@ def main() -> None:
     parser.add_argument("--first-cutoff", type=float, default=0.5)
     parser.add_argument("--test-resume", action="store_true",
                         help="smoke: deliberately resume from state after epoch 0 to validate it")
+    parser.add_argument("--start-epoch", type=int, default=0)
+    parser.add_argument("--resume-state", default=None,
+                        help="tinker://...:train:0/weights/state_epN path to resume from")
     parser.add_argument("--usd-per-step", type=float, default=10.0 / 144.0,
                         help="per-step $ estimate for the budget guard; recalibrate "
                              "token-proportionally per corpus (run-004 anchor = $0.0694 "
@@ -518,6 +538,8 @@ def main() -> None:
         test_resume_after_epoch0=args.test_resume,
         budget_usd=args.budget_usd,
         usd_per_step=args.usd_per_step,
+        start_epoch=args.start_epoch,
+        resume_state=args.resume_state,
     )
     logging.basicConfig(
         level=logging.INFO,
