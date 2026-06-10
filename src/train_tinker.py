@@ -493,6 +493,11 @@ def main() -> None:
     parser.add_argument("--first-cutoff", type=float, default=0.5)
     parser.add_argument("--test-resume", action="store_true",
                         help="smoke: deliberately resume from state after epoch 0 to validate it")
+    parser.add_argument("--usd-per-step", type=float, default=10.0 / 144.0,
+                        help="per-step $ estimate for the budget guard; recalibrate "
+                             "token-proportionally per corpus (run-004 anchor = $0.0694 "
+                             "at ~326k tok/step; run-011 drill-heavy mix = ~165k tok/step "
+                             "-> 0.0351, else the guard truncates mid-epoch)")
     parser.add_argument("--budget-usd", type=float, default=33.0,
                         help="hard spend ceiling; training stops + saves before exceeding this")
     args = parser.parse_args()
@@ -512,6 +517,7 @@ def main() -> None:
         first_cutoff_weight=args.first_cutoff,
         test_resume_after_epoch0=args.test_resume,
         budget_usd=args.budget_usd,
+        usd_per_step=args.usd_per_step,
     )
     logging.basicConfig(
         level=logging.INFO,

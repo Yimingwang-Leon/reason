@@ -61,3 +61,10 @@
 - 配置:curriculum ON、2ep、LR 2e-4、batch 64、rank 32、全模块栈、无 lm_head、无 replay(留 run-012)
 - 预测(跑前写):中心 0.85(0.848-0.855);显示 0.86 概率 ~30-40%;≤0.84 = 配方保真假说证伪即止损
 - 预算:~$26-28 / 上限 $35;三审(隔离/oracle/R-安全)全票通过才开训
+
+#### run-011 三审闸第 1 轮(2026-06-10)
+- Lane2 oracle PASS(全量 8671 解码验证、469 条 crypt 验证行重算)。措辞修正:crypt 161 条含 11 条 lucky-correct unseen-op concat-fallback(诚实声明无规则可验→默认规则→box 恰好正确,correct-only 门放行;"验证失败仍box"毒类 = 0 条)。
+- Lane3 R-safety PASS(238 难尾两级机器验证 procedure-faithful;0 locality 违规;cap 余量 47 tok 提示:不得再加任何后缀)。
+- Lane1 isolation FAIL(blocker):预算守卫单价 $0.0694/步按 run-004 重 token 批次校准,对本 drill 语料高估 ~2× → $33 默认上限在 564 步中第 ~474 步触发 → 截断存残废 final。
+- 修复:--usd-per-step CLI 旗标 + token 比例重校 0.0351(46.4M total tok / 282 批 = 164.6k tok/步 vs 锚 326k)。对账:预计实花 ~$20,钱包上限 $35,守卫余量 941 步。
+- **预登记发车命令**:`python -m src.train_tinker --run-name run-011 --num-epochs 2 --curriculum --budget-usd 33 --usd-per-step 0.0351`
