@@ -76,3 +76,9 @@
 - 可恢复资产:epoch0 ckpt(`sampler_weights/epoch0`,ep0 末 nll 0.0037 已基本收敛,可作保底)+ `weights/state_ep0`(含优化器,可续 epoch 1)。
 - 已装自动完成链(finish011.sh):每 5 分钟探测 billing,解锁后自动 `--start-epoch 1 --resume-state state_ep0` 续跑 epoch 1(282 步,~$10)→ 下载→构建→提交→出分。注:跨进程恢复时 epoch1 的 curriculum branch-weight 因 prev_lp 缺失退化为 plain-CE(可接受:curriculum 价值本未定,huikang 全程 plain-CE)。
 - **待用户:给 Tinker 充值(建议 ~$15:续训 ~$10 + 余量)。充值后无需任何操作,链条自动跑完。**
+
+#### run-011 结果(2026-06-10)
+- **LB = 0.85**(53534096)。跑前预测中心 0.85(0.848-0.855)→ **命中中心**。
+- 意义:7 次付费以来首次超过 run-005(0.84→0.85,+1pp);"配方保真买 R"假说部分验证;"0.84 天花板"正式证伪。
+- 实际成本:~$60(预估失误 + 余额中断重跑,单价实测 ~$0.077/步;教训已记)。
+- 预承诺分支 =0.85 触发:剩余 ~1pp 缺口的候选杠杆 = ① math-replay + LR 3.5e-4(mohamedamr 公开 0.85→0.86 的 delta,刻意留作 run-012 单变量)② 分类 R 诊断 ③ crypt synth。任何花钱动作需用户逐项批准(auto-spend 已收回)。
