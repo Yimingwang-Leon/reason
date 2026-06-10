@@ -100,3 +100,9 @@
 - 全量训练制式(2ep/2e-4/全语料混合)下是否不同:未测;按闸纪律不予资助。
 - 附带教训:60 步小补丁就能把锚打到 80% → **修复层的补丁 FT 必须配更低 LR + 更重 replay**。
 - 今晚总花费:挖矿 ~$5 + 探针 ~$5 ≈ $10-13,皆在授权内。两块账面大分(bit +1.1pp / crypt +2.6pp)按预登记纪律不进全量训练。
+
+### run-012 [FIRING] 2026-06-11
+- 语料:19401 行(main 6940 含 forward-crypt 135 + bit 92.3% oracle/EV 95;champion drills 7502;eq drills 900;replay 4059 配平箱)。格式闸 5/5 全票(含 100% 全量 token 级扫描)。
+- 配置:curriculum ON、2ep、**LR 3.5e-4**、batch 64、rank32、无 lm_head;608 步,守卫单价用实测 0.077。
+- 预登记预测:中心 0.855-0.86;P(显示≥0.86)≈45-55%;P(0.87)≈10-15%;≤0.85 = replay-delta 在我们语料上证伪。
+- 发车命令:python -m src.train_tinker --run-name run-012 --num-epochs 2 --curriculum --lr 3.5e-4 --budget-usd 60 --usd-per-step 0.077

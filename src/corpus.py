@@ -22,6 +22,33 @@ CORPUS_DIR = ROOT / "corpus"
 CORPUS_INDEX = ROOT / "corpus.jsonl"
 BASE_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
 
+# run-012: data/holdout.csv (1899 ids) is a CLEAN R-measurement surface. Main
+# rows are restricted to train_split.csv (7601 ids) and any drill DERIVED from a
+# holdout problem is excluded (leakage). Champion 'matching' drills are the only
+# problem-tied drills (sections extracted from the champion's reasoning/<id>.txt);
+# their opaque sha256("matching_{i}")[:8] ids were mapped back to source problem
+# ids by re-running the champion's deterministic extraction+downsample
+# (verified: 4515/4515 ids reproduce the augmentations dir exactly). The other
+# drill kinds (splitting/concatenation/lstrip: seeded random symbols; spelling:
+# tokenizer vocab; equation_*: synthetic generators) are NOT problem-tied.
+TRAIN_SPLIT_CSV = ROOT / "data" / "train_split.csv"
+HOLDOUT_CSV = ROOT / "data" / "holdout.csv"
+DRILL_SOURCES_JSON = ROOT / "data" / "champion_drill_sources.json"
+
+
+def _load_split_ids() -> tuple[set[str], set[str]]:
+    import csv
+
+    with open(TRAIN_SPLIT_CSV) as f:
+        train_ids = {r["id"] for r in csv.DictReader(f)}
+    with open(HOLDOUT_CSV) as f:
+        holdout_ids = {r["id"] for r in csv.DictReader(f)}
+    assert train_ids and holdout_ids and not (train_ids & holdout_ids), (
+        f"train_split/holdout must be non-empty and disjoint "
+        f"(got {len(train_ids)}/{len(holdout_ids)}, "
+        f"overlap {len(train_ids & holdout_ids)})")
+    return train_ids, holdout_ids
+
 TOKEN_LIMIT = 8192   # max_model_len (prompt + completion)
 GEN_LIMIT = 7680     # grader's GENERATION cap; completion must fit within this
 PROMPT_SUFFIX = (
@@ -103,25 +130,58 @@ def _load_augmenters() -> list:
 
 MATH_REPLAY_PATH = ROOT / "data" / "replay" / "nemotron_math_1gb.jsonl"
 MATH_REPLAY_TARGET_TOKENS = 2_000_000
-MATH_REPLAY_MAX_SEQ = 8192
+MATH_REPLAY_COMP_LIMIT = 7400   # tighter than GEN_LIMIT: replay rows are cheap, skip long
 
 
-def add_math_replay(chat_tok) -> tuple[int, int]:
+
+def _balanced_boxed(text: str) -> str | None:
+    """Last \\boxed{...} content with BALANCED braces (for replay rendering only).
+    extract_answer truncates at the first '}' (grader-isomorphic), which mangles
+    LaTeX like \\boxed{\\frac{1}{2}} into a fragment; replay boxes are never
+    graded, so teach a well-formed box instead. None if unbalanced/absent."""
+    i = text.rfind("\\boxed{")
+    if i < 0:
+        return None
+    j = i + len("\\boxed{")
+    depth = 1
+    out = []
+    while j < len(text):
+        c = text[j]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                ans = "".join(out).strip()
+                return ans or None
+        out.append(c)
+        j += 1
+    return None
+
+def add_math_replay(chat_tok, tok) -> tuple[int, int]:
     """Append a general-math reasoning REPLAY mix (curb-forgetting regularizer; the
-    public 0.85->0.86 lever, mohamedamr992). Tokenized with the SAME chat template
-    as the rest of the corpus (consistent), completion-only mask, accumulated to
-    ~2M trainable tokens. Appends {tokens,mask} segments + index rows (category
-    'math_replay'). Gated by env ADD_MATH_REPLAY=1. Returns (examples, ans_tokens)."""
+    public 0.85->0.86 lever, mohamedamr992), rendered in the SAME regime as every
+    main trace (run-012 fix; the old renderer trained raw chat turns with NO think
+    block, a regime that never occurs at inference):
+
+        prompt     = chat_template(user msgs, add_generation_prompt=True,
+                                   enable_thinking=True)        # ends '<think>\\n'
+        completion = C + '\\n</think>\\n\\boxed{A}<|im_end|>'
+
+    where C is the last assistant message content (reasoning, lives inside the
+    think block) and A = last brace-BALANCED \\boxed{...} in C (skip if absent; replay boxes are never graded, so well-formedness beats grader-isomorphism here).
+    Completions are encoded with the raw tokenizer (add_special_tokens=False)
+    exactly like main traces; rows with completion > MATH_REPLAY_COMP_LIMIT or
+    total > TOKEN_LIMIT are SKIPPED, never truncated. Accumulates until
+    MATH_REPLAY_TARGET_TOKENS unmasked completion tokens. Category 'math_replay'.
+    Gated by env ADD_MATH_REPLAY=1. Returns (examples, unmasked_tokens)."""
     if not MATH_REPLAY_PATH.exists():
         raise FileNotFoundError(
             f"[math_replay] ADD_MATH_REPLAY=1 but {MATH_REPLAY_PATH} missing - "
             "refusing to silently build a no-replay corpus (silent-skew trap)")
 
-    def _ids(msgs, add_gen):
-        r = chat_tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=add_gen)
-        return list(r["input_ids"]) if hasattr(r, "input_ids") else list(r)
-
     kept = tot = 0
+    n_no_ans = n_long_comp = n_long_total = 0
     with open(CORPUS_INDEX, "a") as idx_f, open(MATH_REPLAY_PATH) as fin:
         for line in fin:
             try:
@@ -129,35 +189,52 @@ def add_math_replay(chat_tok) -> tuple[int, int]:
             except Exception:
                 continue
             msgs = row.get("messages")
-            if not msgs or len(msgs) < 2:
+            if not msgs or len(msgs) < 2 or msgs[-1].get("role") != "assistant":
                 continue
-            full = _ids(msgs, False)
-            prompt = _ids(msgs[:-1], True)
-            if len(full) <= len(prompt):
+            content = str(msgs[-1].get("content", "")).rstrip("\n")
+            ans = _balanced_boxed(content)
+            # No box -> nothing to supervise; '}' in the answer can never round-trip
+            # through \boxed{...} extraction (same rule as main traces).
+            if not ans or "}" in ans:
+                n_no_ans += 1
                 continue
-            if len(full) > MATH_REPLAY_MAX_SEQ:
-                full = full[:MATH_REPLAY_MAX_SEQ]
-            plen = min(len(prompt), len(full))
-            mask = [0] * plen + [1] * (len(full) - plen)
-            if not any(mask):
+            completion = f"{content}\n</think>\n\\boxed{{{ans}}}<|im_end|>"
+            comp_ids = tok.encode(completion, add_special_tokens=False).ids
+            if len(comp_ids) > MATH_REPLAY_COMP_LIMIT:
+                n_long_comp += 1
                 continue
-            ans = sum(mask)
+            r = chat_tok.apply_chat_template(
+                msgs[:-1], tokenize=True, add_generation_prompt=True,
+                enable_thinking=True,
+            )
+            prompt_ids = list(r["input_ids"]) if hasattr(r, "input_ids") else list(r)
+            tokens = prompt_ids + comp_ids
+            # Hard gates (skip, never truncate): a truncated row strands the box.
+            assert len(comp_ids) <= MATH_REPLAY_COMP_LIMIT
+            if len(tokens) > TOKEN_LIMIT:
+                n_long_total += 1
+                continue
+            mask = [0] * len(prompt_ids) + [1] * len(comp_ids)
+            unmasked = sum(mask)
+            assert unmasked == len(comp_ids) > 0
             rid = f"replay_{kept:06d}"
             d = CORPUS_DIR / rid
             d.mkdir(parents=True, exist_ok=True)
             with open(d / "synthetic.jsonl", "w") as f:
-                json.dump({"tokens": full, "mask": mask}, f)
+                json.dump({"tokens": tokens, "mask": mask}, f)
                 f.write("\n")
             idx_f.write(json.dumps({
                 "problem_id": rid, "category": "math_replay",
-                "token_count": len(full), "unmasked_token_count": ans,
-                "answer": "", "augmenter": True,
+                "token_count": len(tokens), "unmasked_token_count": unmasked,
+                "answer": ans, "augmenter": True,
             }) + "\n")
             kept += 1
-            tot += ans
+            tot += unmasked
             if tot >= MATH_REPLAY_TARGET_TOKENS:
                 break
-    print(f"[math_replay] appended {kept} examples, {tot:,} trainable tokens")
+    print(f"[math_replay] appended {kept} examples, {tot:,} trainable tokens "
+          f"| skipped: {n_no_ans} no/brace answer, {n_long_comp} completion>"
+          f"{MATH_REPLAY_COMP_LIMIT}, {n_long_total} total>{TOKEN_LIMIT}")
     return kept, tot
 
 
@@ -172,8 +249,15 @@ def main() -> None:
             shutil.rmtree(old)
 
     problems = load_problems()
+    train_ids, holdout_ids = _load_split_ids()
+    # Champion drill -> source problem id map (matching drills only; see header).
+    with open(DRILL_SOURCES_JSON) as f:
+        drill_sources: dict[str, str] = json.load(f)
+    holdout_drill_ids = {d for d, src in drill_sources.items() if src in holdout_ids}
+
     n_used = n_skip = n_trunc = total_unmasked = 0
     n_overlong = n_brace_skip = 0
+    n_holdout_main = n_holdout_drill = 0   # run-012 leakage exclusions
     n_self_consistent = 0   # traces whose own answer != exact truth but is grader-correct
     exact_box_mismatch: list[str] = []
     cat_counts: dict[str, int] = {}
@@ -181,6 +265,11 @@ def main() -> None:
 
     with open(CORPUS_INDEX, "w") as idx_f:
         for p in problems:
+            # run-012: train on train_split ONLY; holdout is the clean R surface.
+            if p.id not in train_ids:
+                assert p.id in holdout_ids, f"{p.id} in neither split"
+                n_holdout_main += 1
+                continue
             cot_path = REASONING_DIR / f"{p.id}.txt"
             if not cot_path.exists():
                 n_skip += 1
@@ -277,6 +366,12 @@ def main() -> None:
             mod_used = 0
             for row in rows:
                 rid = row["id"]
+                # run-012: drop drills DERIVED from holdout problems (champion
+                # matching sections are extracted from per-problem reasoning
+                # traces -> training on them leaks holdout structure).
+                if rid in holdout_drill_ids:
+                    n_holdout_drill += 1
+                    continue
                 completion_text = row.get("completion", row.get("answer", "")).rstrip("\n")
                 if not completion_text:
                     continue
@@ -323,6 +418,9 @@ def main() -> None:
 
     print(f"Corpus: {n_used} entries used | {n_skip} skipped | {n_trunc} truncated "
           f"| {n_overlong} dropped(completion>{GEN_LIMIT}) | {n_brace_skip} dropped(brace answer)")
+    print(f"run-012 holdout exclusions: {n_holdout_main} main problems "
+          f"(of {len(holdout_ids)} holdout ids), {n_holdout_drill} champion drills "
+          f"(of {len(holdout_drill_ids)} holdout-tied)")
     print(f"Self-consistent boxes (own answer, grader-correct but != exact truth): "
           f"{n_self_consistent}")
     # huikang-faithful inclusion policy (2026-06-09): we INTENTIONALLY keep
@@ -345,7 +443,7 @@ def main() -> None:
 
     import os
     if os.environ.get("ADD_MATH_REPLAY") == "1":
-        add_math_replay(chat_tok)
+        add_math_replay(chat_tok, tok)
 
 
 if __name__ == "__main__":
