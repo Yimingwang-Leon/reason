@@ -68,3 +68,11 @@
 - Lane1 isolation FAIL(blocker):预算守卫单价 $0.0694/步按 run-004 重 token 批次校准,对本 drill 语料高估 ~2× → $33 默认上限在 564 步中第 ~474 步触发 → 截断存残废 final。
 - 修复:--usd-per-step CLI 旗标 + token 比例重校 0.0351(46.4M total tok / 282 批 = 164.6k tok/步 vs 锚 326k)。对账:预计实花 ~$20,钱包上限 $35,守卫余量 941 步。
 - **预登记发车命令**:`python -m src.train_tinker --run-name run-011 --num-epochs 2 --curriculum --budget-usd 33 --usd-per-step 0.0351`
+
+#### run-011 训练事故与恢复(2026-06-10 15:42)
+- 三审第2轮全票 PASS 后按预登记命令发车。训练健康推进至 **543/564 步(96%,LR 已退火至 7.4e-6,nll ~0.002,实质收敛)** 时,**Tinker 账户余额耗尽(402 billing blocked)**,进程死亡。
+- 教训:闸审核了"花费≤上限"却没核"账户实际余额≥预计花费"。下次发车前必查余额。
+- 连带 bug:RESUME_ERRORS 含非异常类 tinker.Timeout → except 时 TypeError,402 没走到优雅存状态(已修)。
+- 可恢复资产:epoch0 ckpt(`sampler_weights/epoch0`,ep0 末 nll 0.0037 已基本收敛,可作保底)+ `weights/state_ep0`(含优化器,可续 epoch 1)。
+- 已装自动完成链(finish011.sh):每 5 分钟探测 billing,解锁后自动 `--start-epoch 1 --resume-state state_ep0` 续跑 epoch 1(282 步,~$10)→ 下载→构建→提交→出分。注:跨进程恢复时 epoch1 的 curriculum branch-weight 因 prev_lp 缺失退化为 plain-CE(可接受:curriculum 价值本未定,huikang 全程 plain-CE)。
+- **待用户:给 Tinker 充值(建议 ~$15:续训 ~$10 + 余量)。充值后无需任何操作,链条自动跑完。**
