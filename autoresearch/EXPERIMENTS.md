@@ -42,3 +42,22 @@
 - E1: 噪声底(同配置 train_split 跑 2 seed)
 - E2: equation 解题器改进(oracle 77%→?,局部 CoT)
 - E3: crypt 合成数据 + 解题器(oracle 17.6%→?)
+
+## E2 equation 解题器改进 [DONE, 免费, 不花钱]  2026-06-09
+- 假设:equation oracle 77% 有免费可提空间 → 提 oracle 涨 LB。
+- 诊断(扎实):23% 漏题 = 68% qop_unseen(运算符未演示,**不可解硬上限**,0/115 可救)+ 28% tiebreak 先验(_ORDER 把 signed-sub 排在 absdiff 前)+ 4% 噪声/sign-marker。perfect-tiebreak 天花板 = 83.5% train/86.3% holdout。
+- 改动:_ORDER tiebreak 先验(单例 grp=1、signed-top、sign-convention 才动;局部 CoT、无全局规则、R-安全)。
+- **结果(实测):train 77.0%→77.3%(+2),holdout 80.1%→80.1%(+0)。** "headroom"大多被 `}` 提取器丢 / sign-ambiguous(强解 overfit)。
+- **结论:弃。安全增量 ≈ 0(LB 零),过不了 oracle 审 → 不花钱。** equation 不是杠杆。
+
+### run-011  [PLANNED]  2026-06-10
+- 假设:R 是配方属性而非模型上限(双路会诊裁决)。修复"买 R"的语料政策 + 交付已验 oracle 增量,LB 应从 0.84 → ≥0.85,冲 0.86。
+- 改动(vs run-005 0.84 锚,全部过离线验收):
+  1. crypt solver 17.6%→22.2% 移植(box 与已验版 0 差异;局部验证式 trace;1 行收尾)
+  2. equation trace 重写:隐藏断言 stub → 全枚举 transcript(box 732/732 字节不变;每行机械可推;max 3588 tok)
+  3. bit_manip 回退 run-005 字节原版 89ea8f4(median 6687/max 7668,oracle 1364/1602)+ 纳入 238 条过程忠实 wrong traces(其余类 correct-only,crypt concat 兜底/equation 错断言 = 毒类不收)
+  4. champion drills 8463 导入(数据文件解析,enable_thinking=True 推理 regime + </think> 收尾)+ 我们 equation drills 900
+  5. 加固:metric_correct abs_tol=0、brace 门只丢 '}'(+15 crypt)、收尾统一 run-005 1 行式
+- 配置:curriculum ON、2ep、LR 2e-4、batch 64、rank 32、全模块栈、无 lm_head、无 replay(留 run-012)
+- 预测(跑前写):中心 0.85(0.848-0.855);显示 0.86 概率 ~30-40%;≤0.84 = 配方保真假说证伪即止损
+- 预算:~$26-28 / 上限 $35;三审(隔离/oracle/R-安全)全票通过才开训

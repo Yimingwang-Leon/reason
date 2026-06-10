@@ -258,17 +258,14 @@ def _lr_from_matches(
     right_run = max(all_right_runs, key=lambda t: len(t[0])) if all_right_runs else ([], None)
 
     left_lines = (
-        [
-            _format_list(chain, failed=failed, with_len=True)
-            for chain, failed in all_left_runs
-        ]
+        [_format_list(chain, failed=failed) for chain, failed in all_left_runs]
         if all_left_runs
         else ["none"]
     )
     left_best = _format_list(left_run[0], with_count=True)
     right_lines = (
         [
-            _format_list(list(reversed(chain)), failed=failed, with_len=True)
+            _format_list(list(reversed(chain)), failed=failed)
             for chain, failed in all_right_runs
         ]
         if all_right_runs
@@ -283,7 +280,6 @@ def _format_list(
     cands: List[RuleCandidate],
     with_count: bool = False,
     failed: Optional[str] = None,
-    with_len: bool = False,
 ) -> str:
     if not cands:
         return "none"
@@ -298,26 +294,7 @@ def _format_list(
     parts = [_compact_rule(c) for c in cands]
     if failed:
         parts.append(failed)
-    # EDIT 1 (R4): print each run's length verbatim so the per-section winner is
-    # a copy of the printed max (first run achieving it = append order), not a
-    # count the reader must derive by tallying pairs before the x/y marker.
-    if with_len:
-        parts.append(f"len={len(cands)}")
     return " ".join(parts)
-
-
-def _count_from_best(best: str) -> int:
-    """Length of the winning run, copied from the ': N' suffix of a Best string.
-
-    'none' -> 0. This is the same count printed as ': N' on the Best line, so the
-    'longest=N' verdict is a verbatim copy, never a re-derived tally.
-    """
-    if best == "none":
-        return 0
-    try:
-        return int(best.rsplit(": ", 1)[-1])
-    except ValueError:
-        return 0
 
 
 def _compact_rule(c: RuleCandidate) -> str:
@@ -361,11 +338,6 @@ def _emit_apply(
         lines.append(f"{i} {bit}")
     lines.append("Output")
 
-    # EDIT 4 (R2 anchor): each Output line re-states the operand bit(s) inline,
-    # copied verbatim from the Input block above, so the 1-bit op reads adjacent
-    # literals (regime-1/2 copy) instead of a long-range retrieval. The trailing
-    # " = <result>" tail and the appended answer_bits value are byte-identical to
-    # the legacy line, so the boxed answer (built from answer_bits) is unchanged.
     answer_bits: List[str] = []
     for i, rule in enumerate(vector):
         if rule.family == "DEFAULT":
@@ -379,16 +351,14 @@ def _emit_apply(
         if rule.family == "I":
             assert rule.primary is not None
             val = question_bits[rule.primary]
-            lines.append(f"{i} {rule.expr}: bit{rule.primary}={val} = {val}")
+            lines.append(f"{i} {rule.expr} = {val}")
             answer_bits.append(val)
             continue
         if rule.family == "NOT":
             assert rule.primary is not None
             val = question_bits[rule.primary]
             nval = _bit_not(val)
-            lines.append(
-                f"{i} {rule.expr}: bit{rule.primary}={val} NOT({val}) = {nval}"
-            )
+            lines.append(f"{i} {rule.expr} = NOT({val}) = {nval}")
             answer_bits.append(nval)
             continue
 
@@ -397,20 +367,13 @@ def _emit_apply(
         b = question_bits[rule.secondary]
         if rule.family in SYM_FAMILIES:
             result = _evaluate_rule(question_bits, rule)
-            lines.append(
-                f"{i} {rule.expr}: bit{rule.primary}={a} bit{rule.secondary}={b} "
-                f"{rule.family}({a},{b}) = {result}"
-            )
+            lines.append(f"{i} {rule.expr} = {rule.family}({a},{b}) = {result}")
             answer_bits.append(result)
             continue
 
         base = rule.family.split("-")[0]
-        nb = _bit_not(b)
         result = _evaluate_rule(question_bits, rule)
-        lines.append(
-            f"{i} {rule.expr}: bit{rule.primary}={a} bit{rule.secondary}={b} "
-            f"NOT(bit{rule.secondary})={nb} {base}({a},{nb}) = {result}"
-        )
+        lines.append(f"{i} {rule.expr} = {base}({a},NOT({b})) = {result}")
         answer_bits.append(result)
 
     lines.append("")
@@ -564,12 +527,11 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
     lines.append("")
 
     # 2) output examples
-    # Each row is the full 8-bit output; the per-bit columns are derived once
-    # below in "Output bit columns", so we do not re-unroll bit-by-bit here
-    # (that was a verbatim digit restatement, pure drift surface, never re-read).
     for i, out in enumerate(outputs):
         lines.append(f"Output {i}: {out}")
-    lines.append("")
+        for bit in range(N_BITS):
+            lines.append(f"{bit} {out[bit]}")
+        lines.append("")
 
     # 3) output bit columns
     lines.append("Output bit columns (with bitsum as hash)")
@@ -578,11 +540,13 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
             f"{bit} {output_columns[bit]} {_column_hash(output_columns[bit], n_examples)}"
         )
 
-    # 4) input examples (full 8-bit rows; per-bit columns derived where needed)
+    # 4) input examples
     lines.append("")
     for i, inp in enumerate(inputs):
         lines.append(f"Input {i}: {inp}")
-    lines.append("")
+        for bit in range(N_BITS):
+            lines.append(f"{bit} {inp[bit]}")
+        lines.append("")
 
     # 5) Operation sections (raw data + matching + LRM)
     lines.append("When matching output")
@@ -609,11 +573,7 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
                 if prev_diff is not None and diff != prev_diff:
                     lines.append("")
                 prev_diff = diff
-            # The per-candidate column bits ARE the evidence and stay verbatim;
-            # the trailing bitsum hash is a derived summary that is never re-read
-            # downstream (selection is driven solely by the match list), so we
-            # drop it here to cut ~1 token/row across the high-volume pair rows.
-            line = f"{rec.label} {rec.col}"
+            line = f"{rec.label} {rec.col} {rec.hash_}"
             if rec.matches:
                 line += " match " + " ".join(str(i) for i in rec.matches)
             lines.append(line)
@@ -641,15 +601,11 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
         lines.append("Left")
         for ll in left_lines:
             lines.append(ll)
-        # EDIT 1 (R4): the winner is the first run (append order) reaching the max
-        # of the printed len= values; "first" names that deterministic tie-break.
-        lines.append(f"longest={_count_from_best(left_best)} first")
         lines.append(f"Best: {left_best}")
         lines.append("")
         lines.append("Right")
         for rl in right_lines:
             lines.append(rl)
-        lines.append(f"longest={_count_from_best(right_best)} first")
         lines.append(f"Best: {right_best}")
         lines.append("")
 
@@ -995,23 +951,16 @@ def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
         lines.append(f"{i} {pref_display} - {', '.join(checks)}")
     lines.append("")
 
-    # Perfect match: first category (SECTION_ORDER) covering ALL pending bits wins.
-    # EDIT 3 (R4): print the literal pending set and each category's covered set so
-    # the yes/no verdict is a printed-set==printed-set copy, not an inferred
-    # equality; the chosen category is the first 'yes' (first-in-SECTION_ORDER).
-    pending_str = " ".join(str(i) for i in pending_indices) if pending_indices else "none"
+    # Perfect match: first category that covers ALL pending bits wins
     lines.append("Perfect match")
-    lines.append(f"Pending bits: {pending_str}")
     chosen_cat: Optional[str] = None
     for cat in SECTION_ORDER:
-        covered = [i for i in pending_indices if i in per_bit_cat[cat]]
-        covered_str = " ".join(str(i) for i in covered) if covered else "none"
         is_perfect = (
             chosen_cat is None
             and bool(pending_indices)
-            and covered == pending_indices
+            and all(i in per_bit_cat[cat] for i in pending_indices)
         )
-        lines.append(f"{cat} covers: {covered_str} {'yes' if is_perfect else 'no'}")
+        lines.append(f"{cat} {'yes' if is_perfect else 'no'}")
         if is_perfect:
             chosen_cat = cat
     lines.append("")

@@ -48,7 +48,10 @@ def metric_correct(truth: str, pred: str) -> bool:
     if re.fullmatch(r"[01]+", truth):
         return pred.lower() == truth.lower()
     try:
-        return math.isclose(float(truth), float(pred), rel_tol=1e-2, abs_tol=1e-5)
+        # abs_tol=0.0: strictly isomorphic to the grader's rel-tol-only rule
+        # (abs_tol=1e-5 was a liberal superset near zero; 0 rows affected today,
+        # hardened so selection can never admit a trace the grader would fail).
+        return math.isclose(float(truth), float(pred), rel_tol=1e-2, abs_tol=0.0)
     except Exception:
         return pred.lower() == truth.lower()
 
@@ -75,9 +78,21 @@ def main() -> None:
     for p in problems:
         cat_total[p.category] += 1
         text, ok = run_one(p)
-        if text is None or not ok:
+        if text is None:
             continue
-        cat_correct[p.category] += 1
+        if ok:
+            cat_correct[p.category] += 1
+        # Per-category inclusion policy (run-011, dual-audit ruling):
+        # - bit_manipulation: include wrong-but-self-consistent traces (+238). The
+        #   legacy column-matching procedure ran faithfully and boxed its own result
+        #   on underdetermined hard-tail layouts; dropping them is survivorship bias
+        #   that leaves the hardest layouts with zero training coverage.
+        # - every other category: correct-only. Wrong traces there are assertion-
+        #   style (crypt concat-fallback shows a FAILED verification then boxes
+        #   anyway; the old equation stub asserts an unverified rule) = the same
+        #   poison family that collapsed R in runs 006/007/008.
+        if not ok and p.category != "bit_manipulation":
+            continue
         (REASONING_DIR / f"{p.id}.txt").write_text(text)
 
     width = 60

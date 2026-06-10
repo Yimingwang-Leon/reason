@@ -36,17 +36,24 @@ PROMPT_SUFFIX = (
 # formats / the abandoned cryptarithm skill and are wired-but-excluded until a paid
 # run or the offline R-harness shows they help.
 AUGMENTER_ALLOWLIST = {
-    # CLEAN run-010 (2026-06-09): run-005's 0.84 baseline composition. The ONLY
-    # change vs run-005 is the 5-category locality-hardened reasoners (max-R, oracle
-    # byte-identical). We deliberately DROP the run-009 champion-copied drills
-    # (spelling/concatenation/splitting/lstrip/matching) — they were tokenized with
-    # the enable_thinking=False template (a regime that never occurs at inference)
-    # and contributed to run-009's 0.82 regression. Keep only our own equation drills
-    # that were present in run-005 @ 0.84 (harmless).
+    # run-011: champion sub-skill drills (champion_import.py: matching/splitting/
+    # concatenation/spelling/lstrip) now tokenized in the SAME enable_thinking=True
+    # regime as everything else (the run-009 enable_thinking=False mismatch is
+    # fixed), plus our own equation drills (present in run-005 @ 0.84).
+    "matching",
+    "splitting",
+    "concatenation",
+    "spelling",
+    "lstrip",
     "equation_reversal",
     "equation_arith",
     "equation_digitwise",
 }
+
+# Categories that must come ONLY from champion_import.py (pre-built drill files);
+# the legacy standalone generators for the same categories are skipped to avoid
+# double-injection (they emit identical category names with different content).
+CHAMPION_PROVIDED = {"matching", "splitting", "concatenation", "spelling", "lstrip"}
 
 
 def tokenize_prompt(prompt: str, chat_tok) -> list[int]:
@@ -62,11 +69,15 @@ def tokenize_prompt(prompt: str, chat_tok) -> list[int]:
 
 
 def tokenize_augmenter_prompt(prompt: str, chat_tok) -> list[int]:
-    """Augmenters are direct sub-skill drills: no boxed-answer suffix, no thinking
-    (the template emits an empty <think></think> then the answer follows)."""
+    """Augmenter sub-skill drills, tokenized in the SAME regime as inference
+    (enable_thinking=True -> prompt ends "<think>\\n"). The drill work lives inside
+    the think block; the completion closes it with "\\n</think>" (see main()).
+    The previous enable_thinking=False ("<think></think>") regime NEVER occurs at
+    inference -> 35-45% of trainable tokens trained an impossible regime (train/test
+    mismatch, fixed for run-011)."""
     messages = [{"role": "user", "content": prompt}]
     result = chat_tok.apply_chat_template(
-        messages, tokenize=True, add_generation_prompt=True, enable_thinking=False,
+        messages, tokenize=True, add_generation_prompt=True, enable_thinking=True,
     )
     if hasattr(result, "input_ids"):
         return list(result["input_ids"])
@@ -90,7 +101,7 @@ def _load_augmenters() -> list:
     return mods
 
 
-MATH_REPLAY_PATH = Path("/tmp/replaymath/nemotron_math_1gb.jsonl")
+MATH_REPLAY_PATH = ROOT / "data" / "replay" / "nemotron_math_1gb.jsonl"
 MATH_REPLAY_TARGET_TOKENS = 2_000_000
 MATH_REPLAY_MAX_SEQ = 8192
 
@@ -102,8 +113,9 @@ def add_math_replay(chat_tok) -> tuple[int, int]:
     ~2M trainable tokens. Appends {tokens,mask} segments + index rows (category
     'math_replay'). Gated by env ADD_MATH_REPLAY=1. Returns (examples, ans_tokens)."""
     if not MATH_REPLAY_PATH.exists():
-        print(f"[math_replay] {MATH_REPLAY_PATH} not found; skipping")
-        return 0, 0
+        raise FileNotFoundError(
+            f"[math_replay] ADD_MATH_REPLAY=1 but {MATH_REPLAY_PATH} missing - "
+            "refusing to silently build a no-replay corpus (silent-skew trap)")
 
     def _ids(msgs, add_gen):
         r = chat_tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=add_gen)
@@ -193,9 +205,11 @@ def main() -> None:
                 exact_box_mismatch.append(p.id)
             elif final_answer != p.answer:
                 n_self_consistent += 1   # grader-correct but not string-exact to truth
-            # Drop answers with a literal brace: \boxed{...} cannot robustly carry a
-            # '{'/'}' and a partial/strict-brace grader would mis-extract them.
-            if "{" in final_answer or "}" in final_answer:
+            # Drop only answers containing '}': \boxed{...} extraction truncates at
+            # the first '}', so those can never be carried correctly. A '{'-only
+            # answer round-trips through both our extractor and the grader's
+            # (verified offline), so keep it (+15 crypt traces).
+            if "}" in final_answer:
                 n_brace_skip += 1
                 continue
             completion = f"{cot}\n</think>\n\\boxed{{{final_answer}}}<|im_end|>"
@@ -252,13 +266,24 @@ def main() -> None:
                 # Wired (orphaning fixed) but not baked in pending validation.
                 aug_excluded.append(rows[0]["category"])
                 continue
+            if (rows[0]["category"] in CHAMPION_PROVIDED
+                    and mod_name != "champion_import"):
+                # run-011: these five categories are sourced EXCLUSIVELY from the
+                # champion's pre-built drill files (champion_import.py, exact
+                # 4515/1500/1500/648/300). The legacy standalone generators emit
+                # the same category names — letting both in would double-inject.
+                aug_excluded.append(f"{rows[0]['category']}({mod_name}:legacy-dup)")
+                continue
             mod_used = 0
             for row in rows:
                 rid = row["id"]
                 completion_text = row.get("completion", row.get("answer", "")).rstrip("\n")
                 if not completion_text:
                     continue
-                comp_ids = tok.encode(completion_text + "<|im_end|>",
+                # Close the think block the enable_thinking=True prompt opened, so
+                # the drill teaches the exact think-open/think-close control flow
+                # used at inference.
+                comp_ids = tok.encode(completion_text + "\n</think><|im_end|>",
                                       add_special_tokens=False).ids
                 prompt_ids = tokenize_augmenter_prompt(row["prompt"], chat_tok)
                 tokens = prompt_ids + comp_ids
