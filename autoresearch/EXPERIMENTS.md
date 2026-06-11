@@ -106,3 +106,8 @@
 - 配置:curriculum ON、2ep、**LR 3.5e-4**、batch 64、rank32、无 lm_head;608 步,守卫单价用实测 0.077。
 - 预登记预测:中心 0.855-0.86;P(显示≥0.86)≈45-55%;P(0.87)≈10-15%;≤0.85 = replay-delta 在我们语料上证伪。
 - 发车命令:python -m src.train_tinker --run-name run-012 --num-epochs 2 --curriculum --lr 3.5e-4 --budget-usd 60 --usd-per-step 0.077
+
+#### run-012 结果(2026-06-11)
+- **LB = 0.84**(53556034)。预登记预测中心 0.855-0.86,**预登记证伪线 ≤0.85 触发,且比 run-011 还低 1pp**。
+- 诚实归因(束内 5 变量,无法单独定责):holdout 剔除(-20% 真题)/ LR 3.5e-4 / +replay 4059 / forward-crypt 换入(探针已示 5%)/ bit-EV 换入(探针已示 0%)。replay-delta 假说在本束上证伪。
+- 预承诺生效:**停止花钱**。run-011(0.85)为自训最佳。成本 ~$22(干净单价 ~$0.04/步 实证)。
