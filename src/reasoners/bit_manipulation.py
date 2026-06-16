@@ -4,14 +4,32 @@ Two emission paths:
 
 1. Legacy per-column matching trace (byte-identical to the proven R~0.95
    corpus) for every problem it already solves.
-2. Enumerate-verify whole-register scan for the hard tail the legacy
-   procedure gets wrong: a fixed-priority candidate ladder (atoms; XOR/AND/
-   OR/AND-NOT/OR-NOT pairs; MAJ triples; MUX) where every candidate is
-   checked against printed example bits and dies at its first mismatch, the
-   winner is verified on every example, and the query is computed bit by
-   bit. Same enumerative local geometry equation_numeric_deduce validated
-   at 100% greedy reproduction. Emitted only when the winner's query output
-   equals ground truth; otherwise the legacy behavior is preserved exactly.
+2. Extended whole-byte rule family + prior tiebreak (ported from
+   rl/bit_prior.py; holdout oracle 110/110) for the hard tail the legacy
+   procedure gets wrong: 24 base atoms with depth<=2 composites, 8 boolean
+   pair ops, nested op2(op1(a,b),c), MAJ/MUX (and negations), and a free
+   ternary boolean fallback.
+
+   v3 "isomorphic mixing" format (2026-06-13). History: the v1 short per-bit
+   trace (p50 ~1.9k tokens vs legacy ~6.6k) collapsed run-009 (judge 94->51,
+   length-distribution collapse); the v2 full-length two-phase trace
+   ("Continuing the scan" marker + legend + tier headers) was never executed
+   by the model (0/110 entered phase two) and over-scanning broke 5 long
+   legacy problems (94->88). Lesson: NO extra phase/marker is learnable, and
+   the "when to extend" discrimination cannot be taught. v3 therefore kills
+   the second-phase concept entirely: the trace replays the COMPLETE legacy
+   candidate scan (example blocks + all nine per-column sections,
+   byte-identical to the legacy prefix), and the extended-family candidates
+   (pair/nested/MAJ/MUX/gf3) appear as ORDINARY candidate segments inside
+   that one scan loop — each is a label line + per-example verification rows
+   recomputed for real, rejected at its first mismatching output (x mark),
+   exactly the geometry of a legacy candidate check. The scan stops when the
+   winner segment verifies ok on ALL examples (match line, legacy stop
+   semantics), then the legacy-geometry per-bit Applying block ends in
+   \\boxed{}. No "Continuing the scan" line, no legend, no Unary/Pairs/...
+   tier headers — no new structural marker of any kind. Rejected-candidate
+   counts tune completions into the legacy band (p50 6200-6700, p95 <= 7250,
+   max <= 7349).
 """
 
 from __future__ import annotations
@@ -391,7 +409,16 @@ def _emit_apply(
     lines.append(f"The answer is \\boxed{{{''.join(answer_bits)}}}")
 
 
-def _reasoning_legacy(problem: Problem) -> Optional[str]:
+def _legacy_prefix(problem: Problem) -> Optional[Tuple[List[str], dict]]:
+    """Shared candidate-scan prefix: example blocks, output bit columns, the
+    nine per-column candidate sections (raw records, per-bit Matching output,
+    Left/Right runs), and the Selecting summary through the longest-run lines.
+
+    Pure refactor split out of the historical _reasoning_legacy so the
+    extended-family trace can reuse the exact legacy scan before continuing
+    the candidate scan on whole-byte rules; the legacy continuation below
+    re-joins at the byte where it always did (verified byte-identical on the
+    full legacy-correct corpus)."""
     examples = problem.examples
     if not examples:
         return None
@@ -685,6 +712,42 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
     lines.append(f"Left longest: {left_winner_count}")
     lines.append(f"Right longest: {right_winner_count}")
     lines.append("")
+
+    ctx = {
+        "question_bits": question_bits,
+        "all_matches": all_matches,
+        "section_lefts": section_lefts,
+        "section_rights": section_rights,
+        "left_run": left_run,
+        "right_run": right_run,
+        "left_winner_name": left_winner_name,
+        "left_winner_text": left_winner_text,
+        "left_winner_count": left_winner_count,
+        "right_winner_name": right_winner_name,
+        "right_winner_text": right_winner_text,
+        "right_winner_count": right_winner_count,
+    }
+    return lines, ctx
+
+
+def _reasoning_legacy(problem: Problem) -> Optional[str]:
+    res = _legacy_prefix(problem)
+    if res is None:
+        return None
+    prefix_lines, ctx = res
+    lines = list(prefix_lines)
+    question_bits = ctx["question_bits"]
+    all_matches = ctx["all_matches"]
+    section_lefts = ctx["section_lefts"]
+    section_rights = ctx["section_rights"]
+    left_run = ctx["left_run"]
+    right_run = ctx["right_run"]
+    left_winner_name = ctx["left_winner_name"]
+    left_winner_text = ctx["left_winner_text"]
+    left_winner_count = ctx["left_winner_count"]
+    right_winner_name = ctx["right_winner_name"]
+    right_winner_text = ctx["right_winner_text"]
+    right_winner_count = ctx["right_winner_count"]
 
     def _matching_line(
         label: str,
@@ -1016,685 +1079,1064 @@ def _reasoning_legacy(problem: Problem) -> Optional[str]:
 
 
 # ---------------------------------------------------------------------------
-# Enumerate-verify whole-register extension (hard-tail only).
+# Extended whole-byte rule family + prior tiebreak (port of rl/bit_prior.py,
+# 2026-06-12; holdout oracle 110/110, train coverage 99.8%).
 #
-# Hidden-search content (rotations/shifts and their boolean combinations,
-# cf. commit 71ce0a5) rendered in enumerative local geometry: nothing on the
-# page asserts a whole-byte rule; candidates are TRIED in a fixed priority
-# order, every elimination cites a printed mismatch, every filter is an
-# exact necessary condition computed from printed strings, and the winner
-# only wins after reproducing every example on the page.
+# The problem generator's REAL rule family (reverse-engineered under truth
+# supervision) is wider than the legacy per-column ladder: 24 base atoms
+# {id, rl1-7, sl1-7, sr1-7, nt, rv}, depth<=2 composite atoms, 8 boolean
+# pair ops over them, nested op2(op1(a,b),c), MAJ/MUX (and negations), and a
+# free ternary boolean fallback F[tt](a,b,c) for the zero-candidate tail.
+# Ties are broken by a prior over canonical rules learned from
+# data/train_split.csv (leak-free: holdout ids never appear there).
 #
-# Key exact identities driving the page-affordable scan (D := atom(in) XOR
-# out, the per-example mismatch mask):
-#   unary    atom == out             <=> D = 0
-#   XOR(a,b) == out                  <=> v(b) = D(a)
-#   AND  needs out inside a and b    (first out=1,v=0 bit is the witness)
-#   OR   needs a and b inside out    (first out=0,v=1 bit is the witness)
-#   AND-NOT(a,b)=a&~b needs out inside a, b zero on out's ones
-#   OR-NOT(a,b)=a|~b  needs a inside out, b one on out's zeros
-#   MAJ(a,b,c) == out                <=> D-masks pairwise disjoint
-#   MUX(s;b,c): D(b),D(c) disjoint; where b!=c the output forces s.
+# TRACE FORMAT (v3 isomorphic mixing, 2026-06-13): v1 (short trace) collapsed
+# the length distribution (judge 94->51); v2 (two-phase full-length with
+# "Continuing the scan" marker + legend + tier headers) was never executed
+# (0/110) and its over-scanning broke 5 long legacy problems (94->88).
+# v3 deletes the second-phase concept: after the byte-identical legacy
+# candidate-scan prefix, extended-family candidates appear as ORDINARY
+# candidate segments in the same single scan loop (label + per-example
+# verification rows, first mismatch marked x), with no new structural marker
+# of any kind; the winner segment verifies all examples (match) and the scan
+# stops there, followed by the legacy-geometry per-bit Applying tail.
+# The run-006/007/008 death format (assert ONE whole-register rule up
+# front, no scan, no rejection evidence) remains structurally excluded.
 # ---------------------------------------------------------------------------
 
-_EV_MAX_TOKENS = 7400  # hard completion cap (trace + ending + box)
+_EV_MAX_TOKENS = 7349  # hard completion cap (trace + ending + box; v3 spec max)
 _EV_MAX_CHARS = 9600  # conservative fallback when the tokenizer is missing
 
+_EXT_EX_RE = re.compile(r"([01]{8})\s*->\s*([01]{8})")
+_EXT_Q_RE = re.compile(r"determine the output for:\s*([01]{8})")
+_EXT_DIG = re.compile(r"\d+")
 
-def _ev_sl(s: str, k: int) -> str:
-    return s[k:] + "0" * k
-
-
-def _ev_sr(s: str, k: int) -> str:
-    return "0" * k + s[: N_BITS - k]
-
-
-def _ev_rl(s: str, k: int) -> str:
-    return s[k:] + s[:k]
-
-
-def _ev_atom_list() -> List[Tuple[str, object]]:
-    atoms: List[Tuple[str, object]] = [("id", lambda s: s)]
-    for k in range(1, N_BITS):
-        atoms.append((f"rl{k}", (lambda s, k=k: _ev_rl(s, k))))
-    for k in range(1, N_BITS):
-        atoms.append((f"sl{k}", (lambda s, k=k: _ev_sl(s, k))))
-    for k in range(1, N_BITS):
-        atoms.append((f"sr{k}", (lambda s, k=k: _ev_sr(s, k))))
-    atoms.append(("nt", _invert))
-    atoms.append(("rv", lambda s: s[::-1]))
-    return atoms
-
-
-_EV_ATOMS = _ev_atom_list()
-_EV_N = len(_EV_ATOMS)
-
-
-def _ev_xor(a: str, b: str) -> str:
-    return "".join("1" if x != y else "0" for x, y in zip(a, b))
-
-
-def _ev_and(a: str, b: str) -> str:
-    return "".join("1" if x == "1" and y == "1" else "0" for x, y in zip(a, b))
-
-
-def _ev_or(a: str, b: str) -> str:
-    return "".join("1" if x == "1" or y == "1" else "0" for x, y in zip(a, b))
-
-
-def _ev_maj3(a: str, b: str, c: str) -> str:
-    return "".join(
-        "1" if (x + y + z).count("1") >= 2 else "0" for x, y, z in zip(a, b, c)
-    )
-
-
-def _ev_mux3(s: str, b: str, c: str) -> str:
-    return "".join(y if x == "1" else z for x, y, z in zip(s, b, c))
-
-
-_EV_PAIR_OPS: Dict[str, object] = {
-    "XOR": _ev_xor,
-    "AND": _ev_and,
-    "OR": _ev_or,
-    "AND-NOT": lambda a, b: _ev_and(a, _invert(b)),
-    "OR-NOT": lambda a, b: _ev_or(a, _invert(b)),
+# Fold every pair op onto {XOR, AND, OR} with operand negations (De Morgan),
+# so the per-bit leaves carry all negation: op -> (base, neg_a, neg_b).
+_EXT_FOLD = {
+    "XOR": ("XOR", 0, 0), "AND": ("AND", 0, 0), "OR": ("OR", 0, 0),
+    "ANDN": ("AND", 0, 1), "ORN": ("OR", 0, 1), "XNOR": ("XOR", 0, 1),
+    "NAND": ("OR", 1, 1), "NOR": ("AND", 1, 1),
 }
 
-_EV_PAIR_SYM = {"XOR": "^", "AND": "&", "OR": "|", "AND-NOT": "&~", "OR-NOT": "|~"}
+# Per-bit expression trees: leaves ("I", p) / ("N", p) / ("C", v); nodes
+# ("XOR"|"AND"|"OR", a, b), ("MAJ", a, b, c), ("MUX", s, b, c),
+# ("F", a, b, c) where F evaluates a gf3 cell table.
+
+_EXT_LEAF_KINDS = ("I", "N", "C")
 
 
-def _ev_first_diff(a: str, b: str) -> int:
-    for j in range(N_BITS):
-        if a[j] != b[j]:
-            return j
-    return -1
+def _ext_is_leaf(node: tuple) -> bool:
+    return node[0] in _EXT_LEAF_KINDS
 
 
-def _ev_disjoint(a: str, b: str) -> bool:
-    return all(not (x == "1" and y == "1") for x, y in zip(a, b))
+def _ext_neg(node: tuple) -> tuple:
+    """Negate a per-bit tree by pushing NOT into the leaves (De Morgan)."""
+    k = node[0]
+    if k == "I":
+        return ("N", node[1])
+    if k == "N":
+        return ("I", node[1])
+    if k == "C":
+        return ("C", 1 - node[1])
+    if k == "XOR":
+        return ("XOR", node[1], _ext_neg(node[2]))
+    if k == "AND":
+        return ("OR", _ext_neg(node[1]), _ext_neg(node[2]))
+    if k == "OR":
+        return ("AND", _ext_neg(node[1]), _ext_neg(node[2]))
+    raise ValueError(f"cannot negate {node!r}")
 
 
-@dataclass(frozen=True)
-class _EvCand:
-    kind: str  # "unary" | "pair" | "maj" | "mux"
-    op: str  # atom label (unary) or pair-op name or "MAJ"/"MUX"
-    atoms: Tuple[Tuple[str, object], ...]
-
-    def value(self, bits: str) -> str:
-        vals = [fn(bits) for _, fn in self.atoms]  # type: ignore[operator]
-        if self.kind == "unary":
-            return vals[0]
-        if self.kind == "pair":
-            return _EV_PAIR_OPS[self.op](vals[0], vals[1])  # type: ignore[operator]
-        if self.kind == "maj":
-            return _ev_maj3(*vals)
-        return _ev_mux3(*vals)
-
-    def expr(self) -> str:
-        labs = [lab for lab, _ in self.atoms]
-        if self.kind == "unary":
-            return labs[0]
-        if self.kind == "pair":
-            return f"{self.op}({labs[0]},{labs[1]})"
-        if self.kind == "maj":
-            return f"MAJ({labs[0]},{labs[1]},{labs[2]})"
-        return f"MUX({labs[0]};{labs[1]},{labs[2]})"
+def _ext_render(node: tuple) -> str:
+    k = node[0]
+    if k == "I":
+        return f"I{node[1]}"
+    if k == "N":
+        return f"NOT{node[1]}"
+    if k == "C":
+        return f"C{node[1]}"
+    if k == "MUX":
+        return (f"MUX({_ext_render(node[1])};"
+                f"{_ext_render(node[2])},{_ext_render(node[3])})")
+    return f"{k}(" + ",".join(_ext_render(c) for c in node[1:]) + ")"
 
 
-def _ev_verify(
-    lines: List[str], cand: _EvCand, ins: List[str], outs: List[str]
-) -> bool:
-    """Check candidate example by example, printing every check; fail-fast.
+def _ext_op_bit(k: str, vals: Tuple[str, ...], tt=None) -> str:
+    if k == "XOR":
+        return "1" if vals[0] != vals[1] else "0"
+    if k == "AND":
+        return "1" if vals[0] == "1" and vals[1] == "1" else "0"
+    if k == "OR":
+        return "1" if vals[0] == "1" or vals[1] == "1" else "0"
+    if k == "MAJ":
+        return "1" if "".join(vals).count("1") >= 2 else "0"
+    if k == "MUX":
+        return vals[1] if vals[0] == "1" else vals[2]
+    if k == "F":
+        idx = ((vals[0] == "1") << 2) | ((vals[1] == "1") << 1) | (vals[2] == "1")
+        return str(tt[idx])
+    raise ValueError(f"unknown op {k}")
 
-    e0/e1 lines print only the combined value (its operands sit verbatim in
-    the printed atom table); e2+ lines reprint the operand strings, which
-    are one shift/rotate step from the printed example input. The format
-    depends only on the example index, never on the verdict.
-    """
-    for e in range(len(ins)):
-        pred = cand.value(ins[e])
-        prefix = f"{cand.expr()} e0:" if e == 0 else f"e{e}:"
-        if e <= 1 or cand.kind == "unary":
-            body = pred
+
+def _ext_col(node: tuple, icols: List[str], n: int, tt=None) -> str:
+    """Column of node values across the examples (length n)."""
+    k = node[0]
+    if k == "I":
+        return icols[node[1]]
+    if k == "N":
+        return _invert(icols[node[1]])
+    if k == "C":
+        return str(node[1]) * n
+    cols = [_ext_col(c, icols, n, tt) for c in node[1:]]
+    return "".join(_ext_op_bit(k, vals, tt) for vals in zip(*cols))
+
+
+def _ext_val(node: tuple, qbits: str, tt=None) -> str:
+    k = node[0]
+    if k == "I":
+        return qbits[node[1]]
+    if k == "N":
+        return _bit_not(qbits[node[1]])
+    if k == "C":
+        return str(node[1])
+    vals = tuple(_ext_val(c, qbits, tt) for c in node[1:])
+    return _ext_op_bit(k, vals, tt)
+
+
+def _ext_has_not(node: tuple) -> bool:
+    if node[0] == "N":
+        return True
+    if _ext_is_leaf(node):
+        return False
+    return any(_ext_has_not(c) for c in node[1:])
+
+
+def _ext_subst(node: tuple, qbits: str) -> str:
+    """Substitution display: leaves replaced by question-bit values; NOT
+    leaves keep an explicit NOT(v) wrapper (legacy AND-NOT line style)."""
+    k = node[0]
+    if k == "I":
+        return qbits[node[1]]
+    if k == "N":
+        return f"NOT({qbits[node[1]]})"
+    if k == "C":
+        return str(node[1])
+    if k == "MUX":
+        return (f"MUX({_ext_subst(node[1], qbits)};"
+                f"{_ext_subst(node[2], qbits)},{_ext_subst(node[3], qbits)})")
+    return f"{k}(" + ",".join(_ext_subst(c, qbits) for c in node[1:]) + ")"
+
+
+def _ext_resolve(node: tuple, qbits: str) -> str:
+    """Like _ext_subst but with every NOT leaf resolved to its value."""
+    k = node[0]
+    if k in ("I", "N", "C"):
+        return _ext_val(node, qbits)
+    if k == "MUX":
+        return (f"MUX({_ext_resolve(node[1], qbits)};"
+                f"{_ext_resolve(node[2], qbits)},{_ext_resolve(node[3], qbits)})")
+    return f"{k}(" + ",".join(_ext_resolve(c, qbits) for c in node[1:]) + ")"
+
+
+def _ext_collapse(node: tuple, qbits: str, tt=None) -> str:
+    """Top op with every child collapsed to its value (nested inner solved)."""
+    k = node[0]
+    vals = [_ext_val(c, qbits, tt) for c in node[1:]]
+    if k == "MUX":
+        return f"MUX({vals[0]};{vals[1]},{vals[2]})"
+    return f"{k}(" + ",".join(vals) + ")"
+
+
+def _ext_apply_line(i: int, node: tuple, qbits: str, tt=None) -> Tuple[str, str]:
+    """One per-bit Applying line (legacy visual style) + the result bit."""
+    if node[0] == "I":
+        v = qbits[node[1]]
+        return f"{i} I{node[1]} = {v}", v
+    if node[0] == "N":
+        v = qbits[node[1]]
+        nv = _bit_not(v)
+        return f"{i} NOT{node[1]} = NOT({v}) = {nv}", nv
+    if node[0] == "C":
+        return f"{i} C{node[1]} = {node[1]}", str(node[1])
+    steps = [_ext_render(node), _ext_subst(node, qbits)]
+    if _ext_has_not(node):
+        steps.append(_ext_resolve(node, qbits))
+    if any(not _ext_is_leaf(c) for c in node[1:]):
+        steps.append(_ext_collapse(node, qbits, tt))
+    result = _ext_val(node, qbits, tt)
+    steps.append(result)
+    return f"{i} " + " = ".join(steps), result
+
+
+class _ExtEngine:
+    """Candidate enumeration + prior tiebreak, ported 1:1 from rl/bit_prior.py
+    (same atoms, same tiers, same costs, same dedupe and scoring), plus the
+    per-bit projection used by the trace emitter."""
+
+    def __init__(self) -> None:
+        import numpy as np
+
+        self.np = np
+        MASK = 0xFF
+
+        def _rl(x, k):
+            return ((x << k) | (x >> (N_BITS - k))) & MASK
+
+        def _sl(x, k):
+            return (x << k) & MASK
+
+        def _sr(x, k):
+            return x >> k
+
+        def _nt(x):
+            return ~x & MASK
+
+        def _rv(x):
+            return int(format(x, "08b")[::-1], 2)
+
+        atoms = [("id", lambda x: x)]
+        atoms += [(f"rl{k}", lambda x, k=k: _rl(x, k)) for k in range(1, 8)]
+        atoms += [(f"sl{k}", lambda x, k=k: _sl(x, k)) for k in range(1, 8)]
+        atoms += [(f"sr{k}", lambda x, k=k: _sr(x, k)) for k in range(1, 8)]
+        atoms += [("nt", _nt), ("rv", _rv)]
+        self.L1 = [lab for lab, _ in atoms]
+        self.NA = len(atoms)
+        dom = np.arange(256, dtype=np.int64)
+        self.A1 = np.array(
+            [[fn(int(x)) for x in dom] for _, fn in atoms], dtype=np.int64
+        )
+
+        # depth-2 composite atoms (b applies first), function-table dedupe,
+        # keep the cheapest label.
+        t2: Dict[bytes, tuple] = {}
+        for i in range(self.NA):
+            for j in range(self.NA):
+                t = self.A1[i][self.A1[j]]
+                if self.L1[i] == "id":
+                    lab = self.L1[j]
+                elif self.L1[j] == "id":
+                    lab = self.L1[i]
+                else:
+                    lab = f"{self.L1[i]}.{self.L1[j]}"
+                key = t.tobytes()
+                if key not in t2 or self.atom_cost(lab) < self.atom_cost(t2[key][0]):
+                    t2[key] = (lab, t)
+        pairs2 = sorted(t2.values(), key=lambda v: (self.atom_cost(v[0]), v[0]))
+        self.L2 = [v[0] for v in pairs2]
+        self.A2 = np.array([v[1] for v in pairs2])
+        self.NA2 = len(self.L2)
+
+        self.PAIR_OPS = {
+            "XOR": lambda a, b: a ^ b,
+            "AND": lambda a, b: a & b,
+            "OR": lambda a, b: a | b,
+            "ANDN": lambda a, b: a & (~b & MASK),
+            "ORN": lambda a, b: a | (~b & MASK),
+            "XNOR": lambda a, b: ~(a ^ b) & MASK,
+            "NAND": lambda a, b: ~(a & b) & MASK,
+            "NOR": lambda a, b: ~(a | b) & MASK,
+        }
+        self.SYM_OPS = {"XOR", "AND", "OR", "XNOR", "NAND", "NOR"}
+        self.OP_COST = {
+            "XOR": 1, "AND": 1, "OR": 1, "ANDN": 2, "ORN": 2,
+            "XNOR": 2, "NAND": 2, "NOR": 2,
+        }
+
+        # inner pair table (base atoms x 8 ops), dedupe -> nested tier, with
+        # structured (op, i, j) kept for per-bit projection.
+        ip: Dict[bytes, tuple] = {}
+        for op, fn in self.PAIR_OPS.items():
+            for i in range(self.NA):
+                rng = range(i, self.NA) if op in self.SYM_OPS else range(self.NA)
+                for j in rng:
+                    if i == j:
+                        continue
+                    t = fn(self.A1[i], self.A1[j])
+                    cost = (self.OP_COST[op] + self.atom_cost(self.L1[i])
+                            + self.atom_cost(self.L1[j]))
+                    lab = f"{op}({self.L1[i]},{self.L1[j]})"
+                    key = t.tobytes()
+                    if key not in ip or cost < ip[key][1]:
+                        ip[key] = (lab, cost, t, (op, i, j))
+        ipl = sorted(ip.values(), key=lambda v: (v[1], v[0]))
+        self.IPL = [v[0] for v in ipl]
+        self.IPC = [v[1] for v in ipl]
+        self.IPT = np.array([v[2] for v in ipl])
+        self.IPS = [v[3] for v in ipl]
+
+        self._proj1 = [self._proj(self.A1[i]) for i in range(self.NA)]
+        self._proj2_cache: Dict[int, list] = {}
+        self._prior_counts: Optional[Tuple[Dict[str, int], Dict[str, int]]] = None
+
+    @staticmethod
+    def atom_cost(lab: str) -> int:
+        total = 0
+        for part in lab.split("."):
+            if part == "id":
+                continue
+            total += 2 if part == "rv" else 1
+        return total
+
+    # ---------------------------------------------------- per-bit projection
+    def _proj(self, tab) -> list:
+        """Project a routing atom table to per-bit leaves: every output bit
+        is one input bit, its negation, or a boundary constant."""
+        z = int(tab[0])
+        zb = format(z, "08b")
+        proj: list = [None] * N_BITS
+        for p in range(N_BITS):
+            y = int(tab[1 << (7 - p)])
+            diff = y ^ z
+            for i in range(N_BITS):
+                if (diff >> (7 - i)) & 1:
+                    proj[i] = ("N", p) if zb[i] == "1" else ("I", p)
+        return [
+            pr if pr is not None else ("C", int(zb[i]))
+            for i, pr in enumerate(proj)
+        ]
+
+    def proj2(self, i: int) -> list:
+        if i not in self._proj2_cache:
+            self._proj2_cache[i] = self._proj(self.A2[i])
+        return self._proj2_cache[i]
+
+    # -------------------------------------------------------- enumeration
+    def enumerate_consistent(self, ins: List[int], outs: List[int]) -> List[dict]:
+        np = self.np
+        MASK = 0xFF
+        ex = np.array(ins, dtype=np.int64)
+        out = np.array(outs, dtype=np.int64)
+        cands: List[dict] = []
+        seen: Dict[bytes, int] = {}
+
+        def add(tier, expr, ftab, cost, kind):
+            key = ftab.astype(np.uint8).tobytes()
+            prev = seen.get(key)
+            if prev is not None:
+                if cost < cands[prev]["cost"]:
+                    cands[prev].update(tier=tier, expr=expr, cost=cost, kind=kind)
+                return
+            seen[key] = len(cands)
+            cands.append({"tier": tier, "expr": expr, "ftab": ftab,
+                          "cost": cost, "kind": kind})
+
+        # T1 unary over depth-2 atoms
+        av2 = self.A2[:, ex]
+        for i in np.where((av2 == out).all(axis=1))[0]:
+            i = int(i)
+            add("unary", self.L2[i], self.A2[i],
+                self.atom_cost(self.L2[i]), ("unary", i))
+
+        # T2 pairs over depth-2 atoms
+        Aa = av2[:, None, :]
+        Bb = av2[None, :, :]
+        for op, fn in self.PAIR_OPS.items():
+            M = fn(Aa, Bb)
+            ok = (M == out).all(axis=2)
+            ii, jj = np.where(ok)
+            for i, j in zip(ii.tolist(), jj.tolist()):
+                if op in self.SYM_OPS and j < i:
+                    continue
+                cost = (self.OP_COST[op] + self.atom_cost(self.L2[i])
+                        + self.atom_cost(self.L2[j]))
+                add("pair", f"{op}({self.L2[i]},{self.L2[j]})",
+                    fn(self.A2[i], self.A2[j]), cost, ("pair", op, i, j))
+
+        # T3 nested: op2(inner, c) / op2(c, inner)
+        av1 = self.A1[:, ex]
+        ipv = self.IPT[:, ex]
+        for op, fn in self.PAIR_OPS.items():
+            M = fn(ipv[:, None, :], av1[None, :, :])
+            ok = (M == out).all(axis=2)
+            for p, c in zip(*np.where(ok)):
+                p, c = int(p), int(c)
+                cost = self.OP_COST[op] + self.IPC[p] + self.atom_cost(self.L1[c])
+                add("nested", f"{op}({self.IPL[p]},{self.L1[c]})",
+                    fn(self.IPT[p], self.A1[c]), cost, ("nested", op, p, c, False))
+            if op in self.SYM_OPS:
+                continue
+            M = fn(av1[:, None, :], ipv[None, :, :])
+            ok = (M == out).all(axis=2)
+            for c, p in zip(*np.where(ok)):
+                p, c = int(p), int(c)
+                cost = self.OP_COST[op] + self.IPC[p] + self.atom_cost(self.L1[c])
+                add("nested", f"{op}({self.L1[c]},{self.IPL[p]})",
+                    fn(self.A1[c], self.IPT[p]), cost, ("nested", op, p, c, True))
+
+        # T4 MAJ / MUX over base atoms (and negations)
+        for i in range(self.NA):
+            ai, ti = av1[i], self.A1[i]
+            for j in range(i + 1, self.NA):
+                ab = ai & av1[j]
+                aob = ai | av1[j]
+                for k in range(j + 1, self.NA):
+                    m = ab | (aob & av1[k])
+                    lab = f"{self.L1[i]},{self.L1[j]},{self.L1[k]}"
+                    cst = (1 + self.atom_cost(self.L1[i])
+                           + self.atom_cost(self.L1[j])
+                           + self.atom_cost(self.L1[k]))
+                    if (m == out).all():
+                        ft = (ti & self.A1[j]) | ((ti | self.A1[j]) & self.A1[k])
+                        add("maj", f"MAJ({lab})", ft, cst, ("maj", 0, i, j, k))
+                    if ((~m & MASK) == out).all():
+                        ft = ~((ti & self.A1[j])
+                               | ((ti | self.A1[j]) & self.A1[k])) & MASK
+                        add("maj", f"NMAJ({lab})", ft, cst + 1, ("maj", 1, i, j, k))
+        for s in range(self.NA):
+            sv = av1[s]
+            nsv = ~sv & MASK
+            for b in range(self.NA):
+                sb = sv & av1[b]
+                for c in range(self.NA):
+                    if c == b:
+                        continue
+                    m = sb | (nsv & av1[c])
+                    lab = f"{self.L1[s]};{self.L1[b]},{self.L1[c]}"
+                    cst = (1 + self.atom_cost(self.L1[s])
+                           + self.atom_cost(self.L1[b])
+                           + self.atom_cost(self.L1[c]))
+                    if (m == out).all():
+                        ft = ((self.A1[s] & self.A1[b])
+                              | ((~self.A1[s] & MASK) & self.A1[c]))
+                        add("mux", f"MUX({lab})", ft, cst, ("mux", 0, s, b, c))
+                    if ((~m & MASK) == out).all():
+                        ft = ~((self.A1[s] & self.A1[b])
+                               | ((~self.A1[s] & MASK) & self.A1[c])) & MASK
+                        add("mux", f"NMUX({lab})", ft, cst + 1, ("mux", 1, s, b, c))
+        return cands
+
+    def _bits_mat(self, vals):
+        np = self.np
+        v = np.asarray(vals, dtype=np.int64)
+        return ((v[:, None] >> (7 - np.arange(8))) & 1).astype(np.int8)
+
+    def enumerate_gf3(self, ins: List[int], outs: List[int], q: int) -> List[dict]:
+        """gf3 fallback: free 3-input boolean over base-atom triples; only
+        candidates with no example conflict and a fully decidable query."""
+        np = self.np
+        ex = np.array(ins, dtype=np.int64)
+        AB = np.array([self._bits_mat(self.A1[a][ex]) for a in range(self.NA)])
+        OB = self._bits_mat(outs)
+        QB = np.array([self._bits_mat([int(self.A1[a][q])])[0]
+                       for a in range(self.NA)])
+        cands: List[dict] = []
+        for i in range(self.NA):
+            for j in range(i + 1, self.NA):
+                base = AB[i] * 4 + AB[j] * 2
+                for k in range(j + 1, self.NA):
+                    idx = base + AB[k]
+                    tt = np.full(8, -1, dtype=np.int8)
+                    ok = True
+                    for v in range(8):
+                        cell = idx == v
+                        if not cell.any():
+                            continue
+                        has1 = bool((OB[cell] == 1).any())
+                        has0 = bool((OB[cell] == 0).any())
+                        if has1 and has0:
+                            ok = False
+                            break
+                        tt[v] = 1 if has1 else 0
+                    if not ok:
+                        continue
+                    qidx = QB[i] * 4 + QB[j] * 2 + QB[k]
+                    pred_bits = tt[qidx]
+                    if (pred_bits < 0).any():
+                        continue
+                    pred = 0
+                    for b in range(8):
+                        pred = (pred << 1) | int(pred_bits[b])
+                    tts = "".join("x" if t < 0 else str(t) for t in tt)
+                    cands.append({
+                        "tier": "gf3",
+                        "expr": (f"F[{tts}]({self.L1[i]},{self.L1[j]},"
+                                 f"{self.L1[k]})"),
+                        "ftab": None,
+                        "pred": pred,
+                        "cost": (6 + self.atom_cost(self.L1[i])
+                                 + self.atom_cost(self.L1[j])
+                                 + self.atom_cost(self.L1[k])),
+                        "kind": ("gf3", tuple(int(t) for t in tt), i, j, k),
+                    })
+        return cands
+
+    # ----------------------------------------------------- prior / scoring
+    def cand_pred(self, c: dict, q: int) -> int:
+        if c["ftab"] is not None:
+            return int(c["ftab"][q])
+        return c["pred"]
+
+    def signature(self, c: dict) -> str:
+        return f"{c['tier']}:{c['expr']}"
+
+    def family_sig(self, c: dict) -> str:
+        return f"{c['tier']}:{_EXT_DIG.sub('', c['expr'])}"
+
+    def score(self, c: dict, prior) -> tuple:
+        sig_cnt, fam_cnt = prior
+        s = (sig_cnt.get(self.signature(c), 0)
+             + 0.1 * fam_cnt.get(self.family_sig(c), 0))
+        return (-s, c["cost"], self.signature(c))
+
+    def prior(self) -> Tuple[Dict[str, int], Dict[str, int]]:
+        if self._prior_counts is None:
+            self._prior_counts = self._learn_prior()
+        return self._prior_counts
+
+    def _learn_prior(self) -> Tuple[Dict[str, int], Dict[str, int]]:
+        """Canonical-rule prior over data/train_split.csv bit problems
+        (cheapest truth-consistent candidate per problem; bit_prior.py
+        learn_prior, leak-free by construction)."""
+        import csv
+        from pathlib import Path
+
+        sig_cnt: Dict[str, int] = {}
+        fam_cnt: Dict[str, int] = {}
+        csv_path = Path(__file__).resolve().parents[2] / "data" / "train_split.csv"
+        if not csv_path.exists():
+            return sig_cnt, fam_cnt  # cost-only tiebreak fallback
+        with open(csv_path) as f:
+            for row in csv.DictReader(f):
+                if row.get("cat") != "bit_manipulation":
+                    continue
+                exs = _EXT_EX_RE.findall(row["prompt"])
+                qm = _EXT_Q_RE.search(row["prompt"])
+                ans = str(row["answer"]).strip()
+                if not exs or not qm or not re.fullmatch(r"[01]{8}", ans):
+                    continue
+                ins = [int(a, 2) for a, _ in exs]
+                outs = [int(b, 2) for _, b in exs]
+                q = int(qm.group(1), 2)
+                truth = int(ans, 2)
+                cands = self.enumerate_consistent(ins, outs)
+                if not cands:
+                    cands = self.enumerate_gf3(ins, outs, q)
+                good = [c for c in cands if self.cand_pred(c, q) == truth]
+                if not good:
+                    continue
+                c = min(good, key=lambda c: (c["cost"], self.signature(c)))
+                sig = self.signature(c)
+                fam = self.family_sig(c)
+                sig_cnt[sig] = sig_cnt.get(sig, 0) + 1
+                fam_cnt[fam] = fam_cnt.get(fam, 0) + 1
+        return sig_cnt, fam_cnt
+
+    # ------------------------------------------------- winner -> bit trees
+    def trees(self, c: dict) -> Tuple[list, Optional[tuple]]:
+        """Per-bit expression trees (one per output bit) + gf3 cell table."""
+        kind = c["kind"]
+        t = kind[0]
+        if t == "unary":
+            return list(self.proj2(kind[1])), None
+        if t == "pair":
+            op, ia, ib = kind[1], kind[2], kind[3]
+            base, na, nb = _EXT_FOLD[op]
+            A, B = self.proj2(ia), self.proj2(ib)
+            return [
+                (base,
+                 _ext_neg(A[i]) if na else A[i],
+                 _ext_neg(B[i]) if nb else B[i])
+                for i in range(N_BITS)
+            ], None
+        if t == "nested":
+            op2, p, ci, c_first = kind[1], kind[2], kind[3], kind[4]
+            op1, ia, ib = self.IPS[p]
+            base1, na1, nb1 = _EXT_FOLD[op1]
+            base2, no1, no2 = _EXT_FOLD[op2]
+            A, B, C = self._proj1[ia], self._proj1[ib], self._proj1[ci]
+            out = []
+            for i in range(N_BITS):
+                inner = (base1,
+                         _ext_neg(A[i]) if na1 else A[i],
+                         _ext_neg(B[i]) if nb1 else B[i])
+                first, second = (C[i], inner) if c_first else (inner, C[i])
+                if no1:
+                    first = _ext_neg(first)
+                if no2:
+                    second = _ext_neg(second)
+                out.append((base2, first, second))
+            return out, None
+        if t == "maj":
+            neg = kind[1]
+            pa, pb, pc = (self._proj1[k] for k in kind[2:5])
+            out = []
+            for i in range(N_BITS):
+                a, b, cc = pa[i], pb[i], pc[i]
+                if neg:
+                    a, b, cc = _ext_neg(a), _ext_neg(b), _ext_neg(cc)
+                out.append(("MAJ", a, b, cc))
+            return out, None
+        if t == "mux":
+            neg = kind[1]
+            ps, pb, pc = (self._proj1[k] for k in kind[2:5])
+            out = []
+            for i in range(N_BITS):
+                b, cc = pb[i], pc[i]
+                if neg:
+                    b, cc = _ext_neg(b), _ext_neg(cc)
+                out.append(("MUX", ps[i], b, cc))
+            return out, None
+        # gf3
+        tt = kind[1]
+        pa, pb, pc = (self._proj1[k] for k in kind[2:5])
+        return [("F", pa[i], pb[i], pc[i]) for i in range(N_BITS)], tt
+
+    # ------------------------------------------------- scan display pools
+    def scan_pool(self, tier: str, ins: List[int], outs: List[int],
+                  limit: int = 48) -> List[dict]:
+        """Cheap-first candidates of one tier that CONFLICT with the example
+        outputs — the rejection material for the v2 scan loop. Every entry
+        carries real recomputed per-example values up to (and including) the
+        first mismatching output; example-consistent candidates are skipped
+        (they may only ever appear as the winner)."""
+        MASK = 0xFF
+        entries: List[dict] = []
+        seen: set = set()
+
+        def rows_for(vals_fn) -> Optional[list]:
+            rows = []
+            for k, (iv, ov) in enumerate(zip(ins, outs)):
+                ops, pv = vals_fn(iv)
+                ok = pv == ov
+                rows.append((k, ops, _ext_b(pv), _ext_b(ov), ok))
+                if not ok:
+                    return rows
+            return None  # consistent with every example -> not rejectable
+
+        if tier == "unary":
+            for u in range(self.NA2):
+                tab = self.A2[u]
+                rows = rows_for(lambda iv, tab=tab: ((), int(tab[iv])))
+                if rows is None:
+                    continue
+                entries.append({"t": "unary", "label": self.L2[u], "rows": rows})
+                if len(entries) >= limit:
+                    break
+            return entries
+
+        if tier == "pair":
+            ops_sorted = sorted(self.PAIR_OPS, key=lambda o: (self.OP_COST[o], o))
+            m = min(12, self.NA2)
+            descs = []
+            for op in ops_sorted:
+                for i in range(m):
+                    rng = range(i + 1, m) if op in self.SYM_OPS else range(m)
+                    for j in rng:
+                        if i == j:
+                            continue
+                        cost = (self.OP_COST[op] + self.atom_cost(self.L2[i])
+                                + self.atom_cost(self.L2[j]))
+                        descs.append(
+                            (cost, f"{op}({self.L2[i]},{self.L2[j]})", op, i, j))
+            descs.sort(key=lambda d: (d[0], d[1]))
+            for cost, lab, op, i, j in descs:
+                fn = self.PAIR_OPS[op]
+                ta, tb = self.A2[i], self.A2[j]
+                key = fn(ta, tb).tobytes()
+                if key in seen:
+                    continue
+                rows = rows_for(
+                    lambda iv, ta=ta, tb=tb, fn=fn:
+                    ((_ext_b(ta[iv]), _ext_b(tb[iv])),
+                     int(fn(int(ta[iv]), int(tb[iv]))) & MASK))
+                if rows is None:
+                    continue
+                seen.add(key)
+                entries.append({"t": "pair", "label": lab, "rows": rows})
+                if len(entries) >= limit:
+                    break
+            return entries
+
+        if tier == "nested":
+            ops_sorted = sorted(self.PAIR_OPS, key=lambda o: (self.OP_COST[o], o))
+            mp = min(10, len(self.IPL))
+            order_c = sorted(range(self.NA),
+                             key=lambda c: (self.atom_cost(self.L1[c]), c))[:8]
+            descs = []
+            for op2 in ops_sorted:
+                for p in range(mp):
+                    for c in order_c:
+                        cost = (self.OP_COST[op2] + self.IPC[p]
+                                + self.atom_cost(self.L1[c]))
+                        descs.append((cost, f"{op2}({self.IPL[p]},{self.L1[c]})",
+                                      op2, p, c, False))
+                        if op2 not in self.SYM_OPS:
+                            descs.append(
+                                (cost, f"{op2}({self.L1[c]},{self.IPL[p]})",
+                                 op2, p, c, True))
+            descs.sort(key=lambda d: (d[0], d[1]))
+            for cost, lab, op2, p, c, c_first in descs:
+                fn = self.PAIR_OPS[op2]
+                ti, tc = self.IPT[p], self.A1[c]
+                tab = fn(tc, ti) if c_first else fn(ti, tc)
+                key = tab.tobytes()
+                if key in seen:
+                    continue
+                op1, ia, ib = self.IPS[p]
+                ta1, tb1 = self.A1[ia], self.A1[ib]
+
+                def vals(iv, ta1=ta1, tb1=tb1, ti=ti, tc=tc, fn=fn,
+                         c_first=c_first):
+                    inner_v, c_v = int(ti[iv]), int(tc[iv])
+                    pv = (fn(c_v, inner_v) if c_first
+                          else fn(inner_v, c_v)) & MASK
+                    return ((_ext_b(ta1[iv]), _ext_b(tb1[iv]),
+                             _ext_b(inner_v), _ext_b(c_v)), pv)
+
+                rows = rows_for(vals)
+                if rows is None:
+                    continue
+                seen.add(key)
+                entries.append({
+                    "t": "nested", "label": lab, "rows": rows,
+                    "op1": op1, "op2": op2, "c_first": c_first,
+                })
+                if len(entries) >= limit:
+                    break
+            return entries
+
+        if tier in ("maj", "mux"):
+            descs = []
+            if tier == "maj":
+                m = min(8, self.NA)
+                for i in range(m):
+                    for j in range(i + 1, m):
+                        for k in range(j + 1, m):
+                            cost = (1 + self.atom_cost(self.L1[i])
+                                    + self.atom_cost(self.L1[j])
+                                    + self.atom_cost(self.L1[k]))
+                            lab = f"MAJ({self.L1[i]},{self.L1[j]},{self.L1[k]})"
+                            descs.append((cost, lab, i, j, k))
+            else:
+                m = min(6, self.NA)
+                for s in range(m):
+                    for b in range(m):
+                        for c in range(m):
+                            if c == b:
+                                continue
+                            cost = (1 + self.atom_cost(self.L1[s])
+                                    + self.atom_cost(self.L1[b])
+                                    + self.atom_cost(self.L1[c]))
+                            lab = f"MUX({self.L1[s]};{self.L1[b]},{self.L1[c]})"
+                            descs.append((cost, lab, s, b, c))
+            descs.sort(key=lambda d: (d[0], d[1]))
+            for cost, lab, x, y, z in descs:
+                tx, ty, tz = self.A1[x], self.A1[y], self.A1[z]
+                if tier == "maj":
+                    tab = (tx & ty) | ((tx | ty) & tz)
+                else:
+                    tab = (tx & ty) | ((~tx & MASK) & tz)
+                key = tab.tobytes()
+                if key in seen:
+                    continue
+                rows = rows_for(
+                    lambda iv, tx=tx, ty=ty, tz=tz, tab=tab:
+                    ((_ext_b(tx[iv]), _ext_b(ty[iv]), _ext_b(tz[iv])),
+                     int(tab[iv])))
+                if rows is None:
+                    continue
+                seen.add(key)
+                entries.append({"t": tier, "label": lab, "rows": rows})
+                if len(entries) >= limit:
+                    break
+            return entries
+
+        if tier == "gf3":
+            np = self.np
+            ex = np.array(ins, dtype=np.int64)
+            OB = self._bits_mat(outs)
+            m = min(8, self.NA)
+            AB = [self._bits_mat(self.A1[a][ex]) for a in range(m)]
+            for i in range(m):
+                for j in range(i + 1, m):
+                    base = AB[i] * 4 + AB[j] * 2
+                    for k in range(j + 1, m):
+                        idx = base + AB[k]
+                        conflict = None
+                        for v in range(8):
+                            cell = idx == v
+                            if not cell.any():
+                                continue
+                            if bool((OB[cell] == 1).any()) and bool(
+                                    (OB[cell] == 0).any()):
+                                conflict = v
+                                break
+                        if conflict is None:
+                            continue
+                        entries.append({
+                            "t": "gf3r",
+                            "label": (f"F({self.L1[i]},{self.L1[j]},"
+                                      f"{self.L1[k]})"),
+                            "cell": conflict,
+                        })
+                        if len(entries) >= limit:
+                            return entries
+            return entries
+
+        raise ValueError(f"unknown tier {tier}")
+
+
+_EXT_ENGINE: Optional[_ExtEngine] = None
+
+
+def _ext_engine() -> _ExtEngine:
+    global _EXT_ENGINE
+    if _EXT_ENGINE is None:
+        _EXT_ENGINE = _ExtEngine()
+    return _EXT_ENGINE
+
+
+_EXT_TIER_ORDER = ("unary", "pair", "nested", "maj", "mux", "gf3")
+_EXT_CAP = 7250       # v3 emitter ceiling (spec: p95 <= 7250); traces above it
+                      # go through the slimming ladder, hard max _EV_MAX_TOKENS
+_EXT_FILL_MIN = 6250  # stop adding rejected candidates once reached
+                      # (v3 length band target: p50 6200-6700)
+_EXT_FILL_MAX = 7000  # a rejected candidate may never push past this
+
+
+def _ext_b(x) -> str:
+    return format(int(x) & 0xFF, "08b")
+
+
+def _ext_entry_lines(e: dict) -> List[str]:
+    """Render one scan-candidate block: label line + per-example verification
+    rows (real recomputed data; rejected candidates end on their first
+    mismatching output, marked x)."""
+    if e["t"] == "gf3r":
+        return [e["label"], f"cell {e['cell']:03b} -> 0 1 x"]
+    lines = [e["label"]]
+    for k, ops, pv, ov, ok in e["rows"]:
+        mark = "ok" if ok else "x"
+        if e["t"] == "nested":
+            av, bv, inner_v, c_v = ops
+            first, second = (c_v, inner_v) if e["c_first"] else (inner_v, c_v)
+            lines.append(f"{k} {e['op1']} {av} {bv} -> {inner_v} "
+                         f"{e['op2']} {first} {second} -> {pv} vs {ov} {mark}")
+        elif ops:
+            lines.append(f"{k} {' '.join(ops)} -> {pv} vs {ov} {mark}")
         else:
-            vals = [fn(ins[e]) for _, fn in cand.atoms]  # type: ignore[operator]
-            body = " ".join(vals) + f" -> {pred}"
-        if pred == outs[e]:
-            lines.append(f"{prefix} {body} vs {outs[e]} ok")
+            lines.append(f"{k} {pv} vs {ov} {mark}")
+    return lines
+
+
+def _ext_winner_block(eng: _ExtEngine, pick: dict, ins_i: List[int],
+                      outs_i: List[int], slim: bool = False
+                      ) -> Optional[List[str]]:
+    """Winner candidate block: label + FULL all-example verification rows
+    (every row recomputed and required to match, else refuse to emit) +
+    closing 'match' line. gf3 winners additionally derive their cell table
+    before verifying. slim=True drops operand columns from the rows (token
+    budget rescue for the largest prefixes; the verification stays full)."""
+    kind = pick["kind"]
+    t = kind[0]
+    lines: List[str] = [pick["expr"]]
+
+    if t == "gf3":
+        tt = kind[1]
+        ta, tb, tc = (eng.A1[k] for k in kind[2:5])
+        lines.append("Cells (a,b,c bits -> output bit, over all example bits)")
+        for v in range(8):
+            lines.append(f"{v:03b} {'-' if tt[v] < 0 else tt[v]}")
+        for k, (iv, ov) in enumerate(zip(ins_i, outs_i)):
+            av, bv, cv = int(ta[iv]), int(tb[iv]), int(tc[iv])
+            pv = 0
+            for b in range(8):
+                idx = ((((av >> (7 - b)) & 1) << 2)
+                       | (((bv >> (7 - b)) & 1) << 1)
+                       | ((cv >> (7 - b)) & 1))
+                if tt[idx] < 0:
+                    return None
+                pv = (pv << 1) | int(tt[idx])
+            if pv != ov:
+                return None
+            if slim:
+                lines.append(f"{k} {_ext_b(pv)} vs {_ext_b(ov)} ok")
+            else:
+                lines.append(f"{k} {_ext_b(av)} {_ext_b(bv)} {_ext_b(cv)} "
+                             f"-> {_ext_b(pv)} vs {_ext_b(ov)} ok")
+        lines.append("match")
+        return lines
+
+    ftab = pick["ftab"]
+    for k, (iv, ov) in enumerate(zip(ins_i, outs_i)):
+        pv = int(ftab[iv])
+        if pv != ov:
+            return None
+        if slim or t == "unary":
+            lines.append(f"{k} {_ext_b(pv)} vs {_ext_b(ov)} ok")
+        elif t == "pair":
+            _, op, i, j = kind
+            ta, tb = eng.A2[i], eng.A2[j]
+            lines.append(f"{k} {_ext_b(ta[iv])} {_ext_b(tb[iv])} "
+                         f"-> {_ext_b(pv)} vs {_ext_b(ov)} ok")
+        elif t == "nested":
+            _, op2, p, c, c_first = kind
+            op1, ia, ib = eng.IPS[p]
+            inner_v = _ext_b(eng.IPT[p][iv])
+            c_v = _ext_b(eng.A1[c][iv])
+            first, second = (c_v, inner_v) if c_first else (inner_v, c_v)
+            lines.append(f"{k} {op1} {_ext_b(eng.A1[ia][iv])} "
+                         f"{_ext_b(eng.A1[ib][iv])} -> {inner_v} "
+                         f"{op2} {first} {second} "
+                         f"-> {_ext_b(pv)} vs {_ext_b(ov)} ok")
+        elif t in ("maj", "mux"):
+            ta, tb, tc = (eng.A1[x] for x in kind[2:5])
+            lines.append(f"{k} {_ext_b(ta[iv])} {_ext_b(tb[iv])} "
+                         f"{_ext_b(tc[iv])} -> {_ext_b(pv)} vs {_ext_b(ov)} ok")
         else:
-            j = _ev_first_diff(pred, outs[e])
-            lines.append(f"{prefix} {body} vs {outs[e]} x@{j}")
-            return False
-    return True
+            return None
+    lines.append("match")
+    return lines
 
 
-def _ev_apply(lines: List[str], cand: _EvCand, q: str) -> str:
-    lines.append("")
-    lines.append(f"{cand.expr()} reproduces every example; scan stops.")
-    lines.append("")
-    lines.append(f"Applying to {q}")
-    vals = [fn(q) for _, fn in cand.atoms]  # type: ignore[operator]
-    lines.append(
-        "operands: "
-        + " ".join(f"{lab}={v}" for (lab, _), v in zip(cand.atoms, vals))
-    )
-    bits: List[str] = []
-    for j in range(N_BITS):
-        if cand.kind == "unary":
-            r = vals[0][j]
-            lines.append(f"b{j}: {r}")
-        elif cand.kind == "pair":
-            a, b = vals[0][j], vals[1][j]
-            r = _EV_PAIR_OPS[cand.op](a * N_BITS, b * N_BITS)[0]  # type: ignore[operator]
-            lines.append(f"b{j}: {a}{_EV_PAIR_SYM[cand.op]}{b} -> {r}")
-        elif cand.kind == "maj":
-            a, b, c = vals[0][j], vals[1][j], vals[2][j]
-            r = "1" if (a + b + c).count("1") >= 2 else "0"
-            lines.append(f"b{j}: {a},{b},{c} -> {r}")
-        else:
-            s, b, c = vals[0][j], vals[1][j], vals[2][j]
-            r = b if s == "1" else c
-            src = "b" if s == "1" else "c"
-            lines.append(f"b{j}: s={s} -> {src}={r}")
-        bits.append(r)
-    ans = "".join(bits)
-    lines.append(f"Output: {ans}")
-    lines.append("")
-    lines.append(f"The answer is \\boxed{{{ans}}}")
-    return ans
+def _reasoning_prior_family(problem: Problem) -> Optional[str]:
+    """v3 isomorphic-mixing trace (2026-06-13).
 
+    Structure: the COMPLETE legacy candidate-scan prefix (example blocks +
+    all nine per-column sections, byte-identical to the legacy emitter up to
+    the Selecting block), then extended-family candidates (unary -> pair ->
+    nested -> MAJ -> MUX -> gf3, cheap-first) flow on as ORDINARY candidate
+    segments of the same single scan loop: label line + per-example
+    verification rows recomputed for real, rejected at the first mismatching
+    output (x mark). No phase marker, no legend, no tier headers. The scan
+    stops at the winner segment (all example rows ok + match), then the
+    legacy-geometry per-bit Applying tail ending in \\boxed{}.
 
-def _reasoning_enum_verify(problem: Problem) -> Optional[str]:
+    The winner is chosen by prior tiebreak over all example-consistent
+    candidates; when the ground truth is available (corpus generation) the
+    best-scored TRUTH-consistent candidate is preferred (truth-box corpus
+    philosophy), falling back to the plain prior pick on the uncovered tail.
+    Displayed rejected-candidate counts are tuned per problem so the SFT
+    completion lands in the legacy length band (p50 6200-6700, p95 <= 7250,
+    max <= 7349)."""
     examples = problem.examples
     if not examples:
         return None
     outs = [_normalize_bits(ex.output_value) for ex in examples]
     ins = [_normalize_bits(ex.input_value) for ex in examples]
     q = _normalize_bits(problem.question)
-    if (
-        not q
-        or any(not b for b in ins + outs)
-        or len(ins) != len(outs)
-        or len(ins) < 3
-    ):
-        return None
-    n = len(ins)
-
-    # Atom values and mismatch masks on e0/e1 (the scan's working set).
-    V = [[fn(ins[e]) for _, fn in _EV_ATOMS] for e in range(2)]  # type: ignore[operator]
-    D = [[_ev_xor(V[e][i], outs[e]) for i in range(_EV_N)] for e in range(2)]
-    M = [[D[e][i].count("1") for i in range(_EV_N)] for e in range(2)]
-
-    L: List[str] = []
-    L.append(
-        "We need to deduce the transformation by scanning whole-register "
-        "candidate rules in a fixed priority order."
-    )
-    L.append("I will put my final answer inside \\boxed{}.")
-    L.append("")
-    L.append(
-        "Order: atoms; XOR, AND, OR, AND-NOT, OR-NOT pairs; MAJ triples; "
-        "MUX. Atoms: id, rl1-7 rotate left, sl1-7 shift left (zeros in "
-        "right), sr1-7 shift right (zeros in left), nt NOT, rv reverse. A "
-        "candidate dies at its first mismatch with the printed bits."
-    )
-    L.append("")
-    L.append("Examples")
-    for e in range(n):
-        L.append(f"e{e}: {ins[e]} -> {outs[e]}")
-    L.append(f"q: {q}")
-    L.append("")
-    L.append(
-        "Atom table, columns v0 d0 m0 v1 d1 (v = atom(in), d = v XOR out, "
-        "m = ones(d))."
-    )
-    for i, (lab, _) in enumerate(_EV_ATOMS):
-        L.append(
-            f"{lab}: {V[0][i]} {D[0][i]} {M[0][i]} {V[1][i]} {D[1][i]}"
-        )
-    L.append("")
-
-    winner: Optional[_EvCand] = None
-
-    def _flush(header: str, items: List[str]) -> None:
-        if items:
-            L.append(header + " " + ", ".join(items))
-            items.clear()
-
-    # ---- Stage 1: unary atoms (need m0 = 0 and d1 all zero). ----
-    hdr = "Unary scan (need m0=0 and d1=0):"
-    items: List[str] = []
-    for i, (lab, fn) in enumerate(_EV_ATOMS):
-        s = M[0][i]
-        if s > 0:
-            items.append(f"{lab} {s}")
-            continue
-        if "1" in D[1][i]:
-            items.append(f"{lab} 0 d1 no")
-            continue
-        items.append(f"{lab} 0 -> try")
-        _flush(hdr, items)
-        cand = _EvCand("unary", lab, ((lab, fn),))
-        if _ev_verify(L, cand, ins, outs):
-            winner = cand
-            break
-    if winner is None:
-        items.append("none survive")
-        _flush(hdr, items)
-        L.append("")
-
-    # ---- Stage 2: XOR pairs via residual lookup (v(b) must equal d(a)). ----
-    if winner is None:
-        L.append(
-            "XOR(a,b): b = a XOR out, so d(a) must equal some atom's v on "
-            "e0 and e1 (a=b marks a full hit, a~b a d0-only hit)."
-        )
-        hdr = "XOR scan:"
-        items = []
-        for i, (lab, fn) in enumerate(_EV_ATOMS):
-            if winner is not None:
-                break
-            hits = [j for j in range(_EV_N) if j != i and V[0][j] == D[0][i]]
-            if not hits:
-                items.append(f"{lab} -")
-                continue
-            for j in hits:
-                labj = _EV_ATOMS[j][0]
-                if V[1][j] != D[1][i]:
-                    items.append(f"{lab}~{labj}")
-                    continue
-                items.append(f"{lab}={labj} -> try")
-                _flush(hdr, items)
-                cand = _EvCand(
-                    "pair", "XOR", ((lab, fn), (labj, _EV_ATOMS[j][1]))
-                )
-                if _ev_verify(L, cand, ins, outs):
-                    winner = cand
-                    break
-        if winner is None:
-            items.append("no pair")
-            _flush(hdr, items)
-            L.append("")
-
-    # Helper: filtered survivor scan + pair trials for AND/OR/AND-NOT/OR-NOT.
-    def _filter_scan(
-        title: str, viol: object, reuse: Optional[List[int]] = None
-    ) -> List[int]:
-        """Print a per-atom witness scan; return surviving atom indices.
-
-        viol(e, i) -> first violating bit index or -1, computed from the
-        printed strings V[e][i] and outs[e].
-        """
-        if reuse is not None:
-            L.append(
-                title
-                + " survivors (from above): "
-                + (", ".join(_EV_ATOMS[i][0] for i in reuse) or "none")
-            )
-            return reuse
-        surv: List[int] = []
-        its: List[str] = []
-        for i, (lab, _) in enumerate(_EV_ATOMS):
-            j0 = viol(0, i)  # type: ignore[operator]
-            if j0 >= 0:
-                its.append(f"{lab} x{j0}")
-                continue
-            j1 = viol(1, i)  # type: ignore[operator]
-            if j1 >= 0:
-                its.append(f"{lab} y{j1}")
-                continue
-            surv.append(i)
-            its.append(f"{lab} ok")
-        L.append(title + " " + ", ".join(its))
-        # Cap survivor blowup: extend the same witness test to later examples;
-        # stop as soon as a round eliminates nobody (no progress, save ink).
-        r = 2
-        while len(surv) > 6 and r < n:
-            its = []
-            kept: List[int] = []
-            for i in surv:
-                v = _EV_ATOMS[i][1](ins[r])  # type: ignore[operator]
-                jr = -1
-                for jj in range(N_BITS):
-                    if viol_cell(v[jj], outs[r][jj]):  # type: ignore[operator]
-                        jr = jj
-                        break
-                if jr >= 0:
-                    its.append(f"{_EV_ATOMS[i][0]} x{jr}")
-                else:
-                    kept.append(i)
-            L.append(
-                f"still {len(surv)} candidates; e{r} kills: "
-                + (", ".join(its) if its else "none")
-            )
-            no_progress = len(kept) == len(surv)
-            surv = kept
-            r += 1
-            if no_progress:
-                break
-        return surv
-
-    def _try_pairs(op: str, lefts: List[int], rights: List[int], sym: bool) -> None:
-        nonlocal winner
-        todo: List[Tuple[int, int]] = []
-        for i in lefts:
-            for j in rights:
-                if j == i or (sym and j <= i):
-                    continue
-                todo.append((i, j))
-        if not todo:
-            L.append("no pair to try.")
-            return
-        if len(todo) > 12:
-            L.append(f"{len(todo)} pairs; trying the first 12 in order only.")
-            todo = todo[:12]
-        for i, j in todo:
-            cand = _EvCand(
-                "pair",
-                op,
-                (
-                    (_EV_ATOMS[i][0], _EV_ATOMS[i][1]),
-                    (_EV_ATOMS[j][0], _EV_ATOMS[j][1]),
-                ),
-            )
-            if _ev_verify(L, cand, ins, outs):
-                winner = cand
-                return
-
-    # ---- Stage 3: AND pairs. ----
-    and_surv: List[int] = []
-    if winner is None:
-        def _viol_and(e: int, i: int) -> int:
-            for j in range(N_BITS):
-                if outs[e][j] == "1" and V[e][i][j] == "0":
-                    return j
-            return -1
-
-        viol_cell = lambda vb, ob: ob == "1" and vb == "0"  # noqa: E731
-        and_surv = _filter_scan(
-            "AND(a,b): out must lie inside both operands; witness bit "
-            "(x=e0, y=e1):",
-            _viol_and,
-        )
-        _try_pairs("AND", and_surv, and_surv, sym=True)
-        if winner is None:
-            L.append("")
-
-    # ---- Stage 4: OR pairs. ----
-    or_surv: List[int] = []
-    if winner is None:
-        def _viol_or(e: int, i: int) -> int:
-            for j in range(N_BITS):
-                if outs[e][j] == "0" and V[e][i][j] == "1":
-                    return j
-            return -1
-
-        viol_cell = lambda vb, ob: ob == "0" and vb == "1"  # noqa: E731
-        or_surv = _filter_scan(
-            "OR(a,b): both operands must lie inside out; witness bit "
-            "(x=e0, y=e1):",
-            _viol_or,
-        )
-        _try_pairs("OR", or_surv, or_surv, sym=True)
-        if winner is None:
-            L.append("")
-
-    # ---- Stage 5: AND-NOT pairs (a&~b): a covers out, b zero on out's ones.
-    if winner is None:
-        def _viol_andn_b(e: int, i: int) -> int:
-            for j in range(N_BITS):
-                if outs[e][j] == "1" and V[e][i][j] == "1":
-                    return j
-            return -1
-
-        viol_cell = lambda vb, ob: ob == "1" and vb == "1"  # noqa: E731
-        L.append("AND-NOT(a,b) = a&~b: a must cover out (AND scan above); "
-                 "b must be 0 on out's ones.")
-        a_side = _filter_scan("a-side", None, reuse=and_surv)
-        b_side = _filter_scan(
-            "b-side witness bit (x=e0, y=e1):", _viol_andn_b
-        )
-        _try_pairs("AND-NOT", a_side, b_side, sym=False)
-        if winner is None:
-            L.append("")
-
-    # ---- Stage 6: OR-NOT pairs (a|~b): a inside out, b one on out's zeros.
-    if winner is None:
-        def _viol_orn_b(e: int, i: int) -> int:
-            for j in range(N_BITS):
-                if outs[e][j] == "0" and V[e][i][j] == "0":
-                    return j
-            return -1
-
-        viol_cell = lambda vb, ob: ob == "0" and vb == "0"  # noqa: E731
-        L.append("OR-NOT(a,b) = a|~b: a must lie inside out (OR scan above); "
-                 "b must be 1 on out's zeros.")
-        a_side = _filter_scan("a-side", None, reuse=or_surv)
-        b_side = _filter_scan(
-            "b-side witness bit (x=e0, y=e1):", _viol_orn_b
-        )
-        _try_pairs("OR-NOT", a_side, b_side, sym=False)
-        if winner is None:
-            L.append("")
-
-    # ---- Stage 7/8 shared: disjoint d-mask pairs on e0 and e1. ----
-    pairs: List[Tuple[int, int]] = []
-    if winner is None:
-        L.append(
-            "MAJ(a,b,c): the output is the majority vote, so at most one "
-            "operand may differ from out at any cell -> d-masks must be "
-            "pairwise disjoint (checked on e0 and e1)."
-        )
-        partner_items: List[str] = []
-        for i in range(_EV_N):
-            ps = [
-                j
-                for j in range(i + 1, _EV_N)
-                if _ev_disjoint(D[0][i], D[0][j])
-                and _ev_disjoint(D[1][i], D[1][j])
-            ]
-            for j in ps:
-                pairs.append((i, j))
-            partner_items.append(
-                f"{_EV_ATOMS[i][0]} "
-                + (" ".join(_EV_ATOMS[j][0] for j in ps) if ps else "-")
-            )
-        L.append("Disjoint partners (j>i): " + "; ".join(partner_items))
-        # Cap blowup: prune the pair list on later examples; stop after two
-        # consecutive no-progress rounds (a single plateau can still break).
-        r = 2
-        stall = 0
-        while len(pairs) > 10 and r < n and stall < 2:
-            its = []
-            kept_pairs: List[Tuple[int, int]] = []
-            for (i, j) in pairs:
-                di = _ev_xor(_EV_ATOMS[i][1](ins[r]), outs[r])  # type: ignore[operator]
-                dj = _ev_xor(_EV_ATOMS[j][1](ins[r]), outs[r])  # type: ignore[operator]
-                li, lj = _EV_ATOMS[i][0], _EV_ATOMS[j][0]
-                if _ev_disjoint(di, dj):
-                    kept_pairs.append((i, j))
-                else:
-                    ov = next(
-                        jj
-                        for jj in range(N_BITS)
-                        if di[jj] == "1" and dj[jj] == "1"
-                    )
-                    its.append(f"{li}-{lj} x{ov}")
-            L.append(
-                f"{len(pairs)} disjoint pairs; e{r} kills: "
-                + (", ".join(its) if its else "none")
-            )
-            stall = stall + 1 if len(kept_pairs) == len(pairs) else 0
-            pairs = kept_pairs
-            r += 1
-
-    # ---- Stage 7: MAJ triples (all three pairs disjoint). ----
-    if winner is None:
-        pair_set = {(i, j) for (i, j) in pairs}
-        tried: List[str] = []
-        for (i, j) in pairs:
-            if winner is not None:
-                break
-            thirds = [
-                k
-                for k in range(j + 1, _EV_N)
-                if (i, k) in pair_set and (j, k) in pair_set
-            ]
-            li, lj = _EV_ATOMS[i][0], _EV_ATOMS[j][0]
-            if not thirds:
-                tried.append(f"({li},{lj}) no third")
-                continue
-            for k in thirds:
-                lk = _EV_ATOMS[k][0]
-                tried.append(f"({li},{lj},{lk}) -> try")
-                if tried:
-                    L.append("Triples: " + ", ".join(tried))
-                    tried = []
-                cand = _EvCand(
-                    "maj",
-                    "MAJ",
-                    (
-                        (li, _EV_ATOMS[i][1]),
-                        (lj, _EV_ATOMS[j][1]),
-                        (lk, _EV_ATOMS[k][1]),
-                    ),
-                )
-                if _ev_verify(L, cand, ins, outs):
-                    winner = cand
-                    break
-        if winner is None:
-            tried.append("no surviving triple")
-            L.append("Triples: " + ", ".join(tried))
-            L.append("")
-
-    # ---- Stage 8: MUX over disjoint pairs; forced-sel pattern lookup.
-    if winner is None:
-        L.append(
-            "MUX(s;b,c): out follows b where s=1 and c where s=0; (b,c) must "
-            "be a disjoint pair, and every cell where b!=c forces a bit of s "
-            "('.' = free). An atom matching the forced pattern is a sel for "
-            "(b,c); one matching its complement is a sel for the swapped "
-            "pair."
-        )
-
-        def _mux_pattern(bi: int, ci: int, e: int) -> Optional[str]:
-            """Forced sel bits on example e; None if the pair is impossible
-            there (b == c != out at some cell)."""
-            vb_s = _EV_ATOMS[bi][1](ins[e]) if e >= 2 else V[e][bi]  # type: ignore[operator]
-            vc_s = _EV_ATOMS[ci][1](ins[e]) if e >= 2 else V[e][ci]  # type: ignore[operator]
-            pat = []
-            for jj in range(N_BITS):
-                vb, vc = vb_s[jj], vc_s[jj]
-                if vb == vc:
-                    if outs[e][jj] != vb:
-                        return None
-                    pat.append(".")
-                else:
-                    pat.append("1" if outs[e][jj] == vb else "0")
-            return "".join(pat)
-
-        def _pat_match(val: str, pat: str) -> bool:
-            return all(pc == "." or pc == val[jj] for jj, pc in enumerate(pat))
-
-        def _pat_comp(pat: str) -> str:
-            return "".join(
-                "." if c == "." else ("1" if c == "0" else "0") for c in pat
-            )
-
-        for (pi, pj) in pairs:
-            if winner is not None:
-                break
-            lb, lc = _EV_ATOMS[pi][0], _EV_ATOMS[pj][0]
-            pats = [_mux_pattern(pi, pj, e) for e in range(2)]
-            # Disjointness on e0/e1 guarantees the pattern exists there.
-            assert pats[0] is not None and pats[1] is not None
-            # cands: (atom index, swapped?) in atom order, straight before
-            # swapped at the same atom.
-            cands: List[Tuple[int, bool]] = []
-            for k in range(_EV_N):
-                if _pat_match(V[0][k], pats[0]) and _pat_match(V[1][k], pats[1]):
-                    cands.append((k, False))
-                if _pat_match(V[0][k], _pat_comp(pats[0])) and _pat_match(
-                    V[1][k], _pat_comp(pats[1])
-                ):
-                    cands.append((k, True))
-            L.append(
-                f"b={lb} c={lc}: forced s e0 {pats[0]} e1 {pats[1]}; matches: "
-                + (
-                    ", ".join(
-                        f"{_EV_ATOMS[k][0]}{' swapped' if sw else ''}"
-                        for k, sw in cands
-                    )
-                    if cands
-                    else "none"
-                )
-            )
-            # Extend the forced pattern example by example until at most one
-            # sel remains: pattern eliminations cost one short line, while a
-            # late trial death costs a full verify chain. A sel that matches
-            # the forced pattern on every example is exactly consistent.
-            r = 2
-            killed = False
-            while len(cands) > 1 and r < n:
-                vb_r = _EV_ATOMS[pi][1](ins[r])  # type: ignore[operator]
-                vc_r = _EV_ATOMS[pj][1](ins[r])  # type: ignore[operator]
-                pr = _mux_pattern(pi, pj, r)
-                if pr is None:
-                    jj = next(
-                        j
-                        for j in range(N_BITS)
-                        if vb_r[j] == vc_r[j] != outs[r][j]
-                    )
-                    L.append(
-                        f"extend to e{r}: b {vb_r} c {vc_r}; b=c!=out at "
-                        f"b{jj}; pair dies."
-                    )
-                    killed = True
-                    break
-                kept_c = [
-                    (k, sw)
-                    for k, sw in cands
-                    if _pat_match(
-                        _EV_ATOMS[k][1](ins[r]),  # type: ignore[operator]
-                        _pat_comp(pr) if sw else pr,
-                    )
-                ]
-                L.append(
-                    f"{len(cands)} sels; extend to e{r}: b {vb_r} c {vc_r} "
-                    f"forced {pr}; keep: "
-                    + (
-                        ", ".join(
-                            f"{_EV_ATOMS[k][0]}{' swapped' if sw else ''}"
-                            for k, sw in kept_c
-                        )
-                        if kept_c
-                        else "none"
-                    )
-                )
-                cands = kept_c
-                r += 1
-            if killed:
-                continue
-            for k, sw in cands:
-                bi, ci = (pj, pi) if sw else (pi, pj)
-                cand = _EvCand(
-                    "mux",
-                    "MUX",
-                    (
-                        (_EV_ATOMS[k][0], _EV_ATOMS[k][1]),
-                        (_EV_ATOMS[bi][0], _EV_ATOMS[bi][1]),
-                        (_EV_ATOMS[ci][0], _EV_ATOMS[ci][1]),
-                    ),
-                )
-                if _ev_verify(L, cand, ins, outs):
-                    winner = cand
-                    break
-
-    if winner is None:
+    if not q or any(not b for b in ins + outs) or len(ins) != len(outs):
         return None
 
-    _ev_apply(L, winner, q)
-    return "\n".join(L)
+    res = _legacy_prefix(problem)
+    if res is None:
+        return None
+    prefix_lines, _ctx = res
+    try:
+        cut = prefix_lines.index("Selecting")
+    except ValueError:
+        return None
+    head = prefix_lines[:cut]  # ends with the blank line after XOR-NOT
+
+    eng = _ext_engine()
+    ins_i = [int(s, 2) for s in ins]
+    outs_i = [int(s, 2) for s in outs]
+    q_i = int(q, 2)
+    cands = eng.enumerate_consistent(ins_i, outs_i)
+    if not cands:
+        cands = eng.enumerate_gf3(ins_i, outs_i, q_i)
+    if not cands:
+        return None
+    prior = eng.prior()
+    ranked = sorted(cands, key=lambda c: eng.score(c, prior))
+    pick = ranked[0]
+    answer = (problem.answer or "").strip()
+    if _EV_BITS_RE.fullmatch(answer):
+        truth_i = int(answer, 2)
+        for c in ranked:
+            if eng.cand_pred(c, q_i) == truth_i:
+                pick = c
+                break
+    trees, tt = eng.trees(pick)
+    win_tier = pick["kind"][0]
+    win_full = _ext_winner_block(eng, pick, ins_i, outs_i, slim=False)
+    win_slim = _ext_winner_block(eng, pick, ins_i, outs_i, slim=True)
+    if win_full is None or win_slim is None:
+        return None
+
+    # Per-bit tail: Applying block (projection of the verified winner into
+    # the legacy per-bit Applying geometry; each line names its per-bit rule,
+    # so no separate Selected vector is emitted).
+    apply_lines = [f"Applying to {q}", "Input"]
+    for i, bit in enumerate(q):
+        apply_lines.append(f"{i} {bit}")
+    apply_lines.append("Output")
+    ans_bits: List[str] = []
+    for i in range(N_BITS):
+        line, v = _ext_apply_line(i, trees[i], q, tt)
+        apply_lines.append(line)
+        ans_bits.append(v)
+    ans = "".join(ans_bits)
+    if int(ans, 2) != eng.cand_pred(pick, q_i):
+        return None  # projection mismatch guard (never emit inconsistency)
+    apply_lines.append("")
+    apply_lines.append(f"The answer is \\boxed{{{ans}}}")
+
+    tiers = list(_EXT_TIER_ORDER[: _EXT_TIER_ORDER.index(win_tier) + 1])
+    pools = {t: eng.scan_pool(t, ins_i, outs_i) for t in tiers}
+
+    def assemble(counts: Dict[str, int], slim: bool) -> str:
+        """v3 isomorphic mixing: the extended candidates flow straight after
+        the last legacy section as ORDINARY candidate segments (label line +
+        per-example verification rows, first mismatch marked x) inside the one
+        and only scan loop — no phase marker, no legend, no tier headers.
+        The scan stops at the winner segment (all rows ok + match), then the
+        legacy-geometry Applying tail. slim=True drops operand columns from
+        the winner rows (token-budget rescue; verification stays full)."""
+        body: List[str] = []
+        win_lines = win_slim if slim else win_full
+        for t in tiers:
+            for e in pools[t][: counts[t]]:
+                body.extend(_ext_entry_lines(e))
+            if t == win_tier:
+                body.extend(win_lines)
+        body.append("")
+        parts = list(head) + body
+        parts.extend(apply_lines)
+        return "\n".join(parts)
+
+    def comp_tokens(text: str) -> int:
+        return _ev_token_count(f"{text}\n</think>\n\\boxed{{{ans}}}<|im_end|>")
+
+    # Minimum scan evidence: one cheapest rejected candidate per displayed
+    # tier (the scan-with-rejection geometry must survive even on the
+    # largest prefixes; only the deepest budget rescue may drop it).
+    min_counts = {t: (1 if pools[t] else 0) for t in tiers}
+
+    text = assemble(min_counts, slim=False)
+    ntok = comp_tokens(text)
+    if ntok > _EXT_CAP:
+        # Budget rescue ladder; rejection evidence is dropped last.
+        for slim, counts in ((True, min_counts), (True, {t: 0 for t in tiers})):
+            cand_text = assemble(counts, slim=slim)
+            cand_tok = comp_tokens(cand_text)
+            if cand_tok < ntok:
+                text, ntok = cand_text, cand_tok
+            if ntok <= _EXT_CAP:
+                break
+        return text if ntok <= _EV_MAX_TOKENS else None
+
+    # Fill with rejection evidence: round-robin across tiers, cheap-first
+    # within each tier, until the completion reaches the legacy length band.
+    counts = dict(min_counts)
+    active = [t for t in tiers if counts[t] < len(pools[t])]
+    while ntok < _EXT_FILL_MIN and active:
+        for t in list(active):
+            if counts[t] >= len(pools[t]):
+                active.remove(t)
+                continue
+            counts[t] += 1
+            cand_text = assemble(counts, slim=False)
+            cand_tok = comp_tokens(cand_text)
+            if cand_tok > _EXT_FILL_MAX:
+                counts[t] -= 1
+                active.remove(t)
+                continue
+            text, ntok = cand_text, cand_tok
+            if ntok >= _EXT_FILL_MIN:
+                break
+    return text
 
 
 _EV_BOX_RE = re.compile(r"\\boxed\{([^}]*)\}")
@@ -1708,12 +2150,7 @@ def _ev_boxed(text: str) -> str:
     return m[-1].strip() if m else ""
 
 
-def _ev_completion_fits(text: str, answer: str) -> bool:
-    """True iff the SFT completion built from this trace fits the token cap.
-
-    Uses the corpus completion template (corpus.py). Falls back to a
-    conservative char bound if the tokenizer asset is unavailable.
-    """
+def _ev_load_tokenizer():
     global _EV_TOKENIZER
     if _EV_TOKENIZER is None:
         try:
@@ -1726,25 +2163,44 @@ def _ev_completion_fits(text: str, answer: str) -> bool:
             )
         except Exception:
             _EV_TOKENIZER = False
+    return _EV_TOKENIZER
+
+
+def _ev_token_count(completion: str) -> int:
+    """Completion token count (corpus.py template); crude char-based estimate
+    if the tokenizer asset is unavailable."""
+    tok = _ev_load_tokenizer()
+    if tok is False:
+        return len(completion) // 3 + 1
+    return len(tok.encode(completion, add_special_tokens=False).ids)
+
+
+def _ev_completion_fits(text: str, answer: str) -> bool:
+    """True iff the SFT completion built from this trace fits the token cap.
+
+    Uses the corpus completion template (corpus.py). Falls back to a
+    conservative char bound if the tokenizer asset is unavailable.
+    """
     completion = f"{text}\n</think>\n\\boxed{{{answer}}}<|im_end|>"
-    if _EV_TOKENIZER is False:
+    if _ev_load_tokenizer() is False:
         return len(completion) <= _EV_MAX_CHARS
-    ids = _EV_TOKENIZER.encode(completion, add_special_tokens=False).ids  # type: ignore[union-attr]
-    return len(ids) <= _EV_MAX_TOKENS
+    return _ev_token_count(completion) <= _EV_MAX_TOKENS
 
 
 def reasoning_bit_manipulation(problem: Problem) -> Optional[str]:
-    """Legacy trace when it solves the problem (byte-identical); otherwise
-    the enumerate-verify whole-register trace, emitted only when its winner
-    reproduces the ground-truth query answer and the completion fits the
-    token cap."""
+    """Legacy trace when it solves the problem (byte-identical to the proven
+    R~0.95 corpus); otherwise the extended-family isomorphic-mixing trace
+    (prior tiebreak, truth-preferring candidate selection), emitted
+    only when the SFT completion fits the token cap. Falls back to the
+    legacy trace (the run-011 wrong-but-self-consistent policy) when the
+    extended family has nothing to say."""
     legacy = _reasoning_legacy(problem)
     answer = (problem.answer or "").strip()
     if not _EV_BITS_RE.fullmatch(answer):
         return legacy
     if legacy is not None and _ev_boxed(legacy) == answer:
         return legacy
-    ev = _reasoning_enum_verify(problem)
-    if ev is not None and _ev_boxed(ev) == answer and _ev_completion_fits(ev, answer):
-        return ev
+    ext = _reasoning_prior_family(problem)
+    if ext is not None and _ev_completion_fits(ext, _ev_boxed(ext)):
+        return ext
     return legacy

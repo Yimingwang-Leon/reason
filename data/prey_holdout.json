@@ -1,0 +1,269 @@
+{
+  "meta": {
+    "source": "rl/grader_audit.py (C1 官方判分语义重打 run012_holdout_decode 770 行)",
+    "semantics": "notebook_tinker.py:434-503 fallback 链 + 二进制守卫 ON (reasoning.py:91)",
+    "counts": {
+      "bit_rloss": 11,
+      "crypt_solver_ok": 26,
+      "eq_rloss": 8
+    },
+    "note": "bit/eq 来自已解码 110/类 抽样(官方语义判错 ∧ oracle-ok);crypt = holdout 全部 solver-ok(26)剔官方已对,decoded=False 的 11 题贪心未测"
+  },
+  "bit_rloss": [
+    {
+      "id": "034fb629",
+      "cat": "bit_manipulation",
+      "truth": "00111001"
+    },
+    {
+      "id": "053f87d3",
+      "cat": "bit_manipulation",
+      "truth": "11111111"
+    },
+    {
+      "id": "0e70c867",
+      "cat": "bit_manipulation",
+      "truth": "01000000"
+    },
+    {
+      "id": "0f7ddd75",
+      "cat": "bit_manipulation",
+      "truth": "11110110"
+    },
+    {
+      "id": "1126e314",
+      "cat": "bit_manipulation",
+      "truth": "01001101"
+    },
+    {
+      "id": "1a862653",
+      "cat": "bit_manipulation",
+      "truth": "00101100"
+    },
+    {
+      "id": "30ba0cf4",
+      "cat": "bit_manipulation",
+      "truth": "01101101"
+    },
+    {
+      "id": "33910360",
+      "cat": "bit_manipulation",
+      "truth": "00000001"
+    },
+    {
+      "id": "34a98769",
+      "cat": "bit_manipulation",
+      "truth": "01101111"
+    },
+    {
+      "id": "37a00064",
+      "cat": "bit_manipulation",
+      "truth": "00000001"
+    },
+    {
+      "id": "4fb6838e",
+      "cat": "bit_manipulation",
+      "truth": "10000101"
+    }
+  ],
+  "crypt_solver_ok": [
+    {
+      "id": "0babcba2",
+      "cat": "cryptarithm_deduce",
+      "truth": "?\"\"",
+      "decoded": true
+    },
+    {
+      "id": "0e2d6796",
+      "cat": "cryptarithm_deduce",
+      "truth": "|)]",
+      "decoded": true
+    },
+    {
+      "id": "23b0eb54",
+      "cat": "cryptarithm_deduce",
+      "truth": "]/:)",
+      "decoded": true
+    },
+    {
+      "id": "2c017f70",
+      "cat": "cryptarithm_deduce",
+      "truth": ">/%(",
+      "decoded": true
+    },
+    {
+      "id": "2d89386e",
+      "cat": "cryptarithm_deduce",
+      "truth": ":",
+      "decoded": true
+    },
+    {
+      "id": "39a1f5e9",
+      "cat": "cryptarithm_deduce",
+      "truth": "<\">[",
+      "decoded": true
+    },
+    {
+      "id": "41a8a9f0",
+      "cat": "cryptarithm_deduce",
+      "truth": "|\"`>",
+      "decoded": true
+    },
+    {
+      "id": "524cb5c6",
+      "cat": "cryptarithm_deduce",
+      "truth": "$>>\\",
+      "decoded": true
+    },
+    {
+      "id": "56ac76c6",
+      "cat": "cryptarithm_deduce",
+      "truth": ">&{",
+      "decoded": true
+    },
+    {
+      "id": "58eadc55",
+      "cat": "cryptarithm_deduce",
+      "truth": "!#",
+      "decoded": true
+    },
+    {
+      "id": "64d775e5",
+      "cat": "cryptarithm_deduce",
+      "truth": "$&)<",
+      "decoded": true
+    },
+    {
+      "id": "6fcbf5fd",
+      "cat": "cryptarithm_deduce",
+      "truth": "^`(",
+      "decoded": true
+    },
+    {
+      "id": "7681df4d",
+      "cat": "cryptarithm_deduce",
+      "truth": "<",
+      "decoded": true
+    },
+    {
+      "id": "7d8f22b1",
+      "cat": "cryptarithm_deduce",
+      "truth": "#)>|",
+      "decoded": true
+    },
+    {
+      "id": "99d6a3b5",
+      "cat": "cryptarithm_deduce",
+      "truth": "?()<",
+      "decoded": true
+    },
+    {
+      "id": "bc83b0a1",
+      "cat": "cryptarithm_deduce",
+      "truth": "(/&{",
+      "decoded": false
+    },
+    {
+      "id": "bca230fd",
+      "cat": "cryptarithm_deduce",
+      "truth": "!<[$",
+      "decoded": false
+    },
+    {
+      "id": "c9780577",
+      "cat": "cryptarithm_deduce",
+      "truth": ")?",
+      "decoded": false
+    },
+    {
+      "id": "cef50c24",
+      "cat": "cryptarithm_deduce",
+      "truth": "?",
+      "decoded": false
+    },
+    {
+      "id": "dac75343",
+      "cat": "cryptarithm_deduce",
+      "truth": "#@@`",
+      "decoded": false
+    },
+    {
+      "id": "db4f43ef",
+      "cat": "cryptarithm_deduce",
+      "truth": "%\"|@",
+      "decoded": false
+    },
+    {
+      "id": "e2361a00",
+      "cat": "cryptarithm_deduce",
+      "truth": "'",
+      "decoded": false
+    },
+    {
+      "id": "ea04ed35",
+      "cat": "cryptarithm_deduce",
+      "truth": "|\"",
+      "decoded": false
+    },
+    {
+      "id": "eabc719f",
+      "cat": "cryptarithm_deduce",
+      "truth": "/$\"\"",
+      "decoded": false
+    },
+    {
+      "id": "f624f57c",
+      "cat": "cryptarithm_deduce",
+      "truth": "[",
+      "decoded": false
+    },
+    {
+      "id": "f8bbabab",
+      "cat": "cryptarithm_deduce",
+      "truth": ">^`>",
+      "decoded": false
+    }
+  ],
+  "eq_rloss": [
+    {
+      "id": "04171e29",
+      "cat": "equation_numeric_deduce",
+      "truth": "32"
+    },
+    {
+      "id": "10d7bd1b",
+      "cat": "equation_numeric_deduce",
+      "truth": "77"
+    },
+    {
+      "id": "42d4dcf7",
+      "cat": "equation_numeric_deduce",
+      "truth": "91"
+    },
+    {
+      "id": "4b70414e",
+      "cat": "equation_numeric_deduce",
+      "truth": "1913"
+    },
+    {
+      "id": "4c57a53f",
+      "cat": "equation_numeric_deduce",
+      "truth": "[4"
+    },
+    {
+      "id": "8158a14c",
+      "cat": "equation_numeric_deduce",
+      "truth": "46"
+    },
+    {
+      "id": "937c06c5",
+      "cat": "equation_numeric_deduce",
+      "truth": "1"
+    },
+    {
+      "id": "a04ecffd",
+      "cat": "equation_numeric_deduce",
+      "truth": "!32"
+    }
+  ]
+}

@@ -83,6 +83,14 @@ class Cfg:
     # at an epoch boundary reproduces the original schedule exactly.
     start_epoch: int = 0
     resume_state: str | None = None
+    # Warm-start: take WEIGHTS from a prior run's saved state but a FRESH optimizer
+    # (no stale SFT Adam moments). For stacking a new run (e.g. RFT arm) on run-011.
+    # Mutually exclusive with resume_state (which restores optimizer too).
+    init_from_state: str | None = None
+    # Disable the linear LR decay (lr stays at learning_rate for every step).
+    constant_lr: bool = False
+    # Flat tokens+mask jsonl corpus (rl/rft_filter.py output) instead of ./corpus.jsonl.
+    jsonl_corpus: str | None = None
     # Hard spend ceiling. Clean 3-epoch ~= $30 (432 steps) + ~$0.4 save surcharges, so
     # 33 lets a clean run finish while capping resume-redos; real $ stays <~$35 (<$40
     # wallet). usd_per_step from the run-004 anchor ($10/144 step, same per-step compute).
@@ -95,8 +103,19 @@ def _load_env() -> None:
     os.environ["TINKER_API_KEY"] = env["TINKER_API_KEY"]
 
 
-def _load_examples(max_examples: int | None) -> list[dict]:
-    """Load tokenized examples from local corpus."""
+def _load_examples(max_examples: int | None, jsonl_corpus: str | None = None) -> list[dict]:
+    """Load tokenized examples from local corpus (or a flat tokens+mask jsonl)."""
+    if jsonl_corpus:
+        # RFT/R1 路径:每行 {problem_id, category, tokens, mask}(rl/rft_filter.py 产出)
+        examples = []
+        with open(jsonl_corpus) as f:
+            for line in f:
+                r = json.loads(line)
+                examples.append({
+                    "tokens": r["tokens"], "mask": r["mask"],
+                    "category": r["category"], "problem_id": r["problem_id"],
+                })
+        return examples
     if not CORPUS_INDEX.exists():
         raise FileNotFoundError(
             f"No {CORPUS_INDEX}. Run `python -m src.corpus` first."
@@ -244,8 +263,9 @@ async def main_async(cfg: Cfg) -> None:
     log_path = TRAINING_DIR / cfg.run_name
     log_path.mkdir(parents=True, exist_ok=True)
 
-    examples = _load_examples(cfg.max_examples)
-    logger.info(f"Loaded {len(examples)} examples")
+    examples = _load_examples(cfg.max_examples, cfg.jsonl_corpus)
+    logger.info(f"Loaded {len(examples)} examples"
+                + (f" (jsonl corpus: {cfg.jsonl_corpus})" if cfg.jsonl_corpus else ""))
 
     n_batches = math.ceil(len(examples) / cfg.batch_size)
     total_steps = n_batches * cfg.num_epochs
@@ -262,6 +282,10 @@ async def main_async(cfg: Cfg) -> None:
         training_client = await sc.create_training_client_from_state_with_optimizer_async(
             cfg.resume_state)
         logger.info(f"Resumed Tinker training client from state: {cfg.resume_state}")
+    elif cfg.init_from_state:
+        training_client = await sc.create_training_client_from_state_async(
+            cfg.init_from_state)
+        logger.info(f"Warm-start: weights from {cfg.init_from_state} (fresh optimizer)")
     else:
         training_client = await sc.create_lora_training_client_async(
             base_model=cfg.base_model,
@@ -308,6 +332,11 @@ async def main_async(cfg: Cfg) -> None:
                 if state_path is not None:
                     logger.info(f"RESUME: rebuilding from state {state_path} (attempt {attempt+1}/5)")
                     return await sc.create_training_client_from_state_with_optimizer_async(state_path)
+                if cfg.init_from_state:
+                    logger.info(f"RESUME: no state yet -> re-warm-start from "
+                                f"{cfg.init_from_state} (attempt {attempt+1}/5)")
+                    return await sc.create_training_client_from_state_async(
+                        cfg.init_from_state)
                 logger.info(f"RESUME: no state yet (epoch 0) -> fresh client (attempt {attempt+1}/5)")
                 return await sc.create_lora_training_client_async(
                     base_model=cfg.base_model, rank=cfg.lora_rank, train_mlp=cfg.train_mlp,
@@ -347,7 +376,8 @@ async def main_async(cfg: Cfg) -> None:
                     if not data:
                         continue
 
-                    lr = cfg.learning_rate * (1.0 - step / max(1, total_steps))
+                    lr = cfg.learning_rate if cfg.constant_lr else \
+                        cfg.learning_rate * (1.0 - step / max(1, total_steps))
                     t0 = time.time()
                     fwd_bwd_future = await training_client.forward_backward_async(
                         data, loss_fn="cross_entropy")
@@ -513,6 +543,14 @@ def main() -> None:
     parser.add_argument("--start-epoch", type=int, default=0)
     parser.add_argument("--resume-state", default=None,
                         help="tinker://...:train:0/weights/state_epN path to resume from")
+    parser.add_argument("--init-from-state", default=None,
+                        help="warm-start: WEIGHTS from this saved state, FRESH optimizer "
+                             "(stack a new run on a prior final; exclusive with --resume-state)")
+    parser.add_argument("--constant-lr", action="store_true",
+                        help="hold lr constant at --lr (disable linear decay)")
+    parser.add_argument("--jsonl-corpus", default=None,
+                        help="flat tokens+mask jsonl (rl/rft_filter.py output) "
+                             "instead of ./corpus.jsonl")
     parser.add_argument("--usd-per-step", type=float, default=10.0 / 144.0,
                         help="per-step $ estimate for the budget guard; recalibrate "
                              "token-proportionally per corpus (run-004 anchor = $0.0694 "
@@ -521,6 +559,8 @@ def main() -> None:
     parser.add_argument("--budget-usd", type=float, default=33.0,
                         help="hard spend ceiling; training stops + saves before exceeding this")
     args = parser.parse_args()
+    if args.resume_state and args.init_from_state:
+        parser.error("--resume-state and --init-from-state are mutually exclusive")
 
     cfg = Cfg(
         run_name=args.run_name,
@@ -540,6 +580,9 @@ def main() -> None:
         usd_per_step=args.usd_per_step,
         start_epoch=args.start_epoch,
         resume_state=args.resume_state,
+        init_from_state=args.init_from_state,
+        constant_lr=args.constant_lr,
+        jsonl_corpus=args.jsonl_corpus,
     )
     logging.basicConfig(
         level=logging.INFO,

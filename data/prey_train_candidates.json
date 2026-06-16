@@ -1,0 +1,8851 @@
+{
+  "meta": {
+    "source": "rl/grader_audit.py --train(repo production solver 直跑 train_split)",
+    "status": "候选母池 = oracle-ok;R-loss 子集(贪心错)未测,待 M0 直测",
+    "口径": "rl/recon_data.md §3.2:bit R-loss 预期 100-150;crypt solver-ok 剔 }truth;eq 签名类默认不入池(M0 ≥25% 覆盖才许进)"
+  },
+  "bit_rloss": {
+    "status": "待 M0 直测(母池 = oracle-ok,R-loss 为其贪心错子集)",
+    "expected_rloss": "100-150",
+    "n_pool": 1181,
+    "items": [
+      {
+        "id": "00066667",
+        "cat": "bit_manipulation",
+        "truth": "10010111"
+      },
+      {
+        "id": "000b53cf",
+        "cat": "bit_manipulation",
+        "truth": "01000011"
+      },
+      {
+        "id": "0031df9c",
+        "cat": "bit_manipulation",
+        "truth": "00110100"
+      },
+      {
+        "id": "004ef7c7",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "00754598",
+        "cat": "bit_manipulation",
+        "truth": "11101111"
+      },
+      {
+        "id": "00890aff",
+        "cat": "bit_manipulation",
+        "truth": "01110000"
+      },
+      {
+        "id": "008b52fd",
+        "cat": "bit_manipulation",
+        "truth": "01100101"
+      },
+      {
+        "id": "009a74b6",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "00fdc0be",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "01248b76",
+        "cat": "bit_manipulation",
+        "truth": "11000101"
+      },
+      {
+        "id": "012fb81b",
+        "cat": "bit_manipulation",
+        "truth": "10000100"
+      },
+      {
+        "id": "016c474c",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "01d894fb",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "01e09228",
+        "cat": "bit_manipulation",
+        "truth": "10010101"
+      },
+      {
+        "id": "01e395d0",
+        "cat": "bit_manipulation",
+        "truth": "01011101"
+      },
+      {
+        "id": "02021540",
+        "cat": "bit_manipulation",
+        "truth": "11100000"
+      },
+      {
+        "id": "021ed764",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "0228335b",
+        "cat": "bit_manipulation",
+        "truth": "11011011"
+      },
+      {
+        "id": "02324ba1",
+        "cat": "bit_manipulation",
+        "truth": "11101011"
+      },
+      {
+        "id": "024101d9",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "025abbbb",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "0290f51a",
+        "cat": "bit_manipulation",
+        "truth": "10101111"
+      },
+      {
+        "id": "02a66bcb",
+        "cat": "bit_manipulation",
+        "truth": "00011110"
+      },
+      {
+        "id": "030479a6",
+        "cat": "bit_manipulation",
+        "truth": "01000110"
+      },
+      {
+        "id": "0311b798",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "034930e2",
+        "cat": "bit_manipulation",
+        "truth": "00010111"
+      },
+      {
+        "id": "04183bf9",
+        "cat": "bit_manipulation",
+        "truth": "10010000"
+      },
+      {
+        "id": "0440e6ab",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "046e8532",
+        "cat": "bit_manipulation",
+        "truth": "00011100"
+      },
+      {
+        "id": "048cc279",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "04c44df4",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "04d492a9",
+        "cat": "bit_manipulation",
+        "truth": "00110111"
+      },
+      {
+        "id": "04d8c3e6",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "0520a6ec",
+        "cat": "bit_manipulation",
+        "truth": "10100001"
+      },
+      {
+        "id": "0528d502",
+        "cat": "bit_manipulation",
+        "truth": "00011111"
+      },
+      {
+        "id": "0536483a",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "05d58fb3",
+        "cat": "bit_manipulation",
+        "truth": "01011101"
+      },
+      {
+        "id": "06248efa",
+        "cat": "bit_manipulation",
+        "truth": "11110111"
+      },
+      {
+        "id": "06667a93",
+        "cat": "bit_manipulation",
+        "truth": "10100011"
+      },
+      {
+        "id": "069dbaab",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "06b5da9f",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "073942b5",
+        "cat": "bit_manipulation",
+        "truth": "10100110"
+      },
+      {
+        "id": "07ceed47",
+        "cat": "bit_manipulation",
+        "truth": "10000101"
+      },
+      {
+        "id": "07d1cd39",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "07d8149a",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "07e8cf66",
+        "cat": "bit_manipulation",
+        "truth": "10010110"
+      },
+      {
+        "id": "080b44aa",
+        "cat": "bit_manipulation",
+        "truth": "00111111"
+      },
+      {
+        "id": "0855605b",
+        "cat": "bit_manipulation",
+        "truth": "10010110"
+      },
+      {
+        "id": "08a161c9",
+        "cat": "bit_manipulation",
+        "truth": "01011111"
+      },
+      {
+        "id": "08df5363",
+        "cat": "bit_manipulation",
+        "truth": "01011100"
+      },
+      {
+        "id": "0a1326f4",
+        "cat": "bit_manipulation",
+        "truth": "10010110"
+      },
+      {
+        "id": "0a195a74",
+        "cat": "bit_manipulation",
+        "truth": "01010010"
+      },
+      {
+        "id": "0a5e80bf",
+        "cat": "bit_manipulation",
+        "truth": "01000111"
+      },
+      {
+        "id": "0a6d48aa",
+        "cat": "bit_manipulation",
+        "truth": "11100011"
+      },
+      {
+        "id": "0b16458a",
+        "cat": "bit_manipulation",
+        "truth": "01110000"
+      },
+      {
+        "id": "0b26be60",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "0b3cf93f",
+        "cat": "bit_manipulation",
+        "truth": "10011001"
+      },
+      {
+        "id": "0b404f15",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "0b56b953",
+        "cat": "bit_manipulation",
+        "truth": "11000101"
+      },
+      {
+        "id": "0ba9af93",
+        "cat": "bit_manipulation",
+        "truth": "11110110"
+      },
+      {
+        "id": "0bc6e675",
+        "cat": "bit_manipulation",
+        "truth": "01111100"
+      },
+      {
+        "id": "0c1a09ce",
+        "cat": "bit_manipulation",
+        "truth": "11100000"
+      },
+      {
+        "id": "0c2407ef",
+        "cat": "bit_manipulation",
+        "truth": "11000011"
+      },
+      {
+        "id": "0c671b98",
+        "cat": "bit_manipulation",
+        "truth": "00001110"
+      },
+      {
+        "id": "0c7acd69",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "0c88a3dc",
+        "cat": "bit_manipulation",
+        "truth": "10001011"
+      },
+      {
+        "id": "0cb88778",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "0ceac403",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "0cfc74d4",
+        "cat": "bit_manipulation",
+        "truth": "11011000"
+      },
+      {
+        "id": "0d7aacfc",
+        "cat": "bit_manipulation",
+        "truth": "01100001"
+      },
+      {
+        "id": "0dcacfab",
+        "cat": "bit_manipulation",
+        "truth": "10011101"
+      },
+      {
+        "id": "0dd5caf4",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "0ddca8bf",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "0df8306a",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "0dfd7674",
+        "cat": "bit_manipulation",
+        "truth": "01001110"
+      },
+      {
+        "id": "0e7f299d",
+        "cat": "bit_manipulation",
+        "truth": "01010010"
+      },
+      {
+        "id": "0f0e199c",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "0f1bc0ff",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "0f2dec86",
+        "cat": "bit_manipulation",
+        "truth": "10111000"
+      },
+      {
+        "id": "0f7be6a8",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "0f8fe647",
+        "cat": "bit_manipulation",
+        "truth": "00110101"
+      },
+      {
+        "id": "0fe06e8c",
+        "cat": "bit_manipulation",
+        "truth": "10010010"
+      },
+      {
+        "id": "100e280a",
+        "cat": "bit_manipulation",
+        "truth": "01100011"
+      },
+      {
+        "id": "101e6f80",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "1054486f",
+        "cat": "bit_manipulation",
+        "truth": "10011110"
+      },
+      {
+        "id": "105c8b72",
+        "cat": "bit_manipulation",
+        "truth": "00100101"
+      },
+      {
+        "id": "106aeb25",
+        "cat": "bit_manipulation",
+        "truth": "10000001"
+      },
+      {
+        "id": "107badb0",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "10d29630",
+        "cat": "bit_manipulation",
+        "truth": "11001001"
+      },
+      {
+        "id": "10dfe5c5",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "114a41e3",
+        "cat": "bit_manipulation",
+        "truth": "11111001"
+      },
+      {
+        "id": "114a7439",
+        "cat": "bit_manipulation",
+        "truth": "01110001"
+      },
+      {
+        "id": "117b4e53",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "1249ddb4",
+        "cat": "bit_manipulation",
+        "truth": "10101001"
+      },
+      {
+        "id": "124bc762",
+        "cat": "bit_manipulation",
+        "truth": "11100010"
+      },
+      {
+        "id": "1282c5c5",
+        "cat": "bit_manipulation",
+        "truth": "00001110"
+      },
+      {
+        "id": "12897b38",
+        "cat": "bit_manipulation",
+        "truth": "00100110"
+      },
+      {
+        "id": "1298c980",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "12e0ac8c",
+        "cat": "bit_manipulation",
+        "truth": "10101001"
+      },
+      {
+        "id": "12e947ca",
+        "cat": "bit_manipulation",
+        "truth": "00111110"
+      },
+      {
+        "id": "13009e35",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "130a5dff",
+        "cat": "bit_manipulation",
+        "truth": "00110101"
+      },
+      {
+        "id": "13c8ae90",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "13eebe61",
+        "cat": "bit_manipulation",
+        "truth": "01101001"
+      },
+      {
+        "id": "13f76716",
+        "cat": "bit_manipulation",
+        "truth": "01111100"
+      },
+      {
+        "id": "143627c4",
+        "cat": "bit_manipulation",
+        "truth": "11001001"
+      },
+      {
+        "id": "14742dd8",
+        "cat": "bit_manipulation",
+        "truth": "01110100"
+      },
+      {
+        "id": "14917af8",
+        "cat": "bit_manipulation",
+        "truth": "00010100"
+      },
+      {
+        "id": "1496dfeb",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "14a30d8f",
+        "cat": "bit_manipulation",
+        "truth": "00011101"
+      },
+      {
+        "id": "14a72508",
+        "cat": "bit_manipulation",
+        "truth": "11010110"
+      },
+      {
+        "id": "15305f6a",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "1532c0d1",
+        "cat": "bit_manipulation",
+        "truth": "01001100"
+      },
+      {
+        "id": "16122fba",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "161667cd",
+        "cat": "bit_manipulation",
+        "truth": "11000100"
+      },
+      {
+        "id": "16186320",
+        "cat": "bit_manipulation",
+        "truth": "01000001"
+      },
+      {
+        "id": "161d4390",
+        "cat": "bit_manipulation",
+        "truth": "01101001"
+      },
+      {
+        "id": "16db2c74",
+        "cat": "bit_manipulation",
+        "truth": "00000110"
+      },
+      {
+        "id": "16e151ec",
+        "cat": "bit_manipulation",
+        "truth": "00011000"
+      },
+      {
+        "id": "16e73f0e",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "172d2417",
+        "cat": "bit_manipulation",
+        "truth": "00001000"
+      },
+      {
+        "id": "18544cb0",
+        "cat": "bit_manipulation",
+        "truth": "01111000"
+      },
+      {
+        "id": "18564041",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "18602be3",
+        "cat": "bit_manipulation",
+        "truth": "10111111"
+      },
+      {
+        "id": "186ade13",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "18c54744",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "19f4b3d6",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "1a7c8520",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "1abaffca",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "1bea1a7b",
+        "cat": "bit_manipulation",
+        "truth": "10010000"
+      },
+      {
+        "id": "1bf84ce3",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "1c19ad3e",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "1c2a3c5b",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "1c3f2ff9",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "1c566511",
+        "cat": "bit_manipulation",
+        "truth": "01010010"
+      },
+      {
+        "id": "1c671acc",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "1c7c1246",
+        "cat": "bit_manipulation",
+        "truth": "00100110"
+      },
+      {
+        "id": "1d5ad68a",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "1d729bb1",
+        "cat": "bit_manipulation",
+        "truth": "00111101"
+      },
+      {
+        "id": "1d930d32",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "1da4f2db",
+        "cat": "bit_manipulation",
+        "truth": "01100111"
+      },
+      {
+        "id": "1dba764b",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "1deaf759",
+        "cat": "bit_manipulation",
+        "truth": "10100111"
+      },
+      {
+        "id": "1e677e2c",
+        "cat": "bit_manipulation",
+        "truth": "10001101"
+      },
+      {
+        "id": "1e86b3a7",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "1ed83cae",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "1f1292d6",
+        "cat": "bit_manipulation",
+        "truth": "10001000"
+      },
+      {
+        "id": "1f69a85f",
+        "cat": "bit_manipulation",
+        "truth": "10111101"
+      },
+      {
+        "id": "1fa373db",
+        "cat": "bit_manipulation",
+        "truth": "00101001"
+      },
+      {
+        "id": "1fd65d86",
+        "cat": "bit_manipulation",
+        "truth": "01001000"
+      },
+      {
+        "id": "1fe9b923",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "20052c2f",
+        "cat": "bit_manipulation",
+        "truth": "01100110"
+      },
+      {
+        "id": "201b150e",
+        "cat": "bit_manipulation",
+        "truth": "11001011"
+      },
+      {
+        "id": "20333a1f",
+        "cat": "bit_manipulation",
+        "truth": "10000010"
+      },
+      {
+        "id": "20924dd4",
+        "cat": "bit_manipulation",
+        "truth": "10110000"
+      },
+      {
+        "id": "209e62c5",
+        "cat": "bit_manipulation",
+        "truth": "01111001"
+      },
+      {
+        "id": "20abedb7",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "20c252d7",
+        "cat": "bit_manipulation",
+        "truth": "00111111"
+      },
+      {
+        "id": "20cdbdb1",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "20f3b869",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "21245d76",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "21312779",
+        "cat": "bit_manipulation",
+        "truth": "10101111"
+      },
+      {
+        "id": "214d0570",
+        "cat": "bit_manipulation",
+        "truth": "10111111"
+      },
+      {
+        "id": "22c34f56",
+        "cat": "bit_manipulation",
+        "truth": "11110001"
+      },
+      {
+        "id": "22e28f23",
+        "cat": "bit_manipulation",
+        "truth": "01010101"
+      },
+      {
+        "id": "23410e94",
+        "cat": "bit_manipulation",
+        "truth": "01101001"
+      },
+      {
+        "id": "236034b4",
+        "cat": "bit_manipulation",
+        "truth": "00100011"
+      },
+      {
+        "id": "2370909d",
+        "cat": "bit_manipulation",
+        "truth": "11101001"
+      },
+      {
+        "id": "2395d6df",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "23f39281",
+        "cat": "bit_manipulation",
+        "truth": "01011110"
+      },
+      {
+        "id": "24232d07",
+        "cat": "bit_manipulation",
+        "truth": "01010101"
+      },
+      {
+        "id": "2441e2b4",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "2460c01a",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "24b60af3",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "24ef5b88",
+        "cat": "bit_manipulation",
+        "truth": "00100111"
+      },
+      {
+        "id": "24f44584",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "25705f72",
+        "cat": "bit_manipulation",
+        "truth": "11110000"
+      },
+      {
+        "id": "25764d5f",
+        "cat": "bit_manipulation",
+        "truth": "00001000"
+      },
+      {
+        "id": "25a8aeb1",
+        "cat": "bit_manipulation",
+        "truth": "00111111"
+      },
+      {
+        "id": "2630aaf8",
+        "cat": "bit_manipulation",
+        "truth": "10111110"
+      },
+      {
+        "id": "26410094",
+        "cat": "bit_manipulation",
+        "truth": "10010000"
+      },
+      {
+        "id": "264b2118",
+        "cat": "bit_manipulation",
+        "truth": "00010100"
+      },
+      {
+        "id": "26c83e22",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "26df9536",
+        "cat": "bit_manipulation",
+        "truth": "11101010"
+      },
+      {
+        "id": "271f72f5",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "2774d7a4",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "27c3ce54",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "2817d770",
+        "cat": "bit_manipulation",
+        "truth": "01100110"
+      },
+      {
+        "id": "287e5272",
+        "cat": "bit_manipulation",
+        "truth": "10111001"
+      },
+      {
+        "id": "28a4db44",
+        "cat": "bit_manipulation",
+        "truth": "10011000"
+      },
+      {
+        "id": "28b6bc51",
+        "cat": "bit_manipulation",
+        "truth": "11011011"
+      },
+      {
+        "id": "28bde184",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "28feff8e",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "294557bb",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "29e458d6",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "2a253b6c",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "2a5d4790",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "2aa6ce6a",
+        "cat": "bit_manipulation",
+        "truth": "11010001"
+      },
+      {
+        "id": "2aae1021",
+        "cat": "bit_manipulation",
+        "truth": "01000001"
+      },
+      {
+        "id": "2ae80ced",
+        "cat": "bit_manipulation",
+        "truth": "10100101"
+      },
+      {
+        "id": "2b3e06c9",
+        "cat": "bit_manipulation",
+        "truth": "00111111"
+      },
+      {
+        "id": "2b50eb88",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "2b88fafb",
+        "cat": "bit_manipulation",
+        "truth": "11010000"
+      },
+      {
+        "id": "2bb09a3e",
+        "cat": "bit_manipulation",
+        "truth": "11001111"
+      },
+      {
+        "id": "2c6cb766",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "2cf45d07",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "2d63b436",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "2d6922f4",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "2d74e088",
+        "cat": "bit_manipulation",
+        "truth": "10001100"
+      },
+      {
+        "id": "2dc6056a",
+        "cat": "bit_manipulation",
+        "truth": "11000001"
+      },
+      {
+        "id": "2dcfc1a3",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "2e0f64b7",
+        "cat": "bit_manipulation",
+        "truth": "01110001"
+      },
+      {
+        "id": "2ead53dc",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "2f51362d",
+        "cat": "bit_manipulation",
+        "truth": "11000110"
+      },
+      {
+        "id": "2f6c2b3e",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "2f7f58de",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "2fa48efe",
+        "cat": "bit_manipulation",
+        "truth": "01111010"
+      },
+      {
+        "id": "2fdaf371",
+        "cat": "bit_manipulation",
+        "truth": "10110100"
+      },
+      {
+        "id": "302dc36e",
+        "cat": "bit_manipulation",
+        "truth": "00001101"
+      },
+      {
+        "id": "303d2e72",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "304cc47b",
+        "cat": "bit_manipulation",
+        "truth": "00101010"
+      },
+      {
+        "id": "30b35adc",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "30ce5200",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "31063a4d",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "314d28a0",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "318ddaa9",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "31a4c9ef",
+        "cat": "bit_manipulation",
+        "truth": "10110110"
+      },
+      {
+        "id": "31df43f1",
+        "cat": "bit_manipulation",
+        "truth": "11011100"
+      },
+      {
+        "id": "3296c5b5",
+        "cat": "bit_manipulation",
+        "truth": "10011100"
+      },
+      {
+        "id": "32e5fe87",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "3302f383",
+        "cat": "bit_manipulation",
+        "truth": "10110001"
+      },
+      {
+        "id": "33519c2f",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "3370302a",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "3376d8b7",
+        "cat": "bit_manipulation",
+        "truth": "00100010"
+      },
+      {
+        "id": "3385a400",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "33c48893",
+        "cat": "bit_manipulation",
+        "truth": "01100101"
+      },
+      {
+        "id": "3400e0d5",
+        "cat": "bit_manipulation",
+        "truth": "10011101"
+      },
+      {
+        "id": "341a468c",
+        "cat": "bit_manipulation",
+        "truth": "00100101"
+      },
+      {
+        "id": "343095d3",
+        "cat": "bit_manipulation",
+        "truth": "01010100"
+      },
+      {
+        "id": "3456da40",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "34b9db0e",
+        "cat": "bit_manipulation",
+        "truth": "01001000"
+      },
+      {
+        "id": "35364e9a",
+        "cat": "bit_manipulation",
+        "truth": "11111110"
+      },
+      {
+        "id": "3564baf1",
+        "cat": "bit_manipulation",
+        "truth": "10101101"
+      },
+      {
+        "id": "3595c82c",
+        "cat": "bit_manipulation",
+        "truth": "10011011"
+      },
+      {
+        "id": "35dafdbc",
+        "cat": "bit_manipulation",
+        "truth": "01011000"
+      },
+      {
+        "id": "35e3c7c5",
+        "cat": "bit_manipulation",
+        "truth": "00000110"
+      },
+      {
+        "id": "36300e18",
+        "cat": "bit_manipulation",
+        "truth": "10011101"
+      },
+      {
+        "id": "3683a72b",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "36a33623",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "36e96ab0",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "36f13669",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "37664f79",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "3779ab78",
+        "cat": "bit_manipulation",
+        "truth": "00010110"
+      },
+      {
+        "id": "37cbea46",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "37ce4280",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "37d25dd3",
+        "cat": "bit_manipulation",
+        "truth": "00110101"
+      },
+      {
+        "id": "37d81990",
+        "cat": "bit_manipulation",
+        "truth": "01111011"
+      },
+      {
+        "id": "3888d45c",
+        "cat": "bit_manipulation",
+        "truth": "01110101"
+      },
+      {
+        "id": "38fcbd0c",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "3970c492",
+        "cat": "bit_manipulation",
+        "truth": "01101011"
+      },
+      {
+        "id": "39870fb9",
+        "cat": "bit_manipulation",
+        "truth": "11011001"
+      },
+      {
+        "id": "39d3d49f",
+        "cat": "bit_manipulation",
+        "truth": "11011101"
+      },
+      {
+        "id": "3a148f6a",
+        "cat": "bit_manipulation",
+        "truth": "00100111"
+      },
+      {
+        "id": "3a1f8cf0",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "3a67aa26",
+        "cat": "bit_manipulation",
+        "truth": "00101110"
+      },
+      {
+        "id": "3a6a8eb9",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "3a72f760",
+        "cat": "bit_manipulation",
+        "truth": "10101101"
+      },
+      {
+        "id": "3a90fdf6",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "3abe72f4",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "3ad042eb",
+        "cat": "bit_manipulation",
+        "truth": "01010101"
+      },
+      {
+        "id": "3aec6985",
+        "cat": "bit_manipulation",
+        "truth": "01000100"
+      },
+      {
+        "id": "3b7dab4c",
+        "cat": "bit_manipulation",
+        "truth": "11001111"
+      },
+      {
+        "id": "3b92cc78",
+        "cat": "bit_manipulation",
+        "truth": "00101001"
+      },
+      {
+        "id": "3bd56850",
+        "cat": "bit_manipulation",
+        "truth": "01000100"
+      },
+      {
+        "id": "3c9b8e0e",
+        "cat": "bit_manipulation",
+        "truth": "00111101"
+      },
+      {
+        "id": "3cd80c64",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "3cfc5f9c",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "3d24aef4",
+        "cat": "bit_manipulation",
+        "truth": "10100101"
+      },
+      {
+        "id": "3d6df80f",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "3d8e6b03",
+        "cat": "bit_manipulation",
+        "truth": "01111000"
+      },
+      {
+        "id": "3d92aac9",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "3dc918eb",
+        "cat": "bit_manipulation",
+        "truth": "01101111"
+      },
+      {
+        "id": "3dcc0195",
+        "cat": "bit_manipulation",
+        "truth": "11011011"
+      },
+      {
+        "id": "3e000b40",
+        "cat": "bit_manipulation",
+        "truth": "01101100"
+      },
+      {
+        "id": "3e953bd6",
+        "cat": "bit_manipulation",
+        "truth": "00100111"
+      },
+      {
+        "id": "3ebd80e6",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "3ec3f1b4",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "3f4f7b9b",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "3f93c370",
+        "cat": "bit_manipulation",
+        "truth": "10100010"
+      },
+      {
+        "id": "3f9bd1e7",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "3fd617e5",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "3fdc3de7",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "3feeabea",
+        "cat": "bit_manipulation",
+        "truth": "10010010"
+      },
+      {
+        "id": "4005e4c7",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "400c9250",
+        "cat": "bit_manipulation",
+        "truth": "01001110"
+      },
+      {
+        "id": "4024acac",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "402ea488",
+        "cat": "bit_manipulation",
+        "truth": "01010001"
+      },
+      {
+        "id": "405262aa",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "4059e1a5",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "410837d0",
+        "cat": "bit_manipulation",
+        "truth": "00101101"
+      },
+      {
+        "id": "413086bc",
+        "cat": "bit_manipulation",
+        "truth": "10110011"
+      },
+      {
+        "id": "4145ec70",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "4166067c",
+        "cat": "bit_manipulation",
+        "truth": "01110110"
+      },
+      {
+        "id": "4195699e",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "41beb86c",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "41f574f5",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "42e10376",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "4353cd0b",
+        "cat": "bit_manipulation",
+        "truth": "00100001"
+      },
+      {
+        "id": "44471d06",
+        "cat": "bit_manipulation",
+        "truth": "00111001"
+      },
+      {
+        "id": "455b6b61",
+        "cat": "bit_manipulation",
+        "truth": "00111011"
+      },
+      {
+        "id": "4575c0a2",
+        "cat": "bit_manipulation",
+        "truth": "10011010"
+      },
+      {
+        "id": "45bc0187",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "45da0a33",
+        "cat": "bit_manipulation",
+        "truth": "11110011"
+      },
+      {
+        "id": "45dfb84f",
+        "cat": "bit_manipulation",
+        "truth": "00011101"
+      },
+      {
+        "id": "46ae00b4",
+        "cat": "bit_manipulation",
+        "truth": "11100010"
+      },
+      {
+        "id": "46dd0f22",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "4723911c",
+        "cat": "bit_manipulation",
+        "truth": "00101010"
+      },
+      {
+        "id": "4736daab",
+        "cat": "bit_manipulation",
+        "truth": "01000111"
+      },
+      {
+        "id": "4740c20c",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "474af332",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "47720c17",
+        "cat": "bit_manipulation",
+        "truth": "10001110"
+      },
+      {
+        "id": "47998fb4",
+        "cat": "bit_manipulation",
+        "truth": "00111100"
+      },
+      {
+        "id": "47a5c4f4",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "48ae04f6",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "48db5ccf",
+        "cat": "bit_manipulation",
+        "truth": "01101110"
+      },
+      {
+        "id": "48ded5e8",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "491e3793",
+        "cat": "bit_manipulation",
+        "truth": "10110011"
+      },
+      {
+        "id": "494e04ae",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "499c7735",
+        "cat": "bit_manipulation",
+        "truth": "10011001"
+      },
+      {
+        "id": "49b5ead6",
+        "cat": "bit_manipulation",
+        "truth": "10111110"
+      },
+      {
+        "id": "49fb46e8",
+        "cat": "bit_manipulation",
+        "truth": "01001110"
+      },
+      {
+        "id": "4a374160",
+        "cat": "bit_manipulation",
+        "truth": "00000110"
+      },
+      {
+        "id": "4ac6f0cb",
+        "cat": "bit_manipulation",
+        "truth": "10100101"
+      },
+      {
+        "id": "4b4f1779",
+        "cat": "bit_manipulation",
+        "truth": "10010110"
+      },
+      {
+        "id": "4b628577",
+        "cat": "bit_manipulation",
+        "truth": "00100110"
+      },
+      {
+        "id": "4b86e0bb",
+        "cat": "bit_manipulation",
+        "truth": "01011101"
+      },
+      {
+        "id": "4b8f6727",
+        "cat": "bit_manipulation",
+        "truth": "11010110"
+      },
+      {
+        "id": "4b925449",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "4ba4a7ec",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "4bff6780",
+        "cat": "bit_manipulation",
+        "truth": "11001111"
+      },
+      {
+        "id": "4c237bf3",
+        "cat": "bit_manipulation",
+        "truth": "10000011"
+      },
+      {
+        "id": "4c23d822",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "4c327b55",
+        "cat": "bit_manipulation",
+        "truth": "11011100"
+      },
+      {
+        "id": "4c6b2b37",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "4c8182b0",
+        "cat": "bit_manipulation",
+        "truth": "10001100"
+      },
+      {
+        "id": "4ccf511a",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "4d20d5c5",
+        "cat": "bit_manipulation",
+        "truth": "00101001"
+      },
+      {
+        "id": "4dbb8138",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "4e918d82",
+        "cat": "bit_manipulation",
+        "truth": "11101001"
+      },
+      {
+        "id": "4ec611d7",
+        "cat": "bit_manipulation",
+        "truth": "00011110"
+      },
+      {
+        "id": "4ee23115",
+        "cat": "bit_manipulation",
+        "truth": "00100010"
+      },
+      {
+        "id": "4ee88170",
+        "cat": "bit_manipulation",
+        "truth": "00100010"
+      },
+      {
+        "id": "4ef3d311",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "4f27a061",
+        "cat": "bit_manipulation",
+        "truth": "00011110"
+      },
+      {
+        "id": "4f89532c",
+        "cat": "bit_manipulation",
+        "truth": "10001011"
+      },
+      {
+        "id": "5088b475",
+        "cat": "bit_manipulation",
+        "truth": "00010111"
+      },
+      {
+        "id": "50a0c4b6",
+        "cat": "bit_manipulation",
+        "truth": "10111101"
+      },
+      {
+        "id": "51007339",
+        "cat": "bit_manipulation",
+        "truth": "10001110"
+      },
+      {
+        "id": "511bb76a",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "512dd86d",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "512e1118",
+        "cat": "bit_manipulation",
+        "truth": "11111110"
+      },
+      {
+        "id": "51a78467",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "51da116f",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "522058b9",
+        "cat": "bit_manipulation",
+        "truth": "11010000"
+      },
+      {
+        "id": "524b744b",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "5281a6b3",
+        "cat": "bit_manipulation",
+        "truth": "11011010"
+      },
+      {
+        "id": "52862572",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "52a052a0",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "52a9d5e4",
+        "cat": "bit_manipulation",
+        "truth": "11011111"
+      },
+      {
+        "id": "5309f723",
+        "cat": "bit_manipulation",
+        "truth": "00001011"
+      },
+      {
+        "id": "53329505",
+        "cat": "bit_manipulation",
+        "truth": "11011111"
+      },
+      {
+        "id": "5356c59d",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "5374b4ba",
+        "cat": "bit_manipulation",
+        "truth": "10101100"
+      },
+      {
+        "id": "53b84650",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "546b90de",
+        "cat": "bit_manipulation",
+        "truth": "11100111"
+      },
+      {
+        "id": "546f9036",
+        "cat": "bit_manipulation",
+        "truth": "10100001"
+      },
+      {
+        "id": "547485e9",
+        "cat": "bit_manipulation",
+        "truth": "11010010"
+      },
+      {
+        "id": "549838a3",
+        "cat": "bit_manipulation",
+        "truth": "00101110"
+      },
+      {
+        "id": "54b895c1",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "557103c2",
+        "cat": "bit_manipulation",
+        "truth": "01101000"
+      },
+      {
+        "id": "55dfe758",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "55f5e590",
+        "cat": "bit_manipulation",
+        "truth": "10001111"
+      },
+      {
+        "id": "55fbd1ad",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "562cfc29",
+        "cat": "bit_manipulation",
+        "truth": "11011001"
+      },
+      {
+        "id": "563c1afa",
+        "cat": "bit_manipulation",
+        "truth": "10010011"
+      },
+      {
+        "id": "563d22ab",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "567e3da4",
+        "cat": "bit_manipulation",
+        "truth": "10000100"
+      },
+      {
+        "id": "56b1a67b",
+        "cat": "bit_manipulation",
+        "truth": "10001000"
+      },
+      {
+        "id": "57256dec",
+        "cat": "bit_manipulation",
+        "truth": "01010011"
+      },
+      {
+        "id": "573eaca1",
+        "cat": "bit_manipulation",
+        "truth": "01011110"
+      },
+      {
+        "id": "574c9e17",
+        "cat": "bit_manipulation",
+        "truth": "00011100"
+      },
+      {
+        "id": "5756de38",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "575f9709",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "57e57b3c",
+        "cat": "bit_manipulation",
+        "truth": "00001000"
+      },
+      {
+        "id": "57e76efa",
+        "cat": "bit_manipulation",
+        "truth": "10111111"
+      },
+      {
+        "id": "585f2ff6",
+        "cat": "bit_manipulation",
+        "truth": "01000100"
+      },
+      {
+        "id": "58730ca3",
+        "cat": "bit_manipulation",
+        "truth": "00010100"
+      },
+      {
+        "id": "58b650e5",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "58dc4bc1",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "59a5bd7b",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "59bee375",
+        "cat": "bit_manipulation",
+        "truth": "10010101"
+      },
+      {
+        "id": "5a0c141c",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "5a1179ee",
+        "cat": "bit_manipulation",
+        "truth": "10000101"
+      },
+      {
+        "id": "5a19f71a",
+        "cat": "bit_manipulation",
+        "truth": "11100010"
+      },
+      {
+        "id": "5a7c5b0a",
+        "cat": "bit_manipulation",
+        "truth": "00111111"
+      },
+      {
+        "id": "5aef1b8e",
+        "cat": "bit_manipulation",
+        "truth": "01011110"
+      },
+      {
+        "id": "5b16b484",
+        "cat": "bit_manipulation",
+        "truth": "10010000"
+      },
+      {
+        "id": "5b1b10d3",
+        "cat": "bit_manipulation",
+        "truth": "01010010"
+      },
+      {
+        "id": "5b2c143d",
+        "cat": "bit_manipulation",
+        "truth": "00001001"
+      },
+      {
+        "id": "5b36e273",
+        "cat": "bit_manipulation",
+        "truth": "11111001"
+      },
+      {
+        "id": "5b68563d",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "5b9964c7",
+        "cat": "bit_manipulation",
+        "truth": "00011011"
+      },
+      {
+        "id": "5ba26f21",
+        "cat": "bit_manipulation",
+        "truth": "01011100"
+      },
+      {
+        "id": "5bd26372",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "5c4e308a",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "5c50c07f",
+        "cat": "bit_manipulation",
+        "truth": "11100110"
+      },
+      {
+        "id": "5cbe919f",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "5cc4cf10",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "5d193826",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "5d489e95",
+        "cat": "bit_manipulation",
+        "truth": "01001000"
+      },
+      {
+        "id": "5d77eff6",
+        "cat": "bit_manipulation",
+        "truth": "00011100"
+      },
+      {
+        "id": "5daa92e3",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "5dd3345c",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "5dec898e",
+        "cat": "bit_manipulation",
+        "truth": "11010101"
+      },
+      {
+        "id": "5dfea8b0",
+        "cat": "bit_manipulation",
+        "truth": "01011011"
+      },
+      {
+        "id": "5dffe751",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "5e0b85b0",
+        "cat": "bit_manipulation",
+        "truth": "01001111"
+      },
+      {
+        "id": "5e149421",
+        "cat": "bit_manipulation",
+        "truth": "11010010"
+      },
+      {
+        "id": "5e591674",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "5ea69df4",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "5ec86a30",
+        "cat": "bit_manipulation",
+        "truth": "00010101"
+      },
+      {
+        "id": "5f66eb60",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "5f76ba09",
+        "cat": "bit_manipulation",
+        "truth": "10010111"
+      },
+      {
+        "id": "5fead1a1",
+        "cat": "bit_manipulation",
+        "truth": "11111010"
+      },
+      {
+        "id": "60902b81",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "609c49bc",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "61076abe",
+        "cat": "bit_manipulation",
+        "truth": "00111110"
+      },
+      {
+        "id": "615a02e6",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "6189ce10",
+        "cat": "bit_manipulation",
+        "truth": "00001110"
+      },
+      {
+        "id": "619a99d2",
+        "cat": "bit_manipulation",
+        "truth": "11110100"
+      },
+      {
+        "id": "6201374a",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "62296199",
+        "cat": "bit_manipulation",
+        "truth": "00001000"
+      },
+      {
+        "id": "626a2762",
+        "cat": "bit_manipulation",
+        "truth": "01000101"
+      },
+      {
+        "id": "62c6e1c5",
+        "cat": "bit_manipulation",
+        "truth": "01110100"
+      },
+      {
+        "id": "63227af6",
+        "cat": "bit_manipulation",
+        "truth": "01010111"
+      },
+      {
+        "id": "632444af",
+        "cat": "bit_manipulation",
+        "truth": "10000100"
+      },
+      {
+        "id": "6349d105",
+        "cat": "bit_manipulation",
+        "truth": "00011101"
+      },
+      {
+        "id": "634b5f5f",
+        "cat": "bit_manipulation",
+        "truth": "11110011"
+      },
+      {
+        "id": "636e0dba",
+        "cat": "bit_manipulation",
+        "truth": "01001110"
+      },
+      {
+        "id": "638224db",
+        "cat": "bit_manipulation",
+        "truth": "10000101"
+      },
+      {
+        "id": "63874dd5",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "63d4557e",
+        "cat": "bit_manipulation",
+        "truth": "10111100"
+      },
+      {
+        "id": "64890e18",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "654e8a98",
+        "cat": "bit_manipulation",
+        "truth": "00001101"
+      },
+      {
+        "id": "6564df54",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "65ab9661",
+        "cat": "bit_manipulation",
+        "truth": "00000110"
+      },
+      {
+        "id": "6617d3b0",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "663fd5e9",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "6686f0de",
+        "cat": "bit_manipulation",
+        "truth": "10110111"
+      },
+      {
+        "id": "6689ee95",
+        "cat": "bit_manipulation",
+        "truth": "10001111"
+      },
+      {
+        "id": "66b1c512",
+        "cat": "bit_manipulation",
+        "truth": "11000010"
+      },
+      {
+        "id": "66bd639f",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "66e5eb55",
+        "cat": "bit_manipulation",
+        "truth": "10101110"
+      },
+      {
+        "id": "66f9fe57",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "67032a5c",
+        "cat": "bit_manipulation",
+        "truth": "11111100"
+      },
+      {
+        "id": "6728c338",
+        "cat": "bit_manipulation",
+        "truth": "00110011"
+      },
+      {
+        "id": "67372eaf",
+        "cat": "bit_manipulation",
+        "truth": "01101000"
+      },
+      {
+        "id": "67ae4217",
+        "cat": "bit_manipulation",
+        "truth": "11101101"
+      },
+      {
+        "id": "6818b555",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "68213a4c",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "6890870d",
+        "cat": "bit_manipulation",
+        "truth": "01110000"
+      },
+      {
+        "id": "691608b9",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "691c6e38",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "698e737a",
+        "cat": "bit_manipulation",
+        "truth": "00101110"
+      },
+      {
+        "id": "69cbffdf",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "6a186446",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "6a333ed6",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "6a578940",
+        "cat": "bit_manipulation",
+        "truth": "10010000"
+      },
+      {
+        "id": "6a933284",
+        "cat": "bit_manipulation",
+        "truth": "00101101"
+      },
+      {
+        "id": "6adef1ef",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "6b01e0cf",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "6b11c05f",
+        "cat": "bit_manipulation",
+        "truth": "00100010"
+      },
+      {
+        "id": "6b730629",
+        "cat": "bit_manipulation",
+        "truth": "11100111"
+      },
+      {
+        "id": "6b75f5f0",
+        "cat": "bit_manipulation",
+        "truth": "10111100"
+      },
+      {
+        "id": "6b8246a0",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "6bef21ca",
+        "cat": "bit_manipulation",
+        "truth": "01111101"
+      },
+      {
+        "id": "6c41f684",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "6c7299c2",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "6cb5aff2",
+        "cat": "bit_manipulation",
+        "truth": "01111110"
+      },
+      {
+        "id": "6cface63",
+        "cat": "bit_manipulation",
+        "truth": "10010000"
+      },
+      {
+        "id": "6cfe5536",
+        "cat": "bit_manipulation",
+        "truth": "01000010"
+      },
+      {
+        "id": "6d00964a",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "6d196fe8",
+        "cat": "bit_manipulation",
+        "truth": "01001011"
+      },
+      {
+        "id": "6d24205b",
+        "cat": "bit_manipulation",
+        "truth": "01110001"
+      },
+      {
+        "id": "6d9ff2a3",
+        "cat": "bit_manipulation",
+        "truth": "00110010"
+      },
+      {
+        "id": "6dbd9643",
+        "cat": "bit_manipulation",
+        "truth": "10001011"
+      },
+      {
+        "id": "6deb3d5e",
+        "cat": "bit_manipulation",
+        "truth": "11000011"
+      },
+      {
+        "id": "6e2311e1",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "6e714f65",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "6e838251",
+        "cat": "bit_manipulation",
+        "truth": "01101101"
+      },
+      {
+        "id": "6eb0d262",
+        "cat": "bit_manipulation",
+        "truth": "00111011"
+      },
+      {
+        "id": "6f7a9048",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "6f91481e",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "7064acac",
+        "cat": "bit_manipulation",
+        "truth": "01111100"
+      },
+      {
+        "id": "707acef3",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "709930e0",
+        "cat": "bit_manipulation",
+        "truth": "10011010"
+      },
+      {
+        "id": "70bc42af",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "70df6363",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "70f08eac",
+        "cat": "bit_manipulation",
+        "truth": "01011000"
+      },
+      {
+        "id": "70f81613",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "710cf035",
+        "cat": "bit_manipulation",
+        "truth": "10000011"
+      },
+      {
+        "id": "7192535b",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "719b314e",
+        "cat": "bit_manipulation",
+        "truth": "10010010"
+      },
+      {
+        "id": "71a661f7",
+        "cat": "bit_manipulation",
+        "truth": "11000001"
+      },
+      {
+        "id": "71b70d29",
+        "cat": "bit_manipulation",
+        "truth": "00101001"
+      },
+      {
+        "id": "71e6cae8",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "722b605b",
+        "cat": "bit_manipulation",
+        "truth": "00111101"
+      },
+      {
+        "id": "7283eb09",
+        "cat": "bit_manipulation",
+        "truth": "10100110"
+      },
+      {
+        "id": "72ae2707",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "72d263a8",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "733a819b",
+        "cat": "bit_manipulation",
+        "truth": "00111011"
+      },
+      {
+        "id": "734cba65",
+        "cat": "bit_manipulation",
+        "truth": "01100110"
+      },
+      {
+        "id": "736ae137",
+        "cat": "bit_manipulation",
+        "truth": "01001100"
+      },
+      {
+        "id": "738f4928",
+        "cat": "bit_manipulation",
+        "truth": "10010101"
+      },
+      {
+        "id": "739451ab",
+        "cat": "bit_manipulation",
+        "truth": "11011111"
+      },
+      {
+        "id": "73b7b116",
+        "cat": "bit_manipulation",
+        "truth": "00101000"
+      },
+      {
+        "id": "74339109",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "74ada555",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "74e525f0",
+        "cat": "bit_manipulation",
+        "truth": "01001000"
+      },
+      {
+        "id": "751d48a2",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "7596e86d",
+        "cat": "bit_manipulation",
+        "truth": "01111110"
+      },
+      {
+        "id": "75b509ad",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "75cd12f1",
+        "cat": "bit_manipulation",
+        "truth": "00011110"
+      },
+      {
+        "id": "75cd54d8",
+        "cat": "bit_manipulation",
+        "truth": "10000100"
+      },
+      {
+        "id": "75e869dd",
+        "cat": "bit_manipulation",
+        "truth": "01101111"
+      },
+      {
+        "id": "75ecd32c",
+        "cat": "bit_manipulation",
+        "truth": "11100011"
+      },
+      {
+        "id": "7669569d",
+        "cat": "bit_manipulation",
+        "truth": "01100010"
+      },
+      {
+        "id": "76fbfa25",
+        "cat": "bit_manipulation",
+        "truth": "10101101"
+      },
+      {
+        "id": "77298199",
+        "cat": "bit_manipulation",
+        "truth": "10011000"
+      },
+      {
+        "id": "77602e0f",
+        "cat": "bit_manipulation",
+        "truth": "11001101"
+      },
+      {
+        "id": "77804b32",
+        "cat": "bit_manipulation",
+        "truth": "00010110"
+      },
+      {
+        "id": "77819d4e",
+        "cat": "bit_manipulation",
+        "truth": "10111101"
+      },
+      {
+        "id": "779bb1f3",
+        "cat": "bit_manipulation",
+        "truth": "10000001"
+      },
+      {
+        "id": "77e60a3e",
+        "cat": "bit_manipulation",
+        "truth": "00010110"
+      },
+      {
+        "id": "77f17a8f",
+        "cat": "bit_manipulation",
+        "truth": "00011111"
+      },
+      {
+        "id": "780bf5c8",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "782dfb49",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "783a1317",
+        "cat": "bit_manipulation",
+        "truth": "00111110"
+      },
+      {
+        "id": "78616706",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "7877dd7f",
+        "cat": "bit_manipulation",
+        "truth": "11101000"
+      },
+      {
+        "id": "78989fb5",
+        "cat": "bit_manipulation",
+        "truth": "01100001"
+      },
+      {
+        "id": "789b83ce",
+        "cat": "bit_manipulation",
+        "truth": "00001110"
+      },
+      {
+        "id": "78cf1c8f",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "78d9d61d",
+        "cat": "bit_manipulation",
+        "truth": "00001001"
+      },
+      {
+        "id": "78db4aa3",
+        "cat": "bit_manipulation",
+        "truth": "11011011"
+      },
+      {
+        "id": "790d2fa8",
+        "cat": "bit_manipulation",
+        "truth": "11011001"
+      },
+      {
+        "id": "7973c1b7",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "7987a44b",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "799c6822",
+        "cat": "bit_manipulation",
+        "truth": "01101110"
+      },
+      {
+        "id": "7a3ed1ef",
+        "cat": "bit_manipulation",
+        "truth": "00010110"
+      },
+      {
+        "id": "7a4063e6",
+        "cat": "bit_manipulation",
+        "truth": "10010110"
+      },
+      {
+        "id": "7a79ac09",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "7aa4fdf0",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "7aba9046",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "7abab429",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "7af6e047",
+        "cat": "bit_manipulation",
+        "truth": "11001110"
+      },
+      {
+        "id": "7b107eec",
+        "cat": "bit_manipulation",
+        "truth": "10110101"
+      },
+      {
+        "id": "7b26e296",
+        "cat": "bit_manipulation",
+        "truth": "11011100"
+      },
+      {
+        "id": "7b38ff97",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "7b412ac0",
+        "cat": "bit_manipulation",
+        "truth": "11101010"
+      },
+      {
+        "id": "7b4ac17a",
+        "cat": "bit_manipulation",
+        "truth": "11010101"
+      },
+      {
+        "id": "7b6f55dc",
+        "cat": "bit_manipulation",
+        "truth": "10011110"
+      },
+      {
+        "id": "7c6950c4",
+        "cat": "bit_manipulation",
+        "truth": "01000111"
+      },
+      {
+        "id": "7c980689",
+        "cat": "bit_manipulation",
+        "truth": "11000011"
+      },
+      {
+        "id": "7c99ca45",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "7cc61ea9",
+        "cat": "bit_manipulation",
+        "truth": "10100101"
+      },
+      {
+        "id": "7dec2e14",
+        "cat": "bit_manipulation",
+        "truth": "01001100"
+      },
+      {
+        "id": "7e246b00",
+        "cat": "bit_manipulation",
+        "truth": "01110011"
+      },
+      {
+        "id": "7e527a97",
+        "cat": "bit_manipulation",
+        "truth": "00000110"
+      },
+      {
+        "id": "7e577681",
+        "cat": "bit_manipulation",
+        "truth": "11101011"
+      },
+      {
+        "id": "7eaa679e",
+        "cat": "bit_manipulation",
+        "truth": "10110101"
+      },
+      {
+        "id": "7eaadb01",
+        "cat": "bit_manipulation",
+        "truth": "00100111"
+      },
+      {
+        "id": "7ed809c8",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "7f6baac7",
+        "cat": "bit_manipulation",
+        "truth": "01001000"
+      },
+      {
+        "id": "7f73016f",
+        "cat": "bit_manipulation",
+        "truth": "01010110"
+      },
+      {
+        "id": "7fae2ece",
+        "cat": "bit_manipulation",
+        "truth": "01011110"
+      },
+      {
+        "id": "807c4206",
+        "cat": "bit_manipulation",
+        "truth": "10111000"
+      },
+      {
+        "id": "80e2775c",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "81068064",
+        "cat": "bit_manipulation",
+        "truth": "00111001"
+      },
+      {
+        "id": "812131f1",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "81323d52",
+        "cat": "bit_manipulation",
+        "truth": "10110001"
+      },
+      {
+        "id": "813f2402",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "81a1d399",
+        "cat": "bit_manipulation",
+        "truth": "00110011"
+      },
+      {
+        "id": "81e39cf5",
+        "cat": "bit_manipulation",
+        "truth": "01011100"
+      },
+      {
+        "id": "820c588f",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "823be38e",
+        "cat": "bit_manipulation",
+        "truth": "01110100"
+      },
+      {
+        "id": "8243c91e",
+        "cat": "bit_manipulation",
+        "truth": "01000101"
+      },
+      {
+        "id": "826a32cd",
+        "cat": "bit_manipulation",
+        "truth": "00011110"
+      },
+      {
+        "id": "82acc609",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "835aca57",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "835c56b6",
+        "cat": "bit_manipulation",
+        "truth": "01110100"
+      },
+      {
+        "id": "837d7158",
+        "cat": "bit_manipulation",
+        "truth": "00110100"
+      },
+      {
+        "id": "839e7350",
+        "cat": "bit_manipulation",
+        "truth": "00111011"
+      },
+      {
+        "id": "83a70d48",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "83bea6b2",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "840050ec",
+        "cat": "bit_manipulation",
+        "truth": "10001010"
+      },
+      {
+        "id": "847d8897",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "84e3f9f7",
+        "cat": "bit_manipulation",
+        "truth": "01100001"
+      },
+      {
+        "id": "851c53be",
+        "cat": "bit_manipulation",
+        "truth": "10000101"
+      },
+      {
+        "id": "855b5480",
+        "cat": "bit_manipulation",
+        "truth": "01111010"
+      },
+      {
+        "id": "859a3ca8",
+        "cat": "bit_manipulation",
+        "truth": "00111110"
+      },
+      {
+        "id": "85af23eb",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "8610c227",
+        "cat": "bit_manipulation",
+        "truth": "11010000"
+      },
+      {
+        "id": "8647cfb4",
+        "cat": "bit_manipulation",
+        "truth": "00101011"
+      },
+      {
+        "id": "86b727ff",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "86e91f7d",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "87007054",
+        "cat": "bit_manipulation",
+        "truth": "10111111"
+      },
+      {
+        "id": "872c96f1",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "872ca2f9",
+        "cat": "bit_manipulation",
+        "truth": "11111010"
+      },
+      {
+        "id": "873b8ea2",
+        "cat": "bit_manipulation",
+        "truth": "01110010"
+      },
+      {
+        "id": "8740ed31",
+        "cat": "bit_manipulation",
+        "truth": "01101000"
+      },
+      {
+        "id": "876806f0",
+        "cat": "bit_manipulation",
+        "truth": "01000101"
+      },
+      {
+        "id": "8789bd45",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "885c8b51",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "888069cb",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "88c482d3",
+        "cat": "bit_manipulation",
+        "truth": "00100001"
+      },
+      {
+        "id": "88ca8c4a",
+        "cat": "bit_manipulation",
+        "truth": "00001001"
+      },
+      {
+        "id": "88fff090",
+        "cat": "bit_manipulation",
+        "truth": "01101000"
+      },
+      {
+        "id": "892d73b5",
+        "cat": "bit_manipulation",
+        "truth": "00010101"
+      },
+      {
+        "id": "8982c48b",
+        "cat": "bit_manipulation",
+        "truth": "00100001"
+      },
+      {
+        "id": "89906f16",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "899b479d",
+        "cat": "bit_manipulation",
+        "truth": "11011100"
+      },
+      {
+        "id": "89ff5526",
+        "cat": "bit_manipulation",
+        "truth": "11011101"
+      },
+      {
+        "id": "8a04fbe3",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "8a057351",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "8a0867ce",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "8a1a2c31",
+        "cat": "bit_manipulation",
+        "truth": "00001010"
+      },
+      {
+        "id": "8a382428",
+        "cat": "bit_manipulation",
+        "truth": "01100110"
+      },
+      {
+        "id": "8a5742e1",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "8a89300d",
+        "cat": "bit_manipulation",
+        "truth": "10001001"
+      },
+      {
+        "id": "8abcff0f",
+        "cat": "bit_manipulation",
+        "truth": "11110111"
+      },
+      {
+        "id": "8ac1a11a",
+        "cat": "bit_manipulation",
+        "truth": "01111011"
+      },
+      {
+        "id": "8ad0116e",
+        "cat": "bit_manipulation",
+        "truth": "01000100"
+      },
+      {
+        "id": "8b12ff37",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "8b4c71ba",
+        "cat": "bit_manipulation",
+        "truth": "11001100"
+      },
+      {
+        "id": "8b85ff03",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "8bf273f5",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "8c06fb6f",
+        "cat": "bit_manipulation",
+        "truth": "10111111"
+      },
+      {
+        "id": "8c0f9291",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "8c743940",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "8c9fcc6b",
+        "cat": "bit_manipulation",
+        "truth": "11110111"
+      },
+      {
+        "id": "8caf74ff",
+        "cat": "bit_manipulation",
+        "truth": "00100101"
+      },
+      {
+        "id": "8cf926ca",
+        "cat": "bit_manipulation",
+        "truth": "00110111"
+      },
+      {
+        "id": "8d077532",
+        "cat": "bit_manipulation",
+        "truth": "11001110"
+      },
+      {
+        "id": "8d20d0ae",
+        "cat": "bit_manipulation",
+        "truth": "11000010"
+      },
+      {
+        "id": "8d2290b0",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "8e5d6fe6",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "8e76c0d0",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "8e96d488",
+        "cat": "bit_manipulation",
+        "truth": "00001010"
+      },
+      {
+        "id": "8e99c51c",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "8ed5c9e7",
+        "cat": "bit_manipulation",
+        "truth": "11101110"
+      },
+      {
+        "id": "8edddcc4",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "8f07a84d",
+        "cat": "bit_manipulation",
+        "truth": "11101000"
+      },
+      {
+        "id": "8f52b3de",
+        "cat": "bit_manipulation",
+        "truth": "10010001"
+      },
+      {
+        "id": "8f6d4fb3",
+        "cat": "bit_manipulation",
+        "truth": "00101011"
+      },
+      {
+        "id": "8f7b37be",
+        "cat": "bit_manipulation",
+        "truth": "10011111"
+      },
+      {
+        "id": "8fa7ea3a",
+        "cat": "bit_manipulation",
+        "truth": "01000001"
+      },
+      {
+        "id": "8fbd2477",
+        "cat": "bit_manipulation",
+        "truth": "01011010"
+      },
+      {
+        "id": "9016e3d3",
+        "cat": "bit_manipulation",
+        "truth": "11001001"
+      },
+      {
+        "id": "9121e150",
+        "cat": "bit_manipulation",
+        "truth": "11111001"
+      },
+      {
+        "id": "9124295a",
+        "cat": "bit_manipulation",
+        "truth": "01010101"
+      },
+      {
+        "id": "91c9c95f",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "91dc0848",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "9238e8d6",
+        "cat": "bit_manipulation",
+        "truth": "11101010"
+      },
+      {
+        "id": "929bbda5",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "92b8f52a",
+        "cat": "bit_manipulation",
+        "truth": "01010100"
+      },
+      {
+        "id": "92ce2e1f",
+        "cat": "bit_manipulation",
+        "truth": "01110000"
+      },
+      {
+        "id": "934a2c55",
+        "cat": "bit_manipulation",
+        "truth": "00101011"
+      },
+      {
+        "id": "936c3c1e",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "938b81c2",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "93955d17",
+        "cat": "bit_manipulation",
+        "truth": "10000100"
+      },
+      {
+        "id": "942ddd73",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "9460a623",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "94c25c56",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "95205105",
+        "cat": "bit_manipulation",
+        "truth": "00010100"
+      },
+      {
+        "id": "95771a39",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "97b03b75",
+        "cat": "bit_manipulation",
+        "truth": "11000110"
+      },
+      {
+        "id": "97e7a57f",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "97eb9131",
+        "cat": "bit_manipulation",
+        "truth": "10100001"
+      },
+      {
+        "id": "97f45beb",
+        "cat": "bit_manipulation",
+        "truth": "11011111"
+      },
+      {
+        "id": "989dde0a",
+        "cat": "bit_manipulation",
+        "truth": "01000100"
+      },
+      {
+        "id": "98bbac0f",
+        "cat": "bit_manipulation",
+        "truth": "01101011"
+      },
+      {
+        "id": "98c4eb34",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "98e1a8b4",
+        "cat": "bit_manipulation",
+        "truth": "01111110"
+      },
+      {
+        "id": "9972f3f1",
+        "cat": "bit_manipulation",
+        "truth": "11000001"
+      },
+      {
+        "id": "9984fc0f",
+        "cat": "bit_manipulation",
+        "truth": "01111110"
+      },
+      {
+        "id": "9992bbd0",
+        "cat": "bit_manipulation",
+        "truth": "11110110"
+      },
+      {
+        "id": "999673ed",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "99bda3b2",
+        "cat": "bit_manipulation",
+        "truth": "11010010"
+      },
+      {
+        "id": "99ff46bb",
+        "cat": "bit_manipulation",
+        "truth": "11100101"
+      },
+      {
+        "id": "9ab82dfb",
+        "cat": "bit_manipulation",
+        "truth": "10011100"
+      },
+      {
+        "id": "9ad52d28",
+        "cat": "bit_manipulation",
+        "truth": "00111000"
+      },
+      {
+        "id": "9adc9406",
+        "cat": "bit_manipulation",
+        "truth": "10110000"
+      },
+      {
+        "id": "9b2b3698",
+        "cat": "bit_manipulation",
+        "truth": "01000001"
+      },
+      {
+        "id": "9b9b87e3",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "9bbca089",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "9bd65991",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "9bfb1cc6",
+        "cat": "bit_manipulation",
+        "truth": "10001101"
+      },
+      {
+        "id": "9cecae80",
+        "cat": "bit_manipulation",
+        "truth": "11011110"
+      },
+      {
+        "id": "9cfc388d",
+        "cat": "bit_manipulation",
+        "truth": "10100010"
+      },
+      {
+        "id": "9d09171e",
+        "cat": "bit_manipulation",
+        "truth": "01011111"
+      },
+      {
+        "id": "9d8897e8",
+        "cat": "bit_manipulation",
+        "truth": "11111001"
+      },
+      {
+        "id": "9d964043",
+        "cat": "bit_manipulation",
+        "truth": "01001111"
+      },
+      {
+        "id": "9dfcd4be",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "9e2b594d",
+        "cat": "bit_manipulation",
+        "truth": "10000110"
+      },
+      {
+        "id": "9e61762f",
+        "cat": "bit_manipulation",
+        "truth": "11111000"
+      },
+      {
+        "id": "9eac443f",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "9f2e45e7",
+        "cat": "bit_manipulation",
+        "truth": "11010010"
+      },
+      {
+        "id": "a04bd334",
+        "cat": "bit_manipulation",
+        "truth": "11010101"
+      },
+      {
+        "id": "a0847120",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "a0d317ce",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "a0ffbfd2",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "a169fa86",
+        "cat": "bit_manipulation",
+        "truth": "11111001"
+      },
+      {
+        "id": "a19734b3",
+        "cat": "bit_manipulation",
+        "truth": "10110110"
+      },
+      {
+        "id": "a1a61c77",
+        "cat": "bit_manipulation",
+        "truth": "11011111"
+      },
+      {
+        "id": "a1c20432",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "a1d2bb0c",
+        "cat": "bit_manipulation",
+        "truth": "00100010"
+      },
+      {
+        "id": "a2eb7c6f",
+        "cat": "bit_manipulation",
+        "truth": "00001101"
+      },
+      {
+        "id": "a30a5e37",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "a316aadc",
+        "cat": "bit_manipulation",
+        "truth": "01010110"
+      },
+      {
+        "id": "a33019c4",
+        "cat": "bit_manipulation",
+        "truth": "00100111"
+      },
+      {
+        "id": "a365e304",
+        "cat": "bit_manipulation",
+        "truth": "11011011"
+      },
+      {
+        "id": "a37158d6",
+        "cat": "bit_manipulation",
+        "truth": "00001010"
+      },
+      {
+        "id": "a46d71d0",
+        "cat": "bit_manipulation",
+        "truth": "01000011"
+      },
+      {
+        "id": "a4770481",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "a4970d02",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "a4dd4cce",
+        "cat": "bit_manipulation",
+        "truth": "10110010"
+      },
+      {
+        "id": "a4ea5f61",
+        "cat": "bit_manipulation",
+        "truth": "10110111"
+      },
+      {
+        "id": "a4fceb43",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "a50e5d7e",
+        "cat": "bit_manipulation",
+        "truth": "10110111"
+      },
+      {
+        "id": "a521be72",
+        "cat": "bit_manipulation",
+        "truth": "11011111"
+      },
+      {
+        "id": "a56a80ac",
+        "cat": "bit_manipulation",
+        "truth": "01101000"
+      },
+      {
+        "id": "a5749dc0",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "a59e2ff7",
+        "cat": "bit_manipulation",
+        "truth": "01011111"
+      },
+      {
+        "id": "a6082142",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "a6192d29",
+        "cat": "bit_manipulation",
+        "truth": "00001000"
+      },
+      {
+        "id": "a62417fe",
+        "cat": "bit_manipulation",
+        "truth": "01000110"
+      },
+      {
+        "id": "a63f9c85",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "a69f387a",
+        "cat": "bit_manipulation",
+        "truth": "01010011"
+      },
+      {
+        "id": "a6d00147",
+        "cat": "bit_manipulation",
+        "truth": "11101101"
+      },
+      {
+        "id": "a7104414",
+        "cat": "bit_manipulation",
+        "truth": "10011011"
+      },
+      {
+        "id": "a794d193",
+        "cat": "bit_manipulation",
+        "truth": "01011101"
+      },
+      {
+        "id": "a7dcc027",
+        "cat": "bit_manipulation",
+        "truth": "01011011"
+      },
+      {
+        "id": "a84ac590",
+        "cat": "bit_manipulation",
+        "truth": "11111110"
+      },
+      {
+        "id": "a87fdd3a",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "a88c4f08",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "a897b8bc",
+        "cat": "bit_manipulation",
+        "truth": "01111101"
+      },
+      {
+        "id": "a898cbc4",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "a8ea0e29",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "a8f5ad76",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "a91414ee",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "a916a770",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "a94232ca",
+        "cat": "bit_manipulation",
+        "truth": "10000011"
+      },
+      {
+        "id": "a95e05ce",
+        "cat": "bit_manipulation",
+        "truth": "01101000"
+      },
+      {
+        "id": "aa2e26f1",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "aa3ae31f",
+        "cat": "bit_manipulation",
+        "truth": "10011100"
+      },
+      {
+        "id": "aaa62881",
+        "cat": "bit_manipulation",
+        "truth": "00110001"
+      },
+      {
+        "id": "ab0eee3d",
+        "cat": "bit_manipulation",
+        "truth": "00010111"
+      },
+      {
+        "id": "ab104009",
+        "cat": "bit_manipulation",
+        "truth": "10010001"
+      },
+      {
+        "id": "ab5f7c7f",
+        "cat": "bit_manipulation",
+        "truth": "11110110"
+      },
+      {
+        "id": "ab71eaa0",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "aba5a35d",
+        "cat": "bit_manipulation",
+        "truth": "01011110"
+      },
+      {
+        "id": "abb5d597",
+        "cat": "bit_manipulation",
+        "truth": "00111000"
+      },
+      {
+        "id": "abb9c33a",
+        "cat": "bit_manipulation",
+        "truth": "01111100"
+      },
+      {
+        "id": "abba85ac",
+        "cat": "bit_manipulation",
+        "truth": "11101110"
+      },
+      {
+        "id": "ac0d032d",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "ac145047",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "ac5f6747",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "ac7ed6cf",
+        "cat": "bit_manipulation",
+        "truth": "11100111"
+      },
+      {
+        "id": "ad1ade98",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "ad7edc85",
+        "cat": "bit_manipulation",
+        "truth": "11010100"
+      },
+      {
+        "id": "ada01a20",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "ae006a91",
+        "cat": "bit_manipulation",
+        "truth": "11100010"
+      },
+      {
+        "id": "ae73892e",
+        "cat": "bit_manipulation",
+        "truth": "00110001"
+      },
+      {
+        "id": "ae93aec4",
+        "cat": "bit_manipulation",
+        "truth": "00011000"
+      },
+      {
+        "id": "aea08eb0",
+        "cat": "bit_manipulation",
+        "truth": "11100111"
+      },
+      {
+        "id": "aea14651",
+        "cat": "bit_manipulation",
+        "truth": "11111100"
+      },
+      {
+        "id": "aeca38ba",
+        "cat": "bit_manipulation",
+        "truth": "01111011"
+      },
+      {
+        "id": "aedef8e4",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "af0fd8f6",
+        "cat": "bit_manipulation",
+        "truth": "10100110"
+      },
+      {
+        "id": "af358750",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "af5302ca",
+        "cat": "bit_manipulation",
+        "truth": "00011111"
+      },
+      {
+        "id": "af5e4060",
+        "cat": "bit_manipulation",
+        "truth": "11001111"
+      },
+      {
+        "id": "b06650c1",
+        "cat": "bit_manipulation",
+        "truth": "11101110"
+      },
+      {
+        "id": "b0bc11f1",
+        "cat": "bit_manipulation",
+        "truth": "10000110"
+      },
+      {
+        "id": "b14fb614",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "b158ab98",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "b1890a99",
+        "cat": "bit_manipulation",
+        "truth": "00001011"
+      },
+      {
+        "id": "b1b095ea",
+        "cat": "bit_manipulation",
+        "truth": "10001111"
+      },
+      {
+        "id": "b1b5054f",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "b1f5a2e8",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "b20b39bf",
+        "cat": "bit_manipulation",
+        "truth": "01110010"
+      },
+      {
+        "id": "b265a4af",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "b287ee74",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "b2bdef43",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "b2d46dec",
+        "cat": "bit_manipulation",
+        "truth": "00101100"
+      },
+      {
+        "id": "b30f8610",
+        "cat": "bit_manipulation",
+        "truth": "10000011"
+      },
+      {
+        "id": "b3785949",
+        "cat": "bit_manipulation",
+        "truth": "11100011"
+      },
+      {
+        "id": "b398201b",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "b45003a6",
+        "cat": "bit_manipulation",
+        "truth": "00110110"
+      },
+      {
+        "id": "b487923a",
+        "cat": "bit_manipulation",
+        "truth": "00001011"
+      },
+      {
+        "id": "b5261a95",
+        "cat": "bit_manipulation",
+        "truth": "01011111"
+      },
+      {
+        "id": "b52a8017",
+        "cat": "bit_manipulation",
+        "truth": "11100101"
+      },
+      {
+        "id": "b558c74d",
+        "cat": "bit_manipulation",
+        "truth": "10100101"
+      },
+      {
+        "id": "b57c1c5f",
+        "cat": "bit_manipulation",
+        "truth": "00110100"
+      },
+      {
+        "id": "b595b6e8",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "b5b9c138",
+        "cat": "bit_manipulation",
+        "truth": "00100001"
+      },
+      {
+        "id": "b5e40e49",
+        "cat": "bit_manipulation",
+        "truth": "10101011"
+      },
+      {
+        "id": "b631f2b8",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "b634898d",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "b6e4a36d",
+        "cat": "bit_manipulation",
+        "truth": "01011111"
+      },
+      {
+        "id": "b72f6f48",
+        "cat": "bit_manipulation",
+        "truth": "11010111"
+      },
+      {
+        "id": "b74a49c4",
+        "cat": "bit_manipulation",
+        "truth": "01000111"
+      },
+      {
+        "id": "b75b5123",
+        "cat": "bit_manipulation",
+        "truth": "01110111"
+      },
+      {
+        "id": "b76fd053",
+        "cat": "bit_manipulation",
+        "truth": "11100111"
+      },
+      {
+        "id": "b79f2b10",
+        "cat": "bit_manipulation",
+        "truth": "00100001"
+      },
+      {
+        "id": "b82b2a02",
+        "cat": "bit_manipulation",
+        "truth": "01000110"
+      },
+      {
+        "id": "b8722d19",
+        "cat": "bit_manipulation",
+        "truth": "00100100"
+      },
+      {
+        "id": "b8954f14",
+        "cat": "bit_manipulation",
+        "truth": "11000011"
+      },
+      {
+        "id": "b8dcc19a",
+        "cat": "bit_manipulation",
+        "truth": "10101001"
+      },
+      {
+        "id": "b8e38a49",
+        "cat": "bit_manipulation",
+        "truth": "10011101"
+      },
+      {
+        "id": "b91855fd",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "b9500f41",
+        "cat": "bit_manipulation",
+        "truth": "11110000"
+      },
+      {
+        "id": "b9af70c0",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "b9e7c7c4",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "b9e9dc9f",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "b9f42afb",
+        "cat": "bit_manipulation",
+        "truth": "10011100"
+      },
+      {
+        "id": "ba0a7ac2",
+        "cat": "bit_manipulation",
+        "truth": "00101110"
+      },
+      {
+        "id": "ba409835",
+        "cat": "bit_manipulation",
+        "truth": "11000110"
+      },
+      {
+        "id": "ba47a3bf",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "ba61b815",
+        "cat": "bit_manipulation",
+        "truth": "00001101"
+      },
+      {
+        "id": "ba73cc70",
+        "cat": "bit_manipulation",
+        "truth": "00011101"
+      },
+      {
+        "id": "baa9e4ea",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "bad798af",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "baeb4a11",
+        "cat": "bit_manipulation",
+        "truth": "11010000"
+      },
+      {
+        "id": "baee520f",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "baf66f84",
+        "cat": "bit_manipulation",
+        "truth": "10111010"
+      },
+      {
+        "id": "bb0abecc",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "bb326096",
+        "cat": "bit_manipulation",
+        "truth": "00101001"
+      },
+      {
+        "id": "bb429016",
+        "cat": "bit_manipulation",
+        "truth": "00101111"
+      },
+      {
+        "id": "bb79e64f",
+        "cat": "bit_manipulation",
+        "truth": "01101001"
+      },
+      {
+        "id": "bb91177f",
+        "cat": "bit_manipulation",
+        "truth": "00110111"
+      },
+      {
+        "id": "bbf1dba3",
+        "cat": "bit_manipulation",
+        "truth": "11010010"
+      },
+      {
+        "id": "bc19cd14",
+        "cat": "bit_manipulation",
+        "truth": "11010110"
+      },
+      {
+        "id": "bc4d68f5",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "bc520eb0",
+        "cat": "bit_manipulation",
+        "truth": "00001011"
+      },
+      {
+        "id": "bc7618a7",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "bcdf9198",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "bd049614",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "bd214062",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "bd30ccbd",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "bd417168",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "bd53ea3a",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "bda90b57",
+        "cat": "bit_manipulation",
+        "truth": "01001100"
+      },
+      {
+        "id": "bdb93228",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "bdd63604",
+        "cat": "bit_manipulation",
+        "truth": "01010101"
+      },
+      {
+        "id": "be01af6b",
+        "cat": "bit_manipulation",
+        "truth": "10011111"
+      },
+      {
+        "id": "be05952c",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "be32b22a",
+        "cat": "bit_manipulation",
+        "truth": "11000011"
+      },
+      {
+        "id": "be678a92",
+        "cat": "bit_manipulation",
+        "truth": "11100011"
+      },
+      {
+        "id": "be9b0c9b",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "bef8b5ec",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "bf002000",
+        "cat": "bit_manipulation",
+        "truth": "11001000"
+      },
+      {
+        "id": "bf20f12c",
+        "cat": "bit_manipulation",
+        "truth": "10110110"
+      },
+      {
+        "id": "bf98d26a",
+        "cat": "bit_manipulation",
+        "truth": "00101110"
+      },
+      {
+        "id": "c00d52fe",
+        "cat": "bit_manipulation",
+        "truth": "01111000"
+      },
+      {
+        "id": "c05f5733",
+        "cat": "bit_manipulation",
+        "truth": "00101010"
+      },
+      {
+        "id": "c0788894",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "c095f799",
+        "cat": "bit_manipulation",
+        "truth": "10011111"
+      },
+      {
+        "id": "c0c70a35",
+        "cat": "bit_manipulation",
+        "truth": "11110111"
+      },
+      {
+        "id": "c0e04922",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "c11eba1d",
+        "cat": "bit_manipulation",
+        "truth": "11010111"
+      },
+      {
+        "id": "c180cdec",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "c1b427bb",
+        "cat": "bit_manipulation",
+        "truth": "01110000"
+      },
+      {
+        "id": "c200810b",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "c23fca57",
+        "cat": "bit_manipulation",
+        "truth": "00101100"
+      },
+      {
+        "id": "c24e1a48",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "c285d9ba",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "c2985c8e",
+        "cat": "bit_manipulation",
+        "truth": "11001111"
+      },
+      {
+        "id": "c29cdaed",
+        "cat": "bit_manipulation",
+        "truth": "11101010"
+      },
+      {
+        "id": "c2d8ef67",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "c2dacc5b",
+        "cat": "bit_manipulation",
+        "truth": "10000101"
+      },
+      {
+        "id": "c3207775",
+        "cat": "bit_manipulation",
+        "truth": "11111001"
+      },
+      {
+        "id": "c33ad31a",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "c395b6ec",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "c39705cd",
+        "cat": "bit_manipulation",
+        "truth": "00000110"
+      },
+      {
+        "id": "c424dcd4",
+        "cat": "bit_manipulation",
+        "truth": "11001111"
+      },
+      {
+        "id": "c4a6d52b",
+        "cat": "bit_manipulation",
+        "truth": "01000010"
+      },
+      {
+        "id": "c4d2cf2c",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "c536c44c",
+        "cat": "bit_manipulation",
+        "truth": "01000101"
+      },
+      {
+        "id": "c54765cd",
+        "cat": "bit_manipulation",
+        "truth": "00011110"
+      },
+      {
+        "id": "c58451f9",
+        "cat": "bit_manipulation",
+        "truth": "10010100"
+      },
+      {
+        "id": "c5872355",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "c5dd2a9b",
+        "cat": "bit_manipulation",
+        "truth": "00100010"
+      },
+      {
+        "id": "c60481e7",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "c62359ea",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "c625ba91",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "c628dd06",
+        "cat": "bit_manipulation",
+        "truth": "10010110"
+      },
+      {
+        "id": "c69805fe",
+        "cat": "bit_manipulation",
+        "truth": "11001011"
+      },
+      {
+        "id": "c7077b21",
+        "cat": "bit_manipulation",
+        "truth": "00010110"
+      },
+      {
+        "id": "c71f26d6",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "c728dd09",
+        "cat": "bit_manipulation",
+        "truth": "10100001"
+      },
+      {
+        "id": "c7660833",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "c7a37cda",
+        "cat": "bit_manipulation",
+        "truth": "10110010"
+      },
+      {
+        "id": "c7be75f8",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "c7e6e08f",
+        "cat": "bit_manipulation",
+        "truth": "10001110"
+      },
+      {
+        "id": "c8084977",
+        "cat": "bit_manipulation",
+        "truth": "10001100"
+      },
+      {
+        "id": "c825ac2a",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "c84c150e",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "c869b4f6",
+        "cat": "bit_manipulation",
+        "truth": "10010001"
+      },
+      {
+        "id": "c8c65001",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "c987c34f",
+        "cat": "bit_manipulation",
+        "truth": "10001001"
+      },
+      {
+        "id": "c9ed8124",
+        "cat": "bit_manipulation",
+        "truth": "01010011"
+      },
+      {
+        "id": "ca72b5b3",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "ca8d32e6",
+        "cat": "bit_manipulation",
+        "truth": "10001100"
+      },
+      {
+        "id": "cb11a232",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "cb31384b",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "cb3317fe",
+        "cat": "bit_manipulation",
+        "truth": "00101001"
+      },
+      {
+        "id": "cb5ddb11",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "cb7c2230",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "cbece006",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "cc5011ac",
+        "cat": "bit_manipulation",
+        "truth": "11011101"
+      },
+      {
+        "id": "cc7dd4ae",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "cc861605",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "ccede4a0",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "ccfd3fe3",
+        "cat": "bit_manipulation",
+        "truth": "11110010"
+      },
+      {
+        "id": "cd17f040",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "cd93713c",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "ce00ffe4",
+        "cat": "bit_manipulation",
+        "truth": "11110001"
+      },
+      {
+        "id": "cebaa9b5",
+        "cat": "bit_manipulation",
+        "truth": "10011000"
+      },
+      {
+        "id": "ced947c8",
+        "cat": "bit_manipulation",
+        "truth": "01001011"
+      },
+      {
+        "id": "cf3629fc",
+        "cat": "bit_manipulation",
+        "truth": "11101000"
+      },
+      {
+        "id": "cf447906",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "cf9bebe9",
+        "cat": "bit_manipulation",
+        "truth": "10111001"
+      },
+      {
+        "id": "cfb1b2c1",
+        "cat": "bit_manipulation",
+        "truth": "10100001"
+      },
+      {
+        "id": "d01aeeda",
+        "cat": "bit_manipulation",
+        "truth": "01101111"
+      },
+      {
+        "id": "d030b265",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "d03223ca",
+        "cat": "bit_manipulation",
+        "truth": "00011100"
+      },
+      {
+        "id": "d062642e",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "d08ef8d1",
+        "cat": "bit_manipulation",
+        "truth": "00011111"
+      },
+      {
+        "id": "d0ea0b5f",
+        "cat": "bit_manipulation",
+        "truth": "10110001"
+      },
+      {
+        "id": "d117113e",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "d13302ca",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "d1c3ed77",
+        "cat": "bit_manipulation",
+        "truth": "11111110"
+      },
+      {
+        "id": "d1ecdd11",
+        "cat": "bit_manipulation",
+        "truth": "11001100"
+      },
+      {
+        "id": "d25d3b5f",
+        "cat": "bit_manipulation",
+        "truth": "11100011"
+      },
+      {
+        "id": "d2695f15",
+        "cat": "bit_manipulation",
+        "truth": "11111110"
+      },
+      {
+        "id": "d26f22c3",
+        "cat": "bit_manipulation",
+        "truth": "11101100"
+      },
+      {
+        "id": "d290b24e",
+        "cat": "bit_manipulation",
+        "truth": "01011100"
+      },
+      {
+        "id": "d2ac699b",
+        "cat": "bit_manipulation",
+        "truth": "10001011"
+      },
+      {
+        "id": "d2d230d5",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "d2fc4490",
+        "cat": "bit_manipulation",
+        "truth": "01010110"
+      },
+      {
+        "id": "d3d630b9",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "d40b3aa3",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "d40ce15d",
+        "cat": "bit_manipulation",
+        "truth": "00010000"
+      },
+      {
+        "id": "d452141e",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "d4612468",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "d4e29ed7",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "d50683b4",
+        "cat": "bit_manipulation",
+        "truth": "00100110"
+      },
+      {
+        "id": "d5071155",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "d50746e7",
+        "cat": "bit_manipulation",
+        "truth": "01000010"
+      },
+      {
+        "id": "d5a28743",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "d5c5d624",
+        "cat": "bit_manipulation",
+        "truth": "01010000"
+      },
+      {
+        "id": "d6187157",
+        "cat": "bit_manipulation",
+        "truth": "01001000"
+      },
+      {
+        "id": "d623e937",
+        "cat": "bit_manipulation",
+        "truth": "01010111"
+      },
+      {
+        "id": "d6844056",
+        "cat": "bit_manipulation",
+        "truth": "00001011"
+      },
+      {
+        "id": "d68daa97",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "d6ceda8e",
+        "cat": "bit_manipulation",
+        "truth": "01000101"
+      },
+      {
+        "id": "d6e5cd59",
+        "cat": "bit_manipulation",
+        "truth": "01101111"
+      },
+      {
+        "id": "d6e6f8b5",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "d6f4e854",
+        "cat": "bit_manipulation",
+        "truth": "00101110"
+      },
+      {
+        "id": "d727ad5f",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "d72ca3bf",
+        "cat": "bit_manipulation",
+        "truth": "10010111"
+      },
+      {
+        "id": "d75b53c7",
+        "cat": "bit_manipulation",
+        "truth": "11010000"
+      },
+      {
+        "id": "d7cd3375",
+        "cat": "bit_manipulation",
+        "truth": "01101111"
+      },
+      {
+        "id": "d7dea2ba",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "d8457e76",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "d85d7964",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "d864f0fb",
+        "cat": "bit_manipulation",
+        "truth": "00101101"
+      },
+      {
+        "id": "d87caad1",
+        "cat": "bit_manipulation",
+        "truth": "10101111"
+      },
+      {
+        "id": "d8d3648f",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "d8e070fa",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "d8ef1dae",
+        "cat": "bit_manipulation",
+        "truth": "11011011"
+      },
+      {
+        "id": "d9441d16",
+        "cat": "bit_manipulation",
+        "truth": "01000010"
+      },
+      {
+        "id": "d996d0b8",
+        "cat": "bit_manipulation",
+        "truth": "00000011"
+      },
+      {
+        "id": "d9ae48ad",
+        "cat": "bit_manipulation",
+        "truth": "01110000"
+      },
+      {
+        "id": "d9bdf754",
+        "cat": "bit_manipulation",
+        "truth": "00011111"
+      },
+      {
+        "id": "d9da2a54",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "da38592d",
+        "cat": "bit_manipulation",
+        "truth": "01001110"
+      },
+      {
+        "id": "da4c92a3",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "da7288cb",
+        "cat": "bit_manipulation",
+        "truth": "01101101"
+      },
+      {
+        "id": "da778b21",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "daf04fee",
+        "cat": "bit_manipulation",
+        "truth": "11110101"
+      },
+      {
+        "id": "db56bba9",
+        "cat": "bit_manipulation",
+        "truth": "11001000"
+      },
+      {
+        "id": "dbabfbdd",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "dbb611da",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "dbb789cc",
+        "cat": "bit_manipulation",
+        "truth": "10101101"
+      },
+      {
+        "id": "dbc197e0",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "dbf2b40f",
+        "cat": "bit_manipulation",
+        "truth": "10001101"
+      },
+      {
+        "id": "dc583bdb",
+        "cat": "bit_manipulation",
+        "truth": "11101101"
+      },
+      {
+        "id": "dc593799",
+        "cat": "bit_manipulation",
+        "truth": "10001010"
+      },
+      {
+        "id": "dc7f150a",
+        "cat": "bit_manipulation",
+        "truth": "11001011"
+      },
+      {
+        "id": "dc99f250",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "dcad18e9",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "dd900b68",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "dd9ee40c",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "dde0558e",
+        "cat": "bit_manipulation",
+        "truth": "00011000"
+      },
+      {
+        "id": "de11a23a",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "de91def4",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "dfadfe55",
+        "cat": "bit_manipulation",
+        "truth": "00110101"
+      },
+      {
+        "id": "dfbf4e0e",
+        "cat": "bit_manipulation",
+        "truth": "00110111"
+      },
+      {
+        "id": "dfc4839c",
+        "cat": "bit_manipulation",
+        "truth": "10000001"
+      },
+      {
+        "id": "dff2a315",
+        "cat": "bit_manipulation",
+        "truth": "10111110"
+      },
+      {
+        "id": "e00abbbb",
+        "cat": "bit_manipulation",
+        "truth": "00000010"
+      },
+      {
+        "id": "e05e9ed2",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "e0918834",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "e099a43a",
+        "cat": "bit_manipulation",
+        "truth": "01111110"
+      },
+      {
+        "id": "e0b993bd",
+        "cat": "bit_manipulation",
+        "truth": "10100001"
+      },
+      {
+        "id": "e0d92248",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "e0eba119",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "e11c9f89",
+        "cat": "bit_manipulation",
+        "truth": "00111011"
+      },
+      {
+        "id": "e124d12a",
+        "cat": "bit_manipulation",
+        "truth": "11111101"
+      },
+      {
+        "id": "e16e7f6d",
+        "cat": "bit_manipulation",
+        "truth": "01110100"
+      },
+      {
+        "id": "e20aa7b7",
+        "cat": "bit_manipulation",
+        "truth": "01111101"
+      },
+      {
+        "id": "e20d3f48",
+        "cat": "bit_manipulation",
+        "truth": "10110101"
+      },
+      {
+        "id": "e24b1277",
+        "cat": "bit_manipulation",
+        "truth": "11101111"
+      },
+      {
+        "id": "e24c8980",
+        "cat": "bit_manipulation",
+        "truth": "01111011"
+      },
+      {
+        "id": "e2b02e13",
+        "cat": "bit_manipulation",
+        "truth": "01111110"
+      },
+      {
+        "id": "e2f184b4",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "e34cc6dd",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "e3590284",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "e368d23f",
+        "cat": "bit_manipulation",
+        "truth": "00001101"
+      },
+      {
+        "id": "e3c672be",
+        "cat": "bit_manipulation",
+        "truth": "10010011"
+      },
+      {
+        "id": "e4525488",
+        "cat": "bit_manipulation",
+        "truth": "00011011"
+      },
+      {
+        "id": "e4835530",
+        "cat": "bit_manipulation",
+        "truth": "01001010"
+      },
+      {
+        "id": "e495b8e7",
+        "cat": "bit_manipulation",
+        "truth": "01000111"
+      },
+      {
+        "id": "e4ea8dbc",
+        "cat": "bit_manipulation",
+        "truth": "11001001"
+      },
+      {
+        "id": "e52fb8bd",
+        "cat": "bit_manipulation",
+        "truth": "00110011"
+      },
+      {
+        "id": "e553bd78",
+        "cat": "bit_manipulation",
+        "truth": "00010010"
+      },
+      {
+        "id": "e568d07b",
+        "cat": "bit_manipulation",
+        "truth": "11110001"
+      },
+      {
+        "id": "e5a5fdef",
+        "cat": "bit_manipulation",
+        "truth": "11001011"
+      },
+      {
+        "id": "e5b3f73b",
+        "cat": "bit_manipulation",
+        "truth": "10111011"
+      },
+      {
+        "id": "e5bb9b26",
+        "cat": "bit_manipulation",
+        "truth": "11110001"
+      },
+      {
+        "id": "e5d0d497",
+        "cat": "bit_manipulation",
+        "truth": "01101101"
+      },
+      {
+        "id": "e612387f",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "e625f5a7",
+        "cat": "bit_manipulation",
+        "truth": "00100101"
+      },
+      {
+        "id": "e641791f",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "e651c3ee",
+        "cat": "bit_manipulation",
+        "truth": "01101001"
+      },
+      {
+        "id": "e67cbe88",
+        "cat": "bit_manipulation",
+        "truth": "11010111"
+      },
+      {
+        "id": "e6af8e6f",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "e6c946e0",
+        "cat": "bit_manipulation",
+        "truth": "01010010"
+      },
+      {
+        "id": "e72155f3",
+        "cat": "bit_manipulation",
+        "truth": "01100000"
+      },
+      {
+        "id": "e75dfe6b",
+        "cat": "bit_manipulation",
+        "truth": "00100110"
+      },
+      {
+        "id": "e79c8c5a",
+        "cat": "bit_manipulation",
+        "truth": "10000011"
+      },
+      {
+        "id": "e7c7486e",
+        "cat": "bit_manipulation",
+        "truth": "10000111"
+      },
+      {
+        "id": "e7f1ac8e",
+        "cat": "bit_manipulation",
+        "truth": "01001100"
+      },
+      {
+        "id": "e80d8872",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "e810591c",
+        "cat": "bit_manipulation",
+        "truth": "01110110"
+      },
+      {
+        "id": "e818def8",
+        "cat": "bit_manipulation",
+        "truth": "10101010"
+      },
+      {
+        "id": "e8218e9d",
+        "cat": "bit_manipulation",
+        "truth": "01000001"
+      },
+      {
+        "id": "e893d523",
+        "cat": "bit_manipulation",
+        "truth": "11001000"
+      },
+      {
+        "id": "e89851b9",
+        "cat": "bit_manipulation",
+        "truth": "01001101"
+      },
+      {
+        "id": "e8f79d26",
+        "cat": "bit_manipulation",
+        "truth": "00110101"
+      },
+      {
+        "id": "e912794a",
+        "cat": "bit_manipulation",
+        "truth": "10000011"
+      },
+      {
+        "id": "e915879a",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "e97d9519",
+        "cat": "bit_manipulation",
+        "truth": "10011001"
+      },
+      {
+        "id": "e998079c",
+        "cat": "bit_manipulation",
+        "truth": "00110110"
+      },
+      {
+        "id": "e9a9b51f",
+        "cat": "bit_manipulation",
+        "truth": "00110001"
+      },
+      {
+        "id": "e9f53408",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "ea0deb13",
+        "cat": "bit_manipulation",
+        "truth": "01110100"
+      },
+      {
+        "id": "ea3f72ee",
+        "cat": "bit_manipulation",
+        "truth": "11010010"
+      },
+      {
+        "id": "ea5def07",
+        "cat": "bit_manipulation",
+        "truth": "11111111"
+      },
+      {
+        "id": "ea6859d7",
+        "cat": "bit_manipulation",
+        "truth": "01101110"
+      },
+      {
+        "id": "eae81189",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "eb12e80d",
+        "cat": "bit_manipulation",
+        "truth": "11000111"
+      },
+      {
+        "id": "eb20ea88",
+        "cat": "bit_manipulation",
+        "truth": "00110000"
+      },
+      {
+        "id": "eb359ea5",
+        "cat": "bit_manipulation",
+        "truth": "01100100"
+      },
+      {
+        "id": "eb40d1f3",
+        "cat": "bit_manipulation",
+        "truth": "10000001"
+      },
+      {
+        "id": "ec192379",
+        "cat": "bit_manipulation",
+        "truth": "00011111"
+      },
+      {
+        "id": "ec2e58ea",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "ecd328ef",
+        "cat": "bit_manipulation",
+        "truth": "10110100"
+      },
+      {
+        "id": "ece0babd",
+        "cat": "bit_manipulation",
+        "truth": "10010100"
+      },
+      {
+        "id": "ecf2a23b",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "ed24e7af",
+        "cat": "bit_manipulation",
+        "truth": "00001001"
+      },
+      {
+        "id": "ed5c81ae",
+        "cat": "bit_manipulation",
+        "truth": "00100000"
+      },
+      {
+        "id": "eda44942",
+        "cat": "bit_manipulation",
+        "truth": "11000001"
+      },
+      {
+        "id": "eddb2f6a",
+        "cat": "bit_manipulation",
+        "truth": "10010011"
+      },
+      {
+        "id": "ee055f10",
+        "cat": "bit_manipulation",
+        "truth": "10001001"
+      },
+      {
+        "id": "ee2e608e",
+        "cat": "bit_manipulation",
+        "truth": "10101101"
+      },
+      {
+        "id": "ee429a2d",
+        "cat": "bit_manipulation",
+        "truth": "01011001"
+      },
+      {
+        "id": "ee4f1423",
+        "cat": "bit_manipulation",
+        "truth": "01101111"
+      },
+      {
+        "id": "ee61df9f",
+        "cat": "bit_manipulation",
+        "truth": "01000100"
+      },
+      {
+        "id": "eea91b82",
+        "cat": "bit_manipulation",
+        "truth": "00101111"
+      },
+      {
+        "id": "eeb60061",
+        "cat": "bit_manipulation",
+        "truth": "00000101"
+      },
+      {
+        "id": "eebac653",
+        "cat": "bit_manipulation",
+        "truth": "10011111"
+      },
+      {
+        "id": "eed2f3ae",
+        "cat": "bit_manipulation",
+        "truth": "11101111"
+      },
+      {
+        "id": "eeda9bd9",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "ef2fe526",
+        "cat": "bit_manipulation",
+        "truth": "01011010"
+      },
+      {
+        "id": "ef37f544",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "efc2b69d",
+        "cat": "bit_manipulation",
+        "truth": "10111100"
+      },
+      {
+        "id": "f0007ca0",
+        "cat": "bit_manipulation",
+        "truth": "11000110"
+      },
+      {
+        "id": "f05dc9a6",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "f17db8d6",
+        "cat": "bit_manipulation",
+        "truth": "11000011"
+      },
+      {
+        "id": "f1c1ed58",
+        "cat": "bit_manipulation",
+        "truth": "01111111"
+      },
+      {
+        "id": "f2014638",
+        "cat": "bit_manipulation",
+        "truth": "10011010"
+      },
+      {
+        "id": "f20bf656",
+        "cat": "bit_manipulation",
+        "truth": "10100000"
+      },
+      {
+        "id": "f24b8bee",
+        "cat": "bit_manipulation",
+        "truth": "11011000"
+      },
+      {
+        "id": "f290228c",
+        "cat": "bit_manipulation",
+        "truth": "11110100"
+      },
+      {
+        "id": "f2a167e5",
+        "cat": "bit_manipulation",
+        "truth": "10101110"
+      },
+      {
+        "id": "f2b23d11",
+        "cat": "bit_manipulation",
+        "truth": "10000000"
+      },
+      {
+        "id": "f2ec1685",
+        "cat": "bit_manipulation",
+        "truth": "00100111"
+      },
+      {
+        "id": "f2f257ed",
+        "cat": "bit_manipulation",
+        "truth": "11100001"
+      },
+      {
+        "id": "f30b205e",
+        "cat": "bit_manipulation",
+        "truth": "10001011"
+      },
+      {
+        "id": "f376c085",
+        "cat": "bit_manipulation",
+        "truth": "11010101"
+      },
+      {
+        "id": "f3971b9a",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "f3bfb3bf",
+        "cat": "bit_manipulation",
+        "truth": "10001011"
+      },
+      {
+        "id": "f3cc989a",
+        "cat": "bit_manipulation",
+        "truth": "01000000"
+      },
+      {
+        "id": "f3cdeb29",
+        "cat": "bit_manipulation",
+        "truth": "01101110"
+      },
+      {
+        "id": "f3ebf8bc",
+        "cat": "bit_manipulation",
+        "truth": "00100011"
+      },
+      {
+        "id": "f3fc7209",
+        "cat": "bit_manipulation",
+        "truth": "10001000"
+      },
+      {
+        "id": "f43f6142",
+        "cat": "bit_manipulation",
+        "truth": "01111101"
+      },
+      {
+        "id": "f459b7b4",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "f469f4d7",
+        "cat": "bit_manipulation",
+        "truth": "11010001"
+      },
+      {
+        "id": "f4925854",
+        "cat": "bit_manipulation",
+        "truth": "01011100"
+      },
+      {
+        "id": "f4bb4d9c",
+        "cat": "bit_manipulation",
+        "truth": "00001100"
+      },
+      {
+        "id": "f5059127",
+        "cat": "bit_manipulation",
+        "truth": "11111100"
+      },
+      {
+        "id": "f5082693",
+        "cat": "bit_manipulation",
+        "truth": "11110011"
+      },
+      {
+        "id": "f557284b",
+        "cat": "bit_manipulation",
+        "truth": "10101111"
+      },
+      {
+        "id": "f55c1bf0",
+        "cat": "bit_manipulation",
+        "truth": "11010111"
+      },
+      {
+        "id": "f5cb333a",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "f5d096da",
+        "cat": "bit_manipulation",
+        "truth": "00011101"
+      },
+      {
+        "id": "f62c1fa3",
+        "cat": "bit_manipulation",
+        "truth": "00110110"
+      },
+      {
+        "id": "f64eb796",
+        "cat": "bit_manipulation",
+        "truth": "01101101"
+      },
+      {
+        "id": "f6a95641",
+        "cat": "bit_manipulation",
+        "truth": "10111001"
+      },
+      {
+        "id": "f745d8a2",
+        "cat": "bit_manipulation",
+        "truth": "00010001"
+      },
+      {
+        "id": "f7aeb894",
+        "cat": "bit_manipulation",
+        "truth": "00000111"
+      },
+      {
+        "id": "f84c009a",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "f8c6ea2c",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "f8f4c3b4",
+        "cat": "bit_manipulation",
+        "truth": "10001101"
+      },
+      {
+        "id": "f8fc43d2",
+        "cat": "bit_manipulation",
+        "truth": "11100100"
+      },
+      {
+        "id": "f929c6cc",
+        "cat": "bit_manipulation",
+        "truth": "10010001"
+      },
+      {
+        "id": "f94ed862",
+        "cat": "bit_manipulation",
+        "truth": "11110001"
+      },
+      {
+        "id": "f9c59b61",
+        "cat": "bit_manipulation",
+        "truth": "01001011"
+      },
+      {
+        "id": "f9fee551",
+        "cat": "bit_manipulation",
+        "truth": "00011010"
+      },
+      {
+        "id": "fa67da07",
+        "cat": "bit_manipulation",
+        "truth": "11101011"
+      },
+      {
+        "id": "fa900ac8",
+        "cat": "bit_manipulation",
+        "truth": "00001111"
+      },
+      {
+        "id": "face5252",
+        "cat": "bit_manipulation",
+        "truth": "11001110"
+      },
+      {
+        "id": "fb184e97",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "fb5a7b9e",
+        "cat": "bit_manipulation",
+        "truth": "11111010"
+      },
+      {
+        "id": "fb955790",
+        "cat": "bit_manipulation",
+        "truth": "01000010"
+      },
+      {
+        "id": "fba1e3c2",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "fbbe43a3",
+        "cat": "bit_manipulation",
+        "truth": "00010101"
+      },
+      {
+        "id": "fbdf7656",
+        "cat": "bit_manipulation",
+        "truth": "10100100"
+      },
+      {
+        "id": "fc174f21",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "fc4a85ad",
+        "cat": "bit_manipulation",
+        "truth": "10110111"
+      },
+      {
+        "id": "fcc5f83d",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "fcc6dff6",
+        "cat": "bit_manipulation",
+        "truth": "00111010"
+      },
+      {
+        "id": "fd13b7fd",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "fd15ed49",
+        "cat": "bit_manipulation",
+        "truth": "00000100"
+      },
+      {
+        "id": "fd1d72d0",
+        "cat": "bit_manipulation",
+        "truth": "00011001"
+      },
+      {
+        "id": "fd2c352d",
+        "cat": "bit_manipulation",
+        "truth": "01010001"
+      },
+      {
+        "id": "fd48ee2f",
+        "cat": "bit_manipulation",
+        "truth": "10110100"
+      },
+      {
+        "id": "fd699316",
+        "cat": "bit_manipulation",
+        "truth": "01011100"
+      },
+      {
+        "id": "fd7920d3",
+        "cat": "bit_manipulation",
+        "truth": "11111011"
+      },
+      {
+        "id": "fecfb467",
+        "cat": "bit_manipulation",
+        "truth": "00101100"
+      },
+      {
+        "id": "feef2d98",
+        "cat": "bit_manipulation",
+        "truth": "00000000"
+      },
+      {
+        "id": "ff746806",
+        "cat": "bit_manipulation",
+        "truth": "11000000"
+      },
+      {
+        "id": "ff8b36e7",
+        "cat": "bit_manipulation",
+        "truth": "01010111"
+      },
+      {
+        "id": "ff948917",
+        "cat": "bit_manipulation",
+        "truth": "00000001"
+      },
+      {
+        "id": "ffa4e736",
+        "cat": "bit_manipulation",
+        "truth": "00110111"
+      },
+      {
+        "id": "ffce9e31",
+        "cat": "bit_manipulation",
+        "truth": "01100110"
+      }
+    ]
+  },
+  "crypt_solver_ok": {
+    "status": "待 M0 直测(已训题贪心≈1/30,营救 pass@8≈17%)",
+    "n_pool": 135,
+    "items": [
+      {
+        "id": "0133bcec",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\([#"
+      },
+      {
+        "id": "02a04b59",
+        "cat": "cryptarithm_deduce",
+        "truth": "#>]#"
+      },
+      {
+        "id": "02b8d816",
+        "cat": "cryptarithm_deduce",
+        "truth": ">$$>"
+      },
+      {
+        "id": "06083e68",
+        "cat": "cryptarithm_deduce",
+        "truth": ":::"
+      },
+      {
+        "id": "065abaf6",
+        "cat": "cryptarithm_deduce",
+        "truth": "&/:\\"
+      },
+      {
+        "id": "07b440f0",
+        "cat": "cryptarithm_deduce",
+        "truth": "@$^$"
+      },
+      {
+        "id": "08f6216d",
+        "cat": "cryptarithm_deduce",
+        "truth": "|>>>"
+      },
+      {
+        "id": "0b0a3643",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"\""
+      },
+      {
+        "id": "0d4b2baa",
+        "cat": "cryptarithm_deduce",
+        "truth": ":(|#"
+      },
+      {
+        "id": "0da1841f",
+        "cat": "cryptarithm_deduce",
+        "truth": "(\\#%"
+      },
+      {
+        "id": "0dcfd566",
+        "cat": "cryptarithm_deduce",
+        "truth": ")@\\{"
+      },
+      {
+        "id": "0e009c6d",
+        "cat": "cryptarithm_deduce",
+        "truth": "`?\\!"
+      },
+      {
+        "id": "0e3307ba",
+        "cat": "cryptarithm_deduce",
+        "truth": ":$"
+      },
+      {
+        "id": "0f6436da",
+        "cat": "cryptarithm_deduce",
+        "truth": "$?"
+      },
+      {
+        "id": "0fcf912a",
+        "cat": "cryptarithm_deduce",
+        "truth": "|#&!"
+      },
+      {
+        "id": "0fe53bac",
+        "cat": "cryptarithm_deduce",
+        "truth": "(\""
+      },
+      {
+        "id": "108067c3",
+        "cat": "cryptarithm_deduce",
+        "truth": "$$`"
+      },
+      {
+        "id": "12734c90",
+        "cat": "cryptarithm_deduce",
+        "truth": "]@>["
+      },
+      {
+        "id": "162ff61a",
+        "cat": "cryptarithm_deduce",
+        "truth": "?!"
+      },
+      {
+        "id": "16cf827a",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"[``"
+      },
+      {
+        "id": "17d62f7a",
+        "cat": "cryptarithm_deduce",
+        "truth": "?|:|"
+      },
+      {
+        "id": "1a28140b",
+        "cat": "cryptarithm_deduce",
+        "truth": "%`&"
+      },
+      {
+        "id": "1ac66163",
+        "cat": "cryptarithm_deduce",
+        "truth": "#'["
+      },
+      {
+        "id": "1c7a0091",
+        "cat": "cryptarithm_deduce",
+        "truth": ")`<@"
+      },
+      {
+        "id": "1d10ccaf",
+        "cat": "cryptarithm_deduce",
+        "truth": "<({&"
+      },
+      {
+        "id": "21b90d9f",
+        "cat": "cryptarithm_deduce",
+        "truth": "){?{"
+      },
+      {
+        "id": "24750c4a",
+        "cat": "cryptarithm_deduce",
+        "truth": "?)/{"
+      },
+      {
+        "id": "24e1f1d5",
+        "cat": "cryptarithm_deduce",
+        "truth": "^#(!"
+      },
+      {
+        "id": "252d0997",
+        "cat": "cryptarithm_deduce",
+        "truth": "-/@"
+      },
+      {
+        "id": "258b796b",
+        "cat": "cryptarithm_deduce",
+        "truth": "`]|["
+      },
+      {
+        "id": "25ee72c3",
+        "cat": "cryptarithm_deduce",
+        "truth": "#\"<<"
+      },
+      {
+        "id": "26258d8a",
+        "cat": "cryptarithm_deduce",
+        "truth": "^"
+      },
+      {
+        "id": "26a2a1b8",
+        "cat": "cryptarithm_deduce",
+        "truth": "(:"
+      },
+      {
+        "id": "2c9a8df6",
+        "cat": "cryptarithm_deduce",
+        "truth": "-]\\"
+      },
+      {
+        "id": "2e9973b7",
+        "cat": "cryptarithm_deduce",
+        "truth": ")\\?%"
+      },
+      {
+        "id": "2f46a715",
+        "cat": "cryptarithm_deduce",
+        "truth": "]]&|"
+      },
+      {
+        "id": "2f6531cb",
+        "cat": "cryptarithm_deduce",
+        "truth": "@::'"
+      },
+      {
+        "id": "2ff200fb",
+        "cat": "cryptarithm_deduce",
+        "truth": ")^"
+      },
+      {
+        "id": "3185fdeb",
+        "cat": "cryptarithm_deduce",
+        "truth": "(%|["
+      },
+      {
+        "id": "34b4cf96",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"\"^^"
+      },
+      {
+        "id": "39c237c7",
+        "cat": "cryptarithm_deduce",
+        "truth": "{]``"
+      },
+      {
+        "id": "3d40a271",
+        "cat": "cryptarithm_deduce",
+        "truth": ":/>{"
+      },
+      {
+        "id": "466ad340",
+        "cat": "cryptarithm_deduce",
+        "truth": "-#$"
+      },
+      {
+        "id": "4e8982d6",
+        "cat": "cryptarithm_deduce",
+        "truth": "/@:"
+      },
+      {
+        "id": "51181706",
+        "cat": "cryptarithm_deduce",
+        "truth": "'[)\\"
+      },
+      {
+        "id": "5186f2d7",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\?!$"
+      },
+      {
+        "id": "52395e9a",
+        "cat": "cryptarithm_deduce",
+        "truth": "#!%\\"
+      },
+      {
+        "id": "55f4fa64",
+        "cat": "cryptarithm_deduce",
+        "truth": "{{!?"
+      },
+      {
+        "id": "57c845a6",
+        "cat": "cryptarithm_deduce",
+        "truth": "]|"
+      },
+      {
+        "id": "59733f94",
+        "cat": "cryptarithm_deduce",
+        "truth": "/"
+      },
+      {
+        "id": "5bd9919c",
+        "cat": "cryptarithm_deduce",
+        "truth": "]']`"
+      },
+      {
+        "id": "60ed3f31",
+        "cat": "cryptarithm_deduce",
+        "truth": "@%:\\"
+      },
+      {
+        "id": "60f55291",
+        "cat": "cryptarithm_deduce",
+        "truth": "/\\|?"
+      },
+      {
+        "id": "6183bab7",
+        "cat": "cryptarithm_deduce",
+        "truth": "@@"
+      },
+      {
+        "id": "6848a4e8",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\$"
+      },
+      {
+        "id": "6897f05e",
+        "cat": "cryptarithm_deduce",
+        "truth": ":%::"
+      },
+      {
+        "id": "6c7231ac",
+        "cat": "cryptarithm_deduce",
+        "truth": ":/#"
+      },
+      {
+        "id": "6e84a668",
+        "cat": "cryptarithm_deduce",
+        "truth": "|!^{"
+      },
+      {
+        "id": "6f8261d9",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\"
+      },
+      {
+        "id": "712fe3e4",
+        "cat": "cryptarithm_deduce",
+        "truth": ":#$#"
+      },
+      {
+        "id": "758308ea",
+        "cat": "cryptarithm_deduce",
+        "truth": "("
+      },
+      {
+        "id": "7a422e17",
+        "cat": "cryptarithm_deduce",
+        "truth": "%'!"
+      },
+      {
+        "id": "7a5cfe3e",
+        "cat": "cryptarithm_deduce",
+        "truth": "-#>"
+      },
+      {
+        "id": "7cc5442c",
+        "cat": "cryptarithm_deduce",
+        "truth": ">#)>"
+      },
+      {
+        "id": "7eecd498",
+        "cat": "cryptarithm_deduce",
+        "truth": "^:`!"
+      },
+      {
+        "id": "8043a9d2",
+        "cat": "cryptarithm_deduce",
+        "truth": "$|\\:"
+      },
+      {
+        "id": "811f5f56",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\^^@"
+      },
+      {
+        "id": "8193e7e0",
+        "cat": "cryptarithm_deduce",
+        "truth": "??{`"
+      },
+      {
+        "id": "823c8278",
+        "cat": "cryptarithm_deduce",
+        "truth": "|:"
+      },
+      {
+        "id": "85c5b2a2",
+        "cat": "cryptarithm_deduce",
+        "truth": "$<$$"
+      },
+      {
+        "id": "8916a10d",
+        "cat": "cryptarithm_deduce",
+        "truth": "::"
+      },
+      {
+        "id": "8b1af00e",
+        "cat": "cryptarithm_deduce",
+        "truth": "%%%&"
+      },
+      {
+        "id": "8ca27f6f",
+        "cat": "cryptarithm_deduce",
+        "truth": "(]%/"
+      },
+      {
+        "id": "8dac3984",
+        "cat": "cryptarithm_deduce",
+        "truth": ":!:|"
+      },
+      {
+        "id": "8e56a42e",
+        "cat": "cryptarithm_deduce",
+        "truth": "%/<>"
+      },
+      {
+        "id": "91e9dc52",
+        "cat": "cryptarithm_deduce",
+        "truth": "$#)#"
+      },
+      {
+        "id": "92135360",
+        "cat": "cryptarithm_deduce",
+        "truth": "$!$?"
+      },
+      {
+        "id": "948e5474",
+        "cat": "cryptarithm_deduce",
+        "truth": "-&"
+      },
+      {
+        "id": "96115336",
+        "cat": "cryptarithm_deduce",
+        "truth": "@!<<"
+      },
+      {
+        "id": "97c04f50",
+        "cat": "cryptarithm_deduce",
+        "truth": "`#\"&"
+      },
+      {
+        "id": "97d6db7a",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\[%^"
+      },
+      {
+        "id": "9aa8dc92",
+        "cat": "cryptarithm_deduce",
+        "truth": "/#</"
+      },
+      {
+        "id": "9b4cffb2",
+        "cat": "cryptarithm_deduce",
+        "truth": "&@<"
+      },
+      {
+        "id": "9cc02bc1",
+        "cat": "cryptarithm_deduce",
+        "truth": ":#:'"
+      },
+      {
+        "id": "9ceba70a",
+        "cat": "cryptarithm_deduce",
+        "truth": "##%"
+      },
+      {
+        "id": "9dfe5ac9",
+        "cat": "cryptarithm_deduce",
+        "truth": "'\\%\""
+      },
+      {
+        "id": "9eccbafd",
+        "cat": "cryptarithm_deduce",
+        "truth": "@>"
+      },
+      {
+        "id": "9fbd6a44",
+        "cat": "cryptarithm_deduce",
+        "truth": "::''"
+      },
+      {
+        "id": "9fc69c17",
+        "cat": "cryptarithm_deduce",
+        "truth": "#':@"
+      },
+      {
+        "id": "a021ca5d",
+        "cat": "cryptarithm_deduce",
+        "truth": ")'&/"
+      },
+      {
+        "id": "a08fbb68",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\$'<"
+      },
+      {
+        "id": "a35fa1a0",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"&`]"
+      },
+      {
+        "id": "a3da3c48",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\$"
+      },
+      {
+        "id": "ae4aef23",
+        "cat": "cryptarithm_deduce",
+        "truth": "%<<"
+      },
+      {
+        "id": "af018681",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\${\""
+      },
+      {
+        "id": "b13d511a",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\&[["
+      },
+      {
+        "id": "b1b10e83",
+        "cat": "cryptarithm_deduce",
+        "truth": "|\"#$"
+      },
+      {
+        "id": "b4b73143",
+        "cat": "cryptarithm_deduce",
+        "truth": ">\\:"
+      },
+      {
+        "id": "b69d2e78",
+        "cat": "cryptarithm_deduce",
+        "truth": "|)\\"
+      },
+      {
+        "id": "b7e92a59",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"@|"
+      },
+      {
+        "id": "b9b5a2c1",
+        "cat": "cryptarithm_deduce",
+        "truth": "&`"
+      },
+      {
+        "id": "b9f1d959",
+        "cat": "cryptarithm_deduce",
+        "truth": ":>"
+      },
+      {
+        "id": "c5bf415c",
+        "cat": "cryptarithm_deduce",
+        "truth": ">:["
+      },
+      {
+        "id": "c7844441",
+        "cat": "cryptarithm_deduce",
+        "truth": ":/$^"
+      },
+      {
+        "id": "c87ce9ea",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"\"%"
+      },
+      {
+        "id": "c934ffa1",
+        "cat": "cryptarithm_deduce",
+        "truth": "||"
+      },
+      {
+        "id": "ca85809b",
+        "cat": "cryptarithm_deduce",
+        "truth": "%!^&"
+      },
+      {
+        "id": "cca882b8",
+        "cat": "cryptarithm_deduce",
+        "truth": ">)<|"
+      },
+      {
+        "id": "cdec898a",
+        "cat": "cryptarithm_deduce",
+        "truth": "<?/"
+      },
+      {
+        "id": "cf79c10e",
+        "cat": "cryptarithm_deduce",
+        "truth": "?("
+      },
+      {
+        "id": "d0b1e41a",
+        "cat": "cryptarithm_deduce",
+        "truth": "#{\"!"
+      },
+      {
+        "id": "d250fcc5",
+        "cat": "cryptarithm_deduce",
+        "truth": "<%"
+      },
+      {
+        "id": "d3d30b86",
+        "cat": "cryptarithm_deduce",
+        "truth": "!!$"
+      },
+      {
+        "id": "d63c1fb0",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"|\"%"
+      },
+      {
+        "id": "d6c03e21",
+        "cat": "cryptarithm_deduce",
+        "truth": "&(`#"
+      },
+      {
+        "id": "d72d8c1c",
+        "cat": "cryptarithm_deduce",
+        "truth": "&@&%"
+      },
+      {
+        "id": "d7662688",
+        "cat": "cryptarithm_deduce",
+        "truth": "]&]]"
+      },
+      {
+        "id": "dadc24d7",
+        "cat": "cryptarithm_deduce",
+        "truth": "{{"
+      },
+      {
+        "id": "dea42835",
+        "cat": "cryptarithm_deduce",
+        "truth": "['[/"
+      },
+      {
+        "id": "deed3497",
+        "cat": "cryptarithm_deduce",
+        "truth": "\\^]]"
+      },
+      {
+        "id": "e38c423b",
+        "cat": "cryptarithm_deduce",
+        "truth": "\"(@\""
+      },
+      {
+        "id": "e3b06854",
+        "cat": "cryptarithm_deduce",
+        "truth": "/&:"
+      },
+      {
+        "id": "e483e127",
+        "cat": "cryptarithm_deduce",
+        "truth": "#''>"
+      },
+      {
+        "id": "e585410a",
+        "cat": "cryptarithm_deduce",
+        "truth": "$\"!@"
+      },
+      {
+        "id": "e5b65a4c",
+        "cat": "cryptarithm_deduce",
+        "truth": "``#"
+      },
+      {
+        "id": "e82ed6be",
+        "cat": "cryptarithm_deduce",
+        "truth": "/'?"
+      },
+      {
+        "id": "e977d0b7",
+        "cat": "cryptarithm_deduce",
+        "truth": "&[/{"
+      },
+      {
+        "id": "ec92f091",
+        "cat": "cryptarithm_deduce",
+        "truth": "</"
+      },
+      {
+        "id": "ed61a9d6",
+        "cat": "cryptarithm_deduce",
+        "truth": "!\"\"!"
+      },
+      {
+        "id": "f01f112b",
+        "cat": "cryptarithm_deduce",
+        "truth": "$^>"
+      },
+      {
+        "id": "f4d3e67f",
+        "cat": "cryptarithm_deduce",
+        "truth": "%("
+      },
+      {
+        "id": "fa714b83",
+        "cat": "cryptarithm_deduce",
+        "truth": "/"
+      },
+      {
+        "id": "fdbdf50c",
+        "cat": "cryptarithm_deduce",
+        "truth": "-\\\""
+      },
+      {
+        "id": "ff0e37ae",
+        "cat": "cryptarithm_deduce",
+        "truth": "%'\"`"
+      },
+      {
+        "id": "ff86cd34",
+        "cat": "cryptarithm_deduce",
+        "truth": ")|(("
+      }
+    ]
+  },
+  "eq_rloss": {
+    "status": "待 M0 直测(已训题贪心微探针 30/30,R-loss 预期少)",
+    "n_pool": 449,
+    "items": [
+      {
+        "id": "026106f5",
+        "cat": "equation_numeric_deduce",
+        "truth": "631"
+      },
+      {
+        "id": "04322d27",
+        "cat": "equation_numeric_deduce",
+        "truth": "2891"
+      },
+      {
+        "id": "047c4111",
+        "cat": "equation_numeric_deduce",
+        "truth": "2596"
+      },
+      {
+        "id": "0641ef58",
+        "cat": "equation_numeric_deduce",
+        "truth": "-35"
+      },
+      {
+        "id": "0819520a",
+        "cat": "equation_numeric_deduce",
+        "truth": "401"
+      },
+      {
+        "id": "08d8d7e1",
+        "cat": "equation_numeric_deduce",
+        "truth": "88"
+      },
+      {
+        "id": "09302769",
+        "cat": "equation_numeric_deduce",
+        "truth": "182"
+      },
+      {
+        "id": "0a15c5c7",
+        "cat": "equation_numeric_deduce",
+        "truth": "43"
+      },
+      {
+        "id": "0cd170a0",
+        "cat": "equation_numeric_deduce",
+        "truth": "9814"
+      },
+      {
+        "id": "1019ee55",
+        "cat": "equation_numeric_deduce",
+        "truth": "1162"
+      },
+      {
+        "id": "10fdae00",
+        "cat": "equation_numeric_deduce",
+        "truth": "-47"
+      },
+      {
+        "id": "10ff9431",
+        "cat": "equation_numeric_deduce",
+        "truth": "0271"
+      },
+      {
+        "id": "111e3b8e",
+        "cat": "equation_numeric_deduce",
+        "truth": "41"
+      },
+      {
+        "id": "118889da",
+        "cat": "equation_numeric_deduce",
+        "truth": "10"
+      },
+      {
+        "id": "118f8c86",
+        "cat": "equation_numeric_deduce",
+        "truth": "1"
+      },
+      {
+        "id": "1322241b",
+        "cat": "equation_numeric_deduce",
+        "truth": "61"
+      },
+      {
+        "id": "13892a7c",
+        "cat": "equation_numeric_deduce",
+        "truth": "-85"
+      },
+      {
+        "id": "13ad7bce",
+        "cat": "equation_numeric_deduce",
+        "truth": "-73"
+      },
+      {
+        "id": "144a3e31",
+        "cat": "equation_numeric_deduce",
+        "truth": "582"
+      },
+      {
+        "id": "1450fbc4",
+        "cat": "equation_numeric_deduce",
+        "truth": "96"
+      },
+      {
+        "id": "1497f970",
+        "cat": "equation_numeric_deduce",
+        "truth": "671"
+      },
+      {
+        "id": "1526c35d",
+        "cat": "equation_numeric_deduce",
+        "truth": "2475"
+      },
+      {
+        "id": "155b4694",
+        "cat": "equation_numeric_deduce",
+        "truth": "2322"
+      },
+      {
+        "id": "157228d7",
+        "cat": "equation_numeric_deduce",
+        "truth": "35"
+      },
+      {
+        "id": "1580f498",
+        "cat": "equation_numeric_deduce",
+        "truth": "1554"
+      },
+      {
+        "id": "15a1d279",
+        "cat": "equation_numeric_deduce",
+        "truth": "0782"
+      },
+      {
+        "id": "163db2d8",
+        "cat": "equation_numeric_deduce",
+        "truth": "851"
+      },
+      {
+        "id": "164b3241",
+        "cat": "equation_numeric_deduce",
+        "truth": "52"
+      },
+      {
+        "id": "1779c616",
+        "cat": "equation_numeric_deduce",
+        "truth": "134"
+      },
+      {
+        "id": "17c98340",
+        "cat": "equation_numeric_deduce",
+        "truth": "731"
+      },
+      {
+        "id": "18268687",
+        "cat": "equation_numeric_deduce",
+        "truth": "0"
+      },
+      {
+        "id": "1861c08f",
+        "cat": "equation_numeric_deduce",
+        "truth": "3001"
+      },
+      {
+        "id": "1b6366af",
+        "cat": "equation_numeric_deduce",
+        "truth": "03!"
+      },
+      {
+        "id": "1bc85bd9",
+        "cat": "equation_numeric_deduce",
+        "truth": "93"
+      },
+      {
+        "id": "1c48f9aa",
+        "cat": "equation_numeric_deduce",
+        "truth": "8610"
+      },
+      {
+        "id": "1cb4d524",
+        "cat": "equation_numeric_deduce",
+        "truth": "6314"
+      },
+      {
+        "id": "1d6c587d",
+        "cat": "equation_numeric_deduce",
+        "truth": "6163"
+      },
+      {
+        "id": "1d92ba5d",
+        "cat": "equation_numeric_deduce",
+        "truth": "511"
+      },
+      {
+        "id": "1db0c6fe",
+        "cat": "equation_numeric_deduce",
+        "truth": "72"
+      },
+      {
+        "id": "1e0f6678",
+        "cat": "equation_numeric_deduce",
+        "truth": "1332"
+      },
+      {
+        "id": "1e248995",
+        "cat": "equation_numeric_deduce",
+        "truth": "31"
+      },
+      {
+        "id": "1ef51442",
+        "cat": "equation_numeric_deduce",
+        "truth": "8002"
+      },
+      {
+        "id": "1f0674b0",
+        "cat": "equation_numeric_deduce",
+        "truth": "401"
+      },
+      {
+        "id": "1f0fbe5f",
+        "cat": "equation_numeric_deduce",
+        "truth": "14"
+      },
+      {
+        "id": "1f4c8169",
+        "cat": "equation_numeric_deduce",
+        "truth": "051"
+      },
+      {
+        "id": "207ab66f",
+        "cat": "equation_numeric_deduce",
+        "truth": "2815"
+      },
+      {
+        "id": "209c43f0",
+        "cat": "equation_numeric_deduce",
+        "truth": "101"
+      },
+      {
+        "id": "21261dc6",
+        "cat": "equation_numeric_deduce",
+        "truth": "-25"
+      },
+      {
+        "id": "21519be7",
+        "cat": "equation_numeric_deduce",
+        "truth": "35"
+      },
+      {
+        "id": "22288152",
+        "cat": "equation_numeric_deduce",
+        "truth": "081"
+      },
+      {
+        "id": "224efda1",
+        "cat": "equation_numeric_deduce",
+        "truth": "7"
+      },
+      {
+        "id": "23800316",
+        "cat": "equation_numeric_deduce",
+        "truth": "79"
+      },
+      {
+        "id": "2423926d",
+        "cat": "equation_numeric_deduce",
+        "truth": "48"
+      },
+      {
+        "id": "25f2f2cd",
+        "cat": "equation_numeric_deduce",
+        "truth": "901"
+      },
+      {
+        "id": "260f20c1",
+        "cat": "equation_numeric_deduce",
+        "truth": "43"
+      },
+      {
+        "id": "26168be6",
+        "cat": "equation_numeric_deduce",
+        "truth": "99"
+      },
+      {
+        "id": "26b716ed",
+        "cat": "equation_numeric_deduce",
+        "truth": "36"
+      },
+      {
+        "id": "26dbd20d",
+        "cat": "equation_numeric_deduce",
+        "truth": "0374"
+      },
+      {
+        "id": "2701a005",
+        "cat": "equation_numeric_deduce",
+        "truth": "140"
+      },
+      {
+        "id": "274def88",
+        "cat": "equation_numeric_deduce",
+        "truth": "92"
+      },
+      {
+        "id": "27cec7a9",
+        "cat": "equation_numeric_deduce",
+        "truth": "3341"
+      },
+      {
+        "id": "286135d3",
+        "cat": "equation_numeric_deduce",
+        "truth": "835"
+      },
+      {
+        "id": "2a73a462",
+        "cat": "equation_numeric_deduce",
+        "truth": "9302"
+      },
+      {
+        "id": "2af7134e",
+        "cat": "equation_numeric_deduce",
+        "truth": "20"
+      },
+      {
+        "id": "2bc2a65a",
+        "cat": "equation_numeric_deduce",
+        "truth": "701"
+      },
+      {
+        "id": "2cc274cb",
+        "cat": "equation_numeric_deduce",
+        "truth": "6821"
+      },
+      {
+        "id": "2cf587f6",
+        "cat": "equation_numeric_deduce",
+        "truth": "159"
+      },
+      {
+        "id": "2d3e809c",
+        "cat": "equation_numeric_deduce",
+        "truth": "9264"
+      },
+      {
+        "id": "2dd48cac",
+        "cat": "equation_numeric_deduce",
+        "truth": "-05"
+      },
+      {
+        "id": "2e044d8e",
+        "cat": "equation_numeric_deduce",
+        "truth": "5233"
+      },
+      {
+        "id": "2e2d60b2",
+        "cat": "equation_numeric_deduce",
+        "truth": "07"
+      },
+      {
+        "id": "2e37e963",
+        "cat": "equation_numeric_deduce",
+        "truth": "-15"
+      },
+      {
+        "id": "2e9639de",
+        "cat": "equation_numeric_deduce",
+        "truth": "3585"
+      },
+      {
+        "id": "2f485a40",
+        "cat": "equation_numeric_deduce",
+        "truth": "1867"
+      },
+      {
+        "id": "2f5959c9",
+        "cat": "equation_numeric_deduce",
+        "truth": "7141"
+      },
+      {
+        "id": "2fb20366",
+        "cat": "equation_numeric_deduce",
+        "truth": "147"
+      },
+      {
+        "id": "3013265c",
+        "cat": "equation_numeric_deduce",
+        "truth": "36"
+      },
+      {
+        "id": "30c0d5a2",
+        "cat": "equation_numeric_deduce",
+        "truth": "76"
+      },
+      {
+        "id": "317ec3e6",
+        "cat": "equation_numeric_deduce",
+        "truth": "14"
+      },
+      {
+        "id": "320d8d2b",
+        "cat": "equation_numeric_deduce",
+        "truth": "3913"
+      },
+      {
+        "id": "324f918b",
+        "cat": "equation_numeric_deduce",
+        "truth": "108"
+      },
+      {
+        "id": "32815b79",
+        "cat": "equation_numeric_deduce",
+        "truth": "96"
+      },
+      {
+        "id": "32a31236",
+        "cat": "equation_numeric_deduce",
+        "truth": "44"
+      },
+      {
+        "id": "32a812cd",
+        "cat": "equation_numeric_deduce",
+        "truth": "444"
+      },
+      {
+        "id": "33093ed0",
+        "cat": "equation_numeric_deduce",
+        "truth": "-72"
+      },
+      {
+        "id": "330d5ef1",
+        "cat": "equation_numeric_deduce",
+        "truth": "0864"
+      },
+      {
+        "id": "333d93ec",
+        "cat": "equation_numeric_deduce",
+        "truth": "7"
+      },
+      {
+        "id": "3383d4ec",
+        "cat": "equation_numeric_deduce",
+        "truth": "66"
+      },
+      {
+        "id": "339149c9",
+        "cat": "equation_numeric_deduce",
+        "truth": "3"
+      },
+      {
+        "id": "347477c5",
+        "cat": "equation_numeric_deduce",
+        "truth": "1171"
+      },
+      {
+        "id": "348d6225",
+        "cat": "equation_numeric_deduce",
+        "truth": "98"
+      },
+      {
+        "id": "35672155",
+        "cat": "equation_numeric_deduce",
+        "truth": "4284"
+      },
+      {
+        "id": "3580648f",
+        "cat": "equation_numeric_deduce",
+        "truth": "2640"
+      },
+      {
+        "id": "35a89469",
+        "cat": "equation_numeric_deduce",
+        "truth": "9525"
+      },
+      {
+        "id": "372bb422",
+        "cat": "equation_numeric_deduce",
+        "truth": "7560"
+      },
+      {
+        "id": "379d18b7",
+        "cat": "equation_numeric_deduce",
+        "truth": "2101"
+      },
+      {
+        "id": "37a2a7ff",
+        "cat": "equation_numeric_deduce",
+        "truth": "8483"
+      },
+      {
+        "id": "37f04e3e",
+        "cat": "equation_numeric_deduce",
+        "truth": "0092"
+      },
+      {
+        "id": "383889e1",
+        "cat": "equation_numeric_deduce",
+        "truth": "5185"
+      },
+      {
+        "id": "38e98135",
+        "cat": "equation_numeric_deduce",
+        "truth": "5017"
+      },
+      {
+        "id": "3937cbf8",
+        "cat": "equation_numeric_deduce",
+        "truth": "46"
+      },
+      {
+        "id": "39fd934f",
+        "cat": "equation_numeric_deduce",
+        "truth": "-9"
+      },
+      {
+        "id": "3a8a4ebc",
+        "cat": "equation_numeric_deduce",
+        "truth": "'54"
+      },
+      {
+        "id": "3b51288b",
+        "cat": "equation_numeric_deduce",
+        "truth": "0592"
+      },
+      {
+        "id": "3b7e71b2",
+        "cat": "equation_numeric_deduce",
+        "truth": "3285"
+      },
+      {
+        "id": "3b9e33f6",
+        "cat": "equation_numeric_deduce",
+        "truth": "501"
+      },
+      {
+        "id": "3bf0875d",
+        "cat": "equation_numeric_deduce",
+        "truth": "1065"
+      },
+      {
+        "id": "3c12aeb9",
+        "cat": "equation_numeric_deduce",
+        "truth": "321"
+      },
+      {
+        "id": "3c424916",
+        "cat": "equation_numeric_deduce",
+        "truth": "9351"
+      },
+      {
+        "id": "3e42c4f9",
+        "cat": "equation_numeric_deduce",
+        "truth": "2"
+      },
+      {
+        "id": "3ec77e36",
+        "cat": "equation_numeric_deduce",
+        "truth": "601"
+      },
+      {
+        "id": "3ee36e0a",
+        "cat": "equation_numeric_deduce",
+        "truth": "-51"
+      },
+      {
+        "id": "3efc46c1",
+        "cat": "equation_numeric_deduce",
+        "truth": "3964"
+      },
+      {
+        "id": "3fa49035",
+        "cat": "equation_numeric_deduce",
+        "truth": "696"
+      },
+      {
+        "id": "4011d4e5",
+        "cat": "equation_numeric_deduce",
+        "truth": "1483"
+      },
+      {
+        "id": "40c53743",
+        "cat": "equation_numeric_deduce",
+        "truth": "7963"
+      },
+      {
+        "id": "4179c322",
+        "cat": "equation_numeric_deduce",
+        "truth": "-6"
+      },
+      {
+        "id": "418895f5",
+        "cat": "equation_numeric_deduce",
+        "truth": "1243"
+      },
+      {
+        "id": "41babefd",
+        "cat": "equation_numeric_deduce",
+        "truth": "127"
+      },
+      {
+        "id": "422bc5b4",
+        "cat": "equation_numeric_deduce",
+        "truth": "7"
+      },
+      {
+        "id": "4245e455",
+        "cat": "equation_numeric_deduce",
+        "truth": "-92"
+      },
+      {
+        "id": "42553fde",
+        "cat": "equation_numeric_deduce",
+        "truth": "77"
+      },
+      {
+        "id": "427ba852",
+        "cat": "equation_numeric_deduce",
+        "truth": "2214"
+      },
+      {
+        "id": "4350015c",
+        "cat": "equation_numeric_deduce",
+        "truth": "6461"
+      },
+      {
+        "id": "43837c5b",
+        "cat": "equation_numeric_deduce",
+        "truth": "4572"
+      },
+      {
+        "id": "43980e72",
+        "cat": "equation_numeric_deduce",
+        "truth": "64"
+      },
+      {
+        "id": "44398869",
+        "cat": "equation_numeric_deduce",
+        "truth": "5913"
+      },
+      {
+        "id": "44e69b7e",
+        "cat": "equation_numeric_deduce",
+        "truth": "119"
+      },
+      {
+        "id": "45076dc9",
+        "cat": "equation_numeric_deduce",
+        "truth": "6"
+      },
+      {
+        "id": "4530aff6",
+        "cat": "equation_numeric_deduce",
+        "truth": "111"
+      },
+      {
+        "id": "45582be0",
+        "cat": "equation_numeric_deduce",
+        "truth": "104"
+      },
+      {
+        "id": "45dbc1cc",
+        "cat": "equation_numeric_deduce",
+        "truth": "-35"
+      },
+      {
+        "id": "45df54db",
+        "cat": "equation_numeric_deduce",
+        "truth": "64"
+      },
+      {
+        "id": "47c368d8",
+        "cat": "equation_numeric_deduce",
+        "truth": "851"
+      },
+      {
+        "id": "47dc6570",
+        "cat": "equation_numeric_deduce",
+        "truth": "22"
+      },
+      {
+        "id": "4895b955",
+        "cat": "equation_numeric_deduce",
+        "truth": "4796"
+      },
+      {
+        "id": "49578b02",
+        "cat": "equation_numeric_deduce",
+        "truth": "39"
+      },
+      {
+        "id": "49699136",
+        "cat": "equation_numeric_deduce",
+        "truth": "#52"
+      },
+      {
+        "id": "49743645",
+        "cat": "equation_numeric_deduce",
+        "truth": "1396"
+      },
+      {
+        "id": "49919931",
+        "cat": "equation_numeric_deduce",
+        "truth": "32"
+      },
+      {
+        "id": "49bc1b7b",
+        "cat": "equation_numeric_deduce",
+        "truth": "681"
+      },
+      {
+        "id": "4a569495",
+        "cat": "equation_numeric_deduce",
+        "truth": "47"
+      },
+      {
+        "id": "4a8eafe3",
+        "cat": "equation_numeric_deduce",
+        "truth": "5705"
+      },
+      {
+        "id": "4aabfc3b",
+        "cat": "equation_numeric_deduce",
+        "truth": "17"
+      },
+      {
+        "id": "4bc6e6b5",
+        "cat": "equation_numeric_deduce",
+        "truth": "67"
+      },
+      {
+        "id": "4c19c1cb",
+        "cat": "equation_numeric_deduce",
+        "truth": "0774"
+      },
+      {
+        "id": "4c6cf9d9",
+        "cat": "equation_numeric_deduce",
+        "truth": "63"
+      },
+      {
+        "id": "4cf073bf",
+        "cat": "equation_numeric_deduce",
+        "truth": "08"
+      },
+      {
+        "id": "4d39d098",
+        "cat": "equation_numeric_deduce",
+        "truth": "7434"
+      },
+      {
+        "id": "4d714623",
+        "cat": "equation_numeric_deduce",
+        "truth": "107"
+      },
+      {
+        "id": "4d92de08",
+        "cat": "equation_numeric_deduce",
+        "truth": "819"
+      },
+      {
+        "id": "4dcc1844",
+        "cat": "equation_numeric_deduce",
+        "truth": "83"
+      },
+      {
+        "id": "4f0e0273",
+        "cat": "equation_numeric_deduce",
+        "truth": "5022"
+      },
+      {
+        "id": "4f8da43f",
+        "cat": "equation_numeric_deduce",
+        "truth": "46"
+      },
+      {
+        "id": "4ff92c73",
+        "cat": "equation_numeric_deduce",
+        "truth": "62"
+      },
+      {
+        "id": "50adc396",
+        "cat": "equation_numeric_deduce",
+        "truth": "931"
+      },
+      {
+        "id": "50adfd54",
+        "cat": "equation_numeric_deduce",
+        "truth": "-75"
+      },
+      {
+        "id": "50f8e2c0",
+        "cat": "equation_numeric_deduce",
+        "truth": "-22"
+      },
+      {
+        "id": "518d8529",
+        "cat": "equation_numeric_deduce",
+        "truth": "@75"
+      },
+      {
+        "id": "51dafb5b",
+        "cat": "equation_numeric_deduce",
+        "truth": "9732"
+      },
+      {
+        "id": "52c62a3e",
+        "cat": "equation_numeric_deduce",
+        "truth": "1292"
+      },
+      {
+        "id": "54c9bde5",
+        "cat": "equation_numeric_deduce",
+        "truth": "3064"
+      },
+      {
+        "id": "552e14d7",
+        "cat": "equation_numeric_deduce",
+        "truth": "1756"
+      },
+      {
+        "id": "553b3af9",
+        "cat": "equation_numeric_deduce",
+        "truth": "61%"
+      },
+      {
+        "id": "55954e3c",
+        "cat": "equation_numeric_deduce",
+        "truth": "0685"
+      },
+      {
+        "id": "56343b77",
+        "cat": "equation_numeric_deduce",
+        "truth": "711"
+      },
+      {
+        "id": "56c59dfd",
+        "cat": "equation_numeric_deduce",
+        "truth": "22"
+      },
+      {
+        "id": "5787c3d0",
+        "cat": "equation_numeric_deduce",
+        "truth": "^1"
+      },
+      {
+        "id": "579b4607",
+        "cat": "equation_numeric_deduce",
+        "truth": "16"
+      },
+      {
+        "id": "585b3442",
+        "cat": "equation_numeric_deduce",
+        "truth": "3104"
+      },
+      {
+        "id": "58b9492e",
+        "cat": "equation_numeric_deduce",
+        "truth": "1"
+      },
+      {
+        "id": "58c4ced1",
+        "cat": "equation_numeric_deduce",
+        "truth": "9"
+      },
+      {
+        "id": "58fed63a",
+        "cat": "equation_numeric_deduce",
+        "truth": "5"
+      },
+      {
+        "id": "5a763686",
+        "cat": "equation_numeric_deduce",
+        "truth": "7495"
+      },
+      {
+        "id": "5aeb4ba5",
+        "cat": "equation_numeric_deduce",
+        "truth": "3985"
+      },
+      {
+        "id": "5b06502f",
+        "cat": "equation_numeric_deduce",
+        "truth": "1768"
+      },
+      {
+        "id": "5c743e8a",
+        "cat": "equation_numeric_deduce",
+        "truth": "1755"
+      },
+      {
+        "id": "5c938bea",
+        "cat": "equation_numeric_deduce",
+        "truth": "27"
+      },
+      {
+        "id": "5d44a0b2",
+        "cat": "equation_numeric_deduce",
+        "truth": "8035"
+      },
+      {
+        "id": "5d89a09c",
+        "cat": "equation_numeric_deduce",
+        "truth": "0"
+      },
+      {
+        "id": "5d8c51ce",
+        "cat": "equation_numeric_deduce",
+        "truth": "06"
+      },
+      {
+        "id": "5e67b1a1",
+        "cat": "equation_numeric_deduce",
+        "truth": "63"
+      },
+      {
+        "id": "5eea60e7",
+        "cat": "equation_numeric_deduce",
+        "truth": "791"
+      },
+      {
+        "id": "5f6798e1",
+        "cat": "equation_numeric_deduce",
+        "truth": "34"
+      },
+      {
+        "id": "5fe8d710",
+        "cat": "equation_numeric_deduce",
+        "truth": "281"
+      },
+      {
+        "id": "605e1c08",
+        "cat": "equation_numeric_deduce",
+        "truth": "1020"
+      },
+      {
+        "id": "61bbcdc3",
+        "cat": "equation_numeric_deduce",
+        "truth": "99"
+      },
+      {
+        "id": "620c2521",
+        "cat": "equation_numeric_deduce",
+        "truth": "936"
+      },
+      {
+        "id": "65c52214",
+        "cat": "equation_numeric_deduce",
+        "truth": "1593"
+      },
+      {
+        "id": "662fd21c",
+        "cat": "equation_numeric_deduce",
+        "truth": "17"
+      },
+      {
+        "id": "66a0856f",
+        "cat": "equation_numeric_deduce",
+        "truth": "38"
+      },
+      {
+        "id": "66c5974c",
+        "cat": "equation_numeric_deduce",
+        "truth": "80"
+      },
+      {
+        "id": "67f1bc8a",
+        "cat": "equation_numeric_deduce",
+        "truth": "1321"
+      },
+      {
+        "id": "680f19b3",
+        "cat": "equation_numeric_deduce",
+        "truth": "9756"
+      },
+      {
+        "id": "68b9b9a8",
+        "cat": "equation_numeric_deduce",
+        "truth": "4734"
+      },
+      {
+        "id": "69197d42",
+        "cat": "equation_numeric_deduce",
+        "truth": "4662"
+      },
+      {
+        "id": "691f2f76",
+        "cat": "equation_numeric_deduce",
+        "truth": "331"
+      },
+      {
+        "id": "69aa57b3",
+        "cat": "equation_numeric_deduce",
+        "truth": "4472"
+      },
+      {
+        "id": "6ab04968",
+        "cat": "equation_numeric_deduce",
+        "truth": "1241"
+      },
+      {
+        "id": "6b393b81",
+        "cat": "equation_numeric_deduce",
+        "truth": "4046"
+      },
+      {
+        "id": "6b769a9e",
+        "cat": "equation_numeric_deduce",
+        "truth": "+92"
+      },
+      {
+        "id": "6bd59a1f",
+        "cat": "equation_numeric_deduce",
+        "truth": "7241"
+      },
+      {
+        "id": "6c9e4485",
+        "cat": "equation_numeric_deduce",
+        "truth": "6253"
+      },
+      {
+        "id": "6cd73bdd",
+        "cat": "equation_numeric_deduce",
+        "truth": "6895"
+      },
+      {
+        "id": "6dda26c0",
+        "cat": "equation_numeric_deduce",
+        "truth": "4643"
+      },
+      {
+        "id": "6e60b0c5",
+        "cat": "equation_numeric_deduce",
+        "truth": "9555"
+      },
+      {
+        "id": "6e6f8d9c",
+        "cat": "equation_numeric_deduce",
+        "truth": "951"
+      },
+      {
+        "id": "6f37d7be",
+        "cat": "equation_numeric_deduce",
+        "truth": "01"
+      },
+      {
+        "id": "705bb686",
+        "cat": "equation_numeric_deduce",
+        "truth": "5"
+      },
+      {
+        "id": "7195cb7b",
+        "cat": "equation_numeric_deduce",
+        "truth": "68"
+      },
+      {
+        "id": "71e02000",
+        "cat": "equation_numeric_deduce",
+        "truth": "3767"
+      },
+      {
+        "id": "72336119",
+        "cat": "equation_numeric_deduce",
+        "truth": "3316"
+      },
+      {
+        "id": "7306613b",
+        "cat": "equation_numeric_deduce",
+        "truth": "251"
+      },
+      {
+        "id": "743a293d",
+        "cat": "equation_numeric_deduce",
+        "truth": "2432"
+      },
+      {
+        "id": "744a2570",
+        "cat": "equation_numeric_deduce",
+        "truth": "5"
+      },
+      {
+        "id": "74b9b0ec",
+        "cat": "equation_numeric_deduce",
+        "truth": "16"
+      },
+      {
+        "id": "75032b65",
+        "cat": "equation_numeric_deduce",
+        "truth": "27"
+      },
+      {
+        "id": "764b4288",
+        "cat": "equation_numeric_deduce",
+        "truth": "72"
+      },
+      {
+        "id": "7688e06e",
+        "cat": "equation_numeric_deduce",
+        "truth": "-55"
+      },
+      {
+        "id": "76b79a0c",
+        "cat": "equation_numeric_deduce",
+        "truth": "2192"
+      },
+      {
+        "id": "76e6f646",
+        "cat": "equation_numeric_deduce",
+        "truth": "6557"
+      },
+      {
+        "id": "773ca8a9",
+        "cat": "equation_numeric_deduce",
+        "truth": "83"
+      },
+      {
+        "id": "791056ce",
+        "cat": "equation_numeric_deduce",
+        "truth": "4922"
+      },
+      {
+        "id": "794f71ed",
+        "cat": "equation_numeric_deduce",
+        "truth": "5432"
+      },
+      {
+        "id": "79acd75c",
+        "cat": "equation_numeric_deduce",
+        "truth": "8613"
+      },
+      {
+        "id": "7a962e17",
+        "cat": "equation_numeric_deduce",
+        "truth": "361"
+      },
+      {
+        "id": "7bd5f8b9",
+        "cat": "equation_numeric_deduce",
+        "truth": "0"
+      },
+      {
+        "id": "7c0c5227",
+        "cat": "equation_numeric_deduce",
+        "truth": "14"
+      },
+      {
+        "id": "7c72ad99",
+        "cat": "equation_numeric_deduce",
+        "truth": "2733"
+      },
+      {
+        "id": "7e2e8a95",
+        "cat": "equation_numeric_deduce",
+        "truth": "5419"
+      },
+      {
+        "id": "7ef4d5d6",
+        "cat": "equation_numeric_deduce",
+        "truth": ">42"
+      },
+      {
+        "id": "8011cb24",
+        "cat": "equation_numeric_deduce",
+        "truth": ":64"
+      },
+      {
+        "id": "8021718e",
+        "cat": "equation_numeric_deduce",
+        "truth": "6479"
+      },
+      {
+        "id": "806eba07",
+        "cat": "equation_numeric_deduce",
+        "truth": "321"
+      },
+      {
+        "id": "808a8f62",
+        "cat": "equation_numeric_deduce",
+        "truth": "62"
+      },
+      {
+        "id": "80d44fe3",
+        "cat": "equation_numeric_deduce",
+        "truth": "72"
+      },
+      {
+        "id": "812c12cb",
+        "cat": "equation_numeric_deduce",
+        "truth": "-1"
+      },
+      {
+        "id": "824d4bcb",
+        "cat": "equation_numeric_deduce",
+        "truth": "64:"
+      },
+      {
+        "id": "836d6c4a",
+        "cat": "equation_numeric_deduce",
+        "truth": "5643"
+      },
+      {
+        "id": "837af955",
+        "cat": "equation_numeric_deduce",
+        "truth": "0814"
+      },
+      {
+        "id": "83f2724b",
+        "cat": "equation_numeric_deduce",
+        "truth": "22"
+      },
+      {
+        "id": "84030b0b",
+        "cat": "equation_numeric_deduce",
+        "truth": "24"
+      },
+      {
+        "id": "845e726e",
+        "cat": "equation_numeric_deduce",
+        "truth": "051"
+      },
+      {
+        "id": "87a89786",
+        "cat": "equation_numeric_deduce",
+        "truth": "17"
+      },
+      {
+        "id": "87a902eb",
+        "cat": "equation_numeric_deduce",
+        "truth": "047"
+      },
+      {
+        "id": "88b43464",
+        "cat": "equation_numeric_deduce",
+        "truth": "5311"
+      },
+      {
+        "id": "88c93c2c",
+        "cat": "equation_numeric_deduce",
+        "truth": "2842"
+      },
+      {
+        "id": "88fe5a52",
+        "cat": "equation_numeric_deduce",
+        "truth": "8065"
+      },
+      {
+        "id": "89780a3c",
+        "cat": "equation_numeric_deduce",
+        "truth": "128"
+      },
+      {
+        "id": "8a800607",
+        "cat": "equation_numeric_deduce",
+        "truth": "2"
+      },
+      {
+        "id": "8ae8e12a",
+        "cat": "equation_numeric_deduce",
+        "truth": "9"
+      },
+      {
+        "id": "8bc66fd7",
+        "cat": "equation_numeric_deduce",
+        "truth": "7432"
+      },
+      {
+        "id": "8bc6a26c",
+        "cat": "equation_numeric_deduce",
+        "truth": "38"
+      },
+      {
+        "id": "8bebef83",
+        "cat": "equation_numeric_deduce",
+        "truth": "3388"
+      },
+      {
+        "id": "8c1529e1",
+        "cat": "equation_numeric_deduce",
+        "truth": "-52"
+      },
+      {
+        "id": "8d652f91",
+        "cat": "equation_numeric_deduce",
+        "truth": "4"
+      },
+      {
+        "id": "8dea05d7",
+        "cat": "equation_numeric_deduce",
+        "truth": "3907"
+      },
+      {
+        "id": "8df3daad",
+        "cat": "equation_numeric_deduce",
+        "truth": "34"
+      },
+      {
+        "id": "8e169174",
+        "cat": "equation_numeric_deduce",
+        "truth": "527"
+      },
+      {
+        "id": "8e359dc8",
+        "cat": "equation_numeric_deduce",
+        "truth": "031"
+      },
+      {
+        "id": "8eac8f69",
+        "cat": "equation_numeric_deduce",
+        "truth": "885"
+      },
+      {
+        "id": "8fad338f",
+        "cat": "equation_numeric_deduce",
+        "truth": "4751"
+      },
+      {
+        "id": "902da958",
+        "cat": "equation_numeric_deduce",
+        "truth": "761"
+      },
+      {
+        "id": "904e3a54",
+        "cat": "equation_numeric_deduce",
+        "truth": "66"
+      },
+      {
+        "id": "90d57388",
+        "cat": "equation_numeric_deduce",
+        "truth": "2615"
+      },
+      {
+        "id": "912c6ea5",
+        "cat": "equation_numeric_deduce",
+        "truth": "071"
+      },
+      {
+        "id": "912d2b79",
+        "cat": "equation_numeric_deduce",
+        "truth": "901"
+      },
+      {
+        "id": "91488dc9",
+        "cat": "equation_numeric_deduce",
+        "truth": "3431"
+      },
+      {
+        "id": "91b34547",
+        "cat": "equation_numeric_deduce",
+        "truth": "-84"
+      },
+      {
+        "id": "91b42a45",
+        "cat": "equation_numeric_deduce",
+        "truth": "170"
+      },
+      {
+        "id": "921da788",
+        "cat": "equation_numeric_deduce",
+        "truth": "5403"
+      },
+      {
+        "id": "9250a0a8",
+        "cat": "equation_numeric_deduce",
+        "truth": "3"
+      },
+      {
+        "id": "936b3ae5",
+        "cat": "equation_numeric_deduce",
+        "truth": "14>"
+      },
+      {
+        "id": "93d1c7eb",
+        "cat": "equation_numeric_deduce",
+        "truth": "0154"
+      },
+      {
+        "id": "93f3ae6b",
+        "cat": "equation_numeric_deduce",
+        "truth": "701"
+      },
+      {
+        "id": "94b92001",
+        "cat": "equation_numeric_deduce",
+        "truth": "801"
+      },
+      {
+        "id": "957c70fd",
+        "cat": "equation_numeric_deduce",
+        "truth": "-7"
+      },
+      {
+        "id": "95afbb5f",
+        "cat": "equation_numeric_deduce",
+        "truth": "4560"
+      },
+      {
+        "id": "95d8ff2c",
+        "cat": "equation_numeric_deduce",
+        "truth": "651"
+      },
+      {
+        "id": "9610985a",
+        "cat": "equation_numeric_deduce",
+        "truth": "-22"
+      },
+      {
+        "id": "963bdc67",
+        "cat": "equation_numeric_deduce",
+        "truth": "9973"
+      },
+      {
+        "id": "963e85bb",
+        "cat": "equation_numeric_deduce",
+        "truth": "76"
+      },
+      {
+        "id": "96efb93a",
+        "cat": "equation_numeric_deduce",
+        "truth": "61"
+      },
+      {
+        "id": "97dee6aa",
+        "cat": "equation_numeric_deduce",
+        "truth": "71"
+      },
+      {
+        "id": "98a2636e",
+        "cat": "equation_numeric_deduce",
+        "truth": "001"
+      },
+      {
+        "id": "98bb54f7",
+        "cat": "equation_numeric_deduce",
+        "truth": "5846"
+      },
+      {
+        "id": "99cc2e07",
+        "cat": "equation_numeric_deduce",
+        "truth": "/92"
+      },
+      {
+        "id": "99e2cf41",
+        "cat": "equation_numeric_deduce",
+        "truth": "4415"
+      },
+      {
+        "id": "9a9f6025",
+        "cat": "equation_numeric_deduce",
+        "truth": "-56"
+      },
+      {
+        "id": "9b820b4e",
+        "cat": "equation_numeric_deduce",
+        "truth": "4419"
+      },
+      {
+        "id": "9cb03277",
+        "cat": "equation_numeric_deduce",
+        "truth": "26"
+      },
+      {
+        "id": "9d4ae6b8",
+        "cat": "equation_numeric_deduce",
+        "truth": "16"
+      },
+      {
+        "id": "9d575da5",
+        "cat": "equation_numeric_deduce",
+        "truth": "111"
+      },
+      {
+        "id": "9d68ef62",
+        "cat": "equation_numeric_deduce",
+        "truth": "83("
+      },
+      {
+        "id": "9d7af57b",
+        "cat": "equation_numeric_deduce",
+        "truth": "89"
+      },
+      {
+        "id": "9e5d97de",
+        "cat": "equation_numeric_deduce",
+        "truth": "79"
+      },
+      {
+        "id": "9f2fae58",
+        "cat": "equation_numeric_deduce",
+        "truth": "7272"
+      },
+      {
+        "id": "9fa9ecdc",
+        "cat": "equation_numeric_deduce",
+        "truth": "36"
+      },
+      {
+        "id": "9fb854c3",
+        "cat": "equation_numeric_deduce",
+        "truth": "4"
+      },
+      {
+        "id": "9ff6e9d2",
+        "cat": "equation_numeric_deduce",
+        "truth": "11"
+      },
+      {
+        "id": "a19a75ba",
+        "cat": "equation_numeric_deduce",
+        "truth": "2655"
+      },
+      {
+        "id": "a1bae076",
+        "cat": "equation_numeric_deduce",
+        "truth": "0001"
+      },
+      {
+        "id": "a2252b88",
+        "cat": "equation_numeric_deduce",
+        "truth": "2442"
+      },
+      {
+        "id": "a7454fdb",
+        "cat": "equation_numeric_deduce",
+        "truth": "831"
+      },
+      {
+        "id": "a7d582da",
+        "cat": "equation_numeric_deduce",
+        "truth": "51"
+      },
+      {
+        "id": "a8e033fe",
+        "cat": "equation_numeric_deduce",
+        "truth": "6854"
+      },
+      {
+        "id": "a8e5eca1",
+        "cat": "equation_numeric_deduce",
+        "truth": "4274"
+      },
+      {
+        "id": "a928ad6e",
+        "cat": "equation_numeric_deduce",
+        "truth": "611"
+      },
+      {
+        "id": "a9deb8b5",
+        "cat": "equation_numeric_deduce",
+        "truth": "0131"
+      },
+      {
+        "id": "aa251ec4",
+        "cat": "equation_numeric_deduce",
+        "truth": "%20"
+      },
+      {
+        "id": "aa7f06f4",
+        "cat": "equation_numeric_deduce",
+        "truth": "3212"
+      },
+      {
+        "id": "aa8c76a1",
+        "cat": "equation_numeric_deduce",
+        "truth": "0861"
+      },
+      {
+        "id": "aaec36e0",
+        "cat": "equation_numeric_deduce",
+        "truth": "3201"
+      },
+      {
+        "id": "ab779293",
+        "cat": "equation_numeric_deduce",
+        "truth": "78"
+      },
+      {
+        "id": "ab7809d1",
+        "cat": "equation_numeric_deduce",
+        "truth": "2572"
+      },
+      {
+        "id": "b0d0dd45",
+        "cat": "equation_numeric_deduce",
+        "truth": "7289"
+      },
+      {
+        "id": "b193f06a",
+        "cat": "equation_numeric_deduce",
+        "truth": "3182"
+      },
+      {
+        "id": "b1bc3731",
+        "cat": "equation_numeric_deduce",
+        "truth": "63"
+      },
+      {
+        "id": "b26d8818",
+        "cat": "equation_numeric_deduce",
+        "truth": "5983"
+      },
+      {
+        "id": "b3ae7f39",
+        "cat": "equation_numeric_deduce",
+        "truth": "801"
+      },
+      {
+        "id": "b3f9a15c",
+        "cat": "equation_numeric_deduce",
+        "truth": "1773"
+      },
+      {
+        "id": "b4a15ca6",
+        "cat": "equation_numeric_deduce",
+        "truth": "301"
+      },
+      {
+        "id": "b4a5076f",
+        "cat": "equation_numeric_deduce",
+        "truth": "75"
+      },
+      {
+        "id": "b5e1e604",
+        "cat": "equation_numeric_deduce",
+        "truth": "211"
+      },
+      {
+        "id": "b62453dc",
+        "cat": "equation_numeric_deduce",
+        "truth": "-75"
+      },
+      {
+        "id": "b655eee9",
+        "cat": "equation_numeric_deduce",
+        "truth": "-92"
+      },
+      {
+        "id": "b69391b8",
+        "cat": "equation_numeric_deduce",
+        "truth": "66"
+      },
+      {
+        "id": "b73d0898",
+        "cat": "equation_numeric_deduce",
+        "truth": "9"
+      },
+      {
+        "id": "b7ad0671",
+        "cat": "equation_numeric_deduce",
+        "truth": "16"
+      },
+      {
+        "id": "b980017a",
+        "cat": "equation_numeric_deduce",
+        "truth": "7946"
+      },
+      {
+        "id": "b989c740",
+        "cat": "equation_numeric_deduce",
+        "truth": "8618"
+      },
+      {
+        "id": "b99d3059",
+        "cat": "equation_numeric_deduce",
+        "truth": "31"
+      },
+      {
+        "id": "bad9f9da",
+        "cat": "equation_numeric_deduce",
+        "truth": "87"
+      },
+      {
+        "id": "bc0935ee",
+        "cat": "equation_numeric_deduce",
+        "truth": "@25"
+      },
+      {
+        "id": "bc42e664",
+        "cat": "equation_numeric_deduce",
+        "truth": "71"
+      },
+      {
+        "id": "bc7f14d1",
+        "cat": "equation_numeric_deduce",
+        "truth": "151"
+      },
+      {
+        "id": "bd4c584a",
+        "cat": "equation_numeric_deduce",
+        "truth": "0491"
+      },
+      {
+        "id": "bd8aa942",
+        "cat": "equation_numeric_deduce",
+        "truth": "1881"
+      },
+      {
+        "id": "bdca0fac",
+        "cat": "equation_numeric_deduce",
+        "truth": "2925"
+      },
+      {
+        "id": "be877da5",
+        "cat": "equation_numeric_deduce",
+        "truth": "02"
+      },
+      {
+        "id": "bf4bd858",
+        "cat": "equation_numeric_deduce",
+        "truth": "101"
+      },
+      {
+        "id": "c11777c0",
+        "cat": "equation_numeric_deduce",
+        "truth": "56"
+      },
+      {
+        "id": "c170f7d4",
+        "cat": "equation_numeric_deduce",
+        "truth": "-15"
+      },
+      {
+        "id": "c2199ff2",
+        "cat": "equation_numeric_deduce",
+        "truth": "1807"
+      },
+      {
+        "id": "c37a2a23",
+        "cat": "equation_numeric_deduce",
+        "truth": "5850"
+      },
+      {
+        "id": "c4f66ede",
+        "cat": "equation_numeric_deduce",
+        "truth": "6125"
+      },
+      {
+        "id": "c541eb82",
+        "cat": "equation_numeric_deduce",
+        "truth": "-01"
+      },
+      {
+        "id": "c613082a",
+        "cat": "equation_numeric_deduce",
+        "truth": "31"
+      },
+      {
+        "id": "c7420a23",
+        "cat": "equation_numeric_deduce",
+        "truth": "33"
+      },
+      {
+        "id": "c748b04f",
+        "cat": "equation_numeric_deduce",
+        "truth": "651"
+      },
+      {
+        "id": "c763054a",
+        "cat": "equation_numeric_deduce",
+        "truth": "85"
+      },
+      {
+        "id": "c7bcab48",
+        "cat": "equation_numeric_deduce",
+        "truth": "5899"
+      },
+      {
+        "id": "c81411a2",
+        "cat": "equation_numeric_deduce",
+        "truth": "05"
+      },
+      {
+        "id": "c857a727",
+        "cat": "equation_numeric_deduce",
+        "truth": "429"
+      },
+      {
+        "id": "c9151e86",
+        "cat": "equation_numeric_deduce",
+        "truth": "9421"
+      },
+      {
+        "id": "c9c26b92",
+        "cat": "equation_numeric_deduce",
+        "truth": "2151"
+      },
+      {
+        "id": "ca8929f5",
+        "cat": "equation_numeric_deduce",
+        "truth": "49"
+      },
+      {
+        "id": "cb5fa22d",
+        "cat": "equation_numeric_deduce",
+        "truth": "8007"
+      },
+      {
+        "id": "cb796a2b",
+        "cat": "equation_numeric_deduce",
+        "truth": "114"
+      },
+      {
+        "id": "cbe4288b",
+        "cat": "equation_numeric_deduce",
+        "truth": "411"
+      },
+      {
+        "id": "cc800930",
+        "cat": "equation_numeric_deduce",
+        "truth": "131"
+      },
+      {
+        "id": "cd149ff8",
+        "cat": "equation_numeric_deduce",
+        "truth": "921"
+      },
+      {
+        "id": "cd94ec17",
+        "cat": "equation_numeric_deduce",
+        "truth": "451"
+      },
+      {
+        "id": "cd9d50e2",
+        "cat": "equation_numeric_deduce",
+        "truth": "5293"
+      },
+      {
+        "id": "cde9f7ba",
+        "cat": "equation_numeric_deduce",
+        "truth": "81"
+      },
+      {
+        "id": "cee07c09",
+        "cat": "equation_numeric_deduce",
+        "truth": "4281"
+      },
+      {
+        "id": "cf356d18",
+        "cat": "equation_numeric_deduce",
+        "truth": "6"
+      },
+      {
+        "id": "cf517124",
+        "cat": "equation_numeric_deduce",
+        "truth": "24"
+      },
+      {
+        "id": "cf84c023",
+        "cat": "equation_numeric_deduce",
+        "truth": "13"
+      },
+      {
+        "id": "cfa59b38",
+        "cat": "equation_numeric_deduce",
+        "truth": "233"
+      },
+      {
+        "id": "d033513f",
+        "cat": "equation_numeric_deduce",
+        "truth": "93"
+      },
+      {
+        "id": "d17d3a7a",
+        "cat": "equation_numeric_deduce",
+        "truth": "-01"
+      },
+      {
+        "id": "d21c7677",
+        "cat": "equation_numeric_deduce",
+        "truth": "8544"
+      },
+      {
+        "id": "d3092ac1",
+        "cat": "equation_numeric_deduce",
+        "truth": "-7"
+      },
+      {
+        "id": "d3b20e29",
+        "cat": "equation_numeric_deduce",
+        "truth": "3922"
+      },
+      {
+        "id": "d4483d51",
+        "cat": "equation_numeric_deduce",
+        "truth": "3752"
+      },
+      {
+        "id": "d46df3b0",
+        "cat": "equation_numeric_deduce",
+        "truth": "3955"
+      },
+      {
+        "id": "d490911e",
+        "cat": "equation_numeric_deduce",
+        "truth": "139"
+      },
+      {
+        "id": "d5aa5564",
+        "cat": "equation_numeric_deduce",
+        "truth": "45"
+      },
+      {
+        "id": "d64a6578",
+        "cat": "equation_numeric_deduce",
+        "truth": "2626"
+      },
+      {
+        "id": "d67f28ad",
+        "cat": "equation_numeric_deduce",
+        "truth": "131"
+      },
+      {
+        "id": "d6a2e332",
+        "cat": "equation_numeric_deduce",
+        "truth": "582"
+      },
+      {
+        "id": "d7682996",
+        "cat": "equation_numeric_deduce",
+        "truth": "157"
+      },
+      {
+        "id": "d78128b2",
+        "cat": "equation_numeric_deduce",
+        "truth": "52"
+      },
+      {
+        "id": "d78ce112",
+        "cat": "equation_numeric_deduce",
+        "truth": "7042"
+      },
+      {
+        "id": "d82f5933",
+        "cat": "equation_numeric_deduce",
+        "truth": "86"
+      },
+      {
+        "id": "d8b3310a",
+        "cat": "equation_numeric_deduce",
+        "truth": "5491"
+      },
+      {
+        "id": "d9a2b78f",
+        "cat": "equation_numeric_deduce",
+        "truth": "901"
+      },
+      {
+        "id": "d9bedb64",
+        "cat": "equation_numeric_deduce",
+        "truth": "(1"
+      },
+      {
+        "id": "db4383f3",
+        "cat": "equation_numeric_deduce",
+        "truth": "175"
+      },
+      {
+        "id": "dbc6defc",
+        "cat": "equation_numeric_deduce",
+        "truth": "1886"
+      },
+      {
+        "id": "dbd0e3c9",
+        "cat": "equation_numeric_deduce",
+        "truth": "5631"
+      },
+      {
+        "id": "dc178d1c",
+        "cat": "equation_numeric_deduce",
+        "truth": "04"
+      },
+      {
+        "id": "dc73d295",
+        "cat": "equation_numeric_deduce",
+        "truth": "86"
+      },
+      {
+        "id": "dc7a5e7b",
+        "cat": "equation_numeric_deduce",
+        "truth": "4445"
+      },
+      {
+        "id": "ddb9aafd",
+        "cat": "equation_numeric_deduce",
+        "truth": "5544"
+      },
+      {
+        "id": "debff779",
+        "cat": "equation_numeric_deduce",
+        "truth": "94"
+      },
+      {
+        "id": "df309eeb",
+        "cat": "equation_numeric_deduce",
+        "truth": "77"
+      },
+      {
+        "id": "dfec0ed4",
+        "cat": "equation_numeric_deduce",
+        "truth": "9370"
+      },
+      {
+        "id": "e102a09d",
+        "cat": "equation_numeric_deduce",
+        "truth": "-02"
+      },
+      {
+        "id": "e1c0ae13",
+        "cat": "equation_numeric_deduce",
+        "truth": "4968"
+      },
+      {
+        "id": "e3b3573a",
+        "cat": "equation_numeric_deduce",
+        "truth": "7265"
+      },
+      {
+        "id": "e4479bb1",
+        "cat": "equation_numeric_deduce",
+        "truth": "(35"
+      },
+      {
+        "id": "e518256e",
+        "cat": "equation_numeric_deduce",
+        "truth": "84"
+      },
+      {
+        "id": "e5956ffa",
+        "cat": "equation_numeric_deduce",
+        "truth": "821"
+      },
+      {
+        "id": "e667f2d7",
+        "cat": "equation_numeric_deduce",
+        "truth": "*4"
+      },
+      {
+        "id": "e70d5739",
+        "cat": "equation_numeric_deduce",
+        "truth": "6257"
+      },
+      {
+        "id": "e7b87b82",
+        "cat": "equation_numeric_deduce",
+        "truth": "10"
+      },
+      {
+        "id": "e7cf0394",
+        "cat": "equation_numeric_deduce",
+        "truth": "9783"
+      },
+      {
+        "id": "e836fb20",
+        "cat": "equation_numeric_deduce",
+        "truth": "68"
+      },
+      {
+        "id": "e952f61f",
+        "cat": "equation_numeric_deduce",
+        "truth": "4699"
+      },
+      {
+        "id": "e9a84dd6",
+        "cat": "equation_numeric_deduce",
+        "truth": "771"
+      },
+      {
+        "id": "e9b69bf8",
+        "cat": "equation_numeric_deduce",
+        "truth": "15"
+      },
+      {
+        "id": "ead8fe28",
+        "cat": "equation_numeric_deduce",
+        "truth": "141"
+      },
+      {
+        "id": "eafc7e67",
+        "cat": "equation_numeric_deduce",
+        "truth": "9044"
+      },
+      {
+        "id": "eb68289b",
+        "cat": "equation_numeric_deduce",
+        "truth": "-82"
+      },
+      {
+        "id": "ec694941",
+        "cat": "equation_numeric_deduce",
+        "truth": "1261"
+      },
+      {
+        "id": "ef1b13ac",
+        "cat": "equation_numeric_deduce",
+        "truth": "8"
+      },
+      {
+        "id": "ef6bc241",
+        "cat": "equation_numeric_deduce",
+        "truth": "$55"
+      },
+      {
+        "id": "f0a2d457",
+        "cat": "equation_numeric_deduce",
+        "truth": "22"
+      },
+      {
+        "id": "f28681ad",
+        "cat": "equation_numeric_deduce",
+        "truth": "4314"
+      },
+      {
+        "id": "f299569f",
+        "cat": "equation_numeric_deduce",
+        "truth": "7992"
+      },
+      {
+        "id": "f2afd89d",
+        "cat": "equation_numeric_deduce",
+        "truth": "6102"
+      },
+      {
+        "id": "f333b67f",
+        "cat": "equation_numeric_deduce",
+        "truth": "100"
+      },
+      {
+        "id": "f35a488d",
+        "cat": "equation_numeric_deduce",
+        "truth": "162"
+      },
+      {
+        "id": "f3e08a24",
+        "cat": "equation_numeric_deduce",
+        "truth": "0548"
+      },
+      {
+        "id": "f463ee16",
+        "cat": "equation_numeric_deduce",
+        "truth": "78"
+      },
+      {
+        "id": "f4ecefa4",
+        "cat": "equation_numeric_deduce",
+        "truth": "86"
+      },
+      {
+        "id": "f6ca90f6",
+        "cat": "equation_numeric_deduce",
+        "truth": "31"
+      },
+      {
+        "id": "f6db706e",
+        "cat": "equation_numeric_deduce",
+        "truth": "4"
+      },
+      {
+        "id": "f7d90ae3",
+        "cat": "equation_numeric_deduce",
+        "truth": "9819"
+      },
+      {
+        "id": "f8d6abd1",
+        "cat": "equation_numeric_deduce",
+        "truth": "5543"
+      },
+      {
+        "id": "f93475e9",
+        "cat": "equation_numeric_deduce",
+        "truth": "4443"
+      },
+      {
+        "id": "f94810f5",
+        "cat": "equation_numeric_deduce",
+        "truth": "1592"
+      },
+      {
+        "id": "f96e1e6e",
+        "cat": "equation_numeric_deduce",
+        "truth": "041"
+      },
+      {
+        "id": "f9983eb7",
+        "cat": "equation_numeric_deduce",
+        "truth": "1983"
+      },
+      {
+        "id": "f9ff29fa",
+        "cat": "equation_numeric_deduce",
+        "truth": "8482"
+      },
+      {
+        "id": "fa7426d3",
+        "cat": "equation_numeric_deduce",
+        "truth": "65"
+      },
+      {
+        "id": "fa952980",
+        "cat": "equation_numeric_deduce",
+        "truth": "71"
+      },
+      {
+        "id": "fb623471",
+        "cat": "equation_numeric_deduce",
+        "truth": "-21"
+      },
+      {
+        "id": "fc799f0a",
+        "cat": "equation_numeric_deduce",
+        "truth": "021"
+      },
+      {
+        "id": "fc7e53c7",
+        "cat": "equation_numeric_deduce",
+        "truth": "42"
+      },
+      {
+        "id": "fd683004",
+        "cat": "equation_numeric_deduce",
+        "truth": "19"
+      },
+      {
+        "id": "fe393711",
+        "cat": "equation_numeric_deduce",
+        "truth": "1291"
+      },
+      {
+        "id": "febd3442",
+        "cat": "equation_numeric_deduce",
+        "truth": "13"
+      },
+      {
+        "id": "fecad63c",
+        "cat": "equation_numeric_deduce",
+        "truth": "09"
+      },
+      {
+        "id": "fee66e16",
+        "cat": "equation_numeric_deduce",
+        "truth": "3910"
+      },
+      {
+        "id": "fef61ca1",
+        "cat": "equation_numeric_deduce",
+        "truth": "111"
+      },
+      {
+        "id": "ff8409cd",
+        "cat": "equation_numeric_deduce",
+        "truth": "9"
+      }
+    ]
+  }
+}
