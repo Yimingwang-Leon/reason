@@ -1,0 +1,65 @@
+project: nemotron-reasoning-087
+question: >
+  Raise LB on the NVIDIA Nemotron Model Reasoning Challenge. LB = per-category
+  oracle x realization R. R is already ~0.958 and near a local optimum (CoT-format
+  redesign proven to hurt). The remaining lever is per-category oracle, where
+  cryptarithm_deduce is by far the lowest (~17.6%) and the largest loss lever.
+
+constraints:
+  base_model: NemotronH-30B (fixed)
+  lora_rank_max: 32
+  decode: greedy temp=0
+  answer_format: \boxed{}
+  tinker_budget_usd: small  # 2ep retrain ~$20; NEVER auto-spend, queue for user approval
+  offline_work: free and unlimited
+
+current_state:
+  best_lb: 0.84            # run-005 legacy-CoT corpus
+  oracle_offline: ~0.90   # bit_manip solver now 94.4%, overall oracle ~0.90
+  R: ~0.958
+  note: >
+    See MEMORY.md project_run006_collapse_diagnosis for the controlled proof that
+    the legacy-CoT corpus is the R local-optimum. Self-train ceiling on this
+    pipeline is ~0.84-0.845.
+
+# Per-category oracle + loss lever live in MEMORY.md (project_grader_tolerance /
+# strategy). Crypt ~17.6% = biggest single lever; bit_manip ~94%; equation ~77%.
+
+proven_infeasible:   # each cost a real paid run — do NOT re-attempt without new idea
+  - bit_manip "structural / global-rule-assertion" CoT -> R-collapse 0.95->0.2
+    (runs 006/007/008 = 0.71/0.73/0.72). The asserted global rule does not
+    generalize at greedy decode.
+  - Beating run-005 (0.84) by REDESIGNING CoT FORMAT is dead: run-009 slimming=0.82,
+    run-010 locality-hardening=0.82. Both directions hurt; legacy CoT is the R
+    local-optimum. (Also: 4 categories already ~100% oracle, so R-tweaking them is
+    wasted effort.)
+  - lm_head LoRA = measured eval no-op (run-006 with==without==0.71). Earlier
+    "notebook route accepts lm_head / it's the missing 0.86 delta" was a misjudgment,
+    disproven by the run.
+  - Dropping MoE up/down LoRA -> crippled 0.56. MoE LoRA is essential.
+
+open_leads:   # NOT disproven. Crypt is the biggest lever, kept OPEN.
+  crypt:
+    why: lowest oracle (~17.6%) and biggest point loss; format-cap ~76% (}-truncation),
+         well above current — large headroom remains.
+    structural_findings:
+      - column-wise arithmetic structure
+      - symbol->digit map is non-injective
+      - unknown base (signal: base ~11, op=add dominates)
+      - zero-column omission
+      - ~76% of answers contain '}' -> \boxed{} truncation cap (host fixed the metric
+        2026-05-08 to extract '}'-answers; our corpus still drops brace rows, so
+        re-adding them is a cheap potential gain to test)
+    untried_directions:
+      - synthetic cipher-deduction corpus to teach the meta-skill (H3, never run)
+      - re-add brace rows to corpus (cheap, offline)
+  community_intel:   # not our experiments
+    - distillation route caps ~0.73 (intel).
+    - 0.87 reported reachable without crypt via bit_manip ~98-99% (huikang/Taha/lkevincc);
+      our bit_manip solver is at 94.4% — closing that gap is a live offline lever.
+
+next_action: >
+  Stay offline. Crypt is the open frontier (structural leads above) and bit_manip
+  94->98% is a free oracle lever. Do NOT redesign CoT format (proven to hurt) and
+  do NOT re-run lm_head/global-rule-assertion experiments. Only queue a paid retrain
+  with explicit user approval and only when an offline change projects > 0.845.

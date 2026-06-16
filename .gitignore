@@ -37,3 +37,16 @@ __pycache__/
 
 # Log files
 *.log
+# RL campaign large/derived data (adapters, rollouts, replay, probes)
+data/adapters/
+data/replay/
+data/rft/
+data/probes/
+
+# Scratch / exploration scripts (not part of the deliverable)
+scratch/
+_crypt_scratch/
+crypt_arith_test.py
+crypt_arith_test2.py
+crypt_baseconv.py
+crypt_global_out.py

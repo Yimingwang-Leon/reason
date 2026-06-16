@@ -10,8 +10,13 @@ validation:
     re-attach the marker only when the computed answer is negative
   - +-1 offset ops (add/sub/mul +-1)
   - our extra modular / bitwise rules at LOW priority (recover ~10 the champion misses)
-  - deterministic priority order so a reversal variant never shadows a simpler
-    identity rule (greedy submission demands byte-stable traces)
+  - deterministic priority order. The OUTER key is the reversal *mode*: we prefer
+    the columnar reading (reverse operands, compute, reverse result == right-to-left
+    place-value arithmetic) over plain left-to-right arithmetic, because columnar is
+    the most common hidden convention here and wins ambiguous ties more often. The
+    two single-reversal modes never win on their own, so they are demoted to a
+    last-resort fallback (kept only for hidden-test coverage). Greedy submission
+    still gets byte-stable traces because the ordering is fully deterministic.
   - query-op-unseen fallback (absolute difference) instead of emitting '?'
 
 `solve_equation()` exposes the survivor count and the query-op example count for
@@ -19,6 +24,17 @@ optional label-confidence analysis. We currently KEEP single-example traces: the
 offline holdout showed the priority-ordered first-consistent-rule heuristic still
 generalizes (~80% realistic on 1-example query-ops), and we only ever train on
 grader-correct traces, so the heuristic taught is a sound one rather than noise.
+
+TRACE FORMAT (run-011): the emitted CoT is a FULL ENUMERATIVE SEARCH transcript,
+not a hidden-deduction stub. For every candidate (mode, op) the solver considers,
+in the solver's exact priority order, the trace prints the candidate, computes its
+value on each example with the arithmetic shown locally (operands restated, result
+computed, '-> match' / '-> no'), and eliminates it at its first mismatch. The scan
+stops at the first fully-consistent candidate (== survivors[0]), re-verifies it on
+every example, then applies it to the query step by step. Every line is a copy or
+a deterministic local transform of earlier tokens; no per-item global rule is ever
+asserted without its derivation on the page. The boxed answer is byte-identical to
+solve_equation()'s answer (validated over all 732 train problems).
 """
 from __future__ import annotations
 
@@ -91,9 +107,9 @@ def _base_candidates(sa: str, sb: str) -> dict[str, str]:
     return r
 
 
-# Deterministic priority: simpler/more-common first. Reversal modes are applied
-# OUTSIDE this list (identity modes are preferred via _MODE_ORDER below), so a
-# reversal variant can never outrank a non-reversed match of the same priority.
+# Deterministic priority among base ops: simpler/more-common first. The reversal
+# *mode* (columnar vs plain, see _MODE_ORDER below) is the OUTER sort key, so the
+# preferred mode always wins first and this op order only breaks ties within a mode.
 _ORDER = [
     # natural signed arithmetic first; abs/neg-abs are special cases that
     # coincidentally tie on limited data, so they rank below sub/revsub.
@@ -111,8 +127,26 @@ _ORDER = [
 ]
 _ORDER_IDX = {name: i for i, name in enumerate(_ORDER)}
 
-# Prefer no transformation, then result-reversal, then operand-reversal, then both.
-_MODE_ORDER = [(False, False), (False, True), (True, False), (True, True)]
+# Mode preference, learned from the holdout (and from the structure of the task):
+#
+#   (True, True)  -- reverse each operand, compute, reverse the result. This is
+#                    exactly *columnar / place-value* arithmetic done right-to-left
+#                    (e.g. 97-65 -> 79-56=23 -> "32" == per-column 9-6,7-5). It is by
+#                    far the most common hidden convention in this family.
+#   (False, False) -- plain left-to-right arithmetic on the literal numbers.
+#
+# These two account for EVERY mode that ever produces a correct answer on the
+# holdout (60 vs 48 of the wins). The single-reversal modes never win a problem on
+# their own and merely *shadow* the columnar interpretation when they happen to fit
+# a sparse example set, so we demote them to a last-resort fallback that only fires
+# when neither columnar nor plain arithmetic is consistent.
+#
+# When BOTH columnar and plain arithmetic fit the demonstrated examples (an
+# inherently ambiguous tie, common with a single example), we break toward the
+# columnar reading: on the holdout it is the correct hidden rule ~55% more often
+# than the plain reading, and it is the more "deliberate" of the two conventions
+# (plain arithmetic rarely needs to be *taught* with examples).
+_MODE_ORDER = [(True, True), (False, False), (False, True), (True, False)]
 _MODE_IDX = {m: i for i, m in enumerate(_MODE_ORDER)}
 
 
@@ -180,6 +214,46 @@ def _survivors(group: list[tuple[str, str, str]], tmap: dict) -> list[tuple[str,
     return found
 
 
+# Signed subtraction ops, and their absolute-magnitude siblings. On a SINGLE
+# demonstrated example, signed sub/revsub and the abs-variant in the same reversal
+# mode are *indistinguishable* (the example never forces a sign), so the deterministic
+# _ORDER puts the signed reading first. But when (a) the query's literal operands run
+# small-minus-large (qa < qb, so the signed reading would go negative) AND (b) the
+# operator already shows a sign convention on its example (a leading/trailing op-char
+# or an explicit '-' on the transformed target), the demonstrated convention is
+# "magnitude carries a sign marker" -- so the abs-variant in the SAME mode (which the
+# example confirms equally well, and which re-attaches that very marker) is the local
+# reading. We only switch among rules the SAME example already verifies; we never
+# assert a hidden rule. At most one of {absdiff, negabsdiff} survives any example set
+# (they are sign opposites), so the pick is unambiguous.
+_SIGNED_SUB = {"sub", "revsub"}
+_ABS_SIBLINGS = ("absdiff", "negabsdiff")
+
+
+def _pick_survivor(
+    survivors: list[tuple[str, bool, bool]],
+    group: list[tuple[str, str, str]],
+    tmap: dict,
+    qa: str,
+    qb: str,
+) -> tuple[tuple[str, bool, bool], bool]:
+    """Return (chosen_survivor, abs_preferred_flag). Applies the single-example
+    abs-magnitude preference described above; otherwise returns survivors[0]."""
+    top = survivors[0]
+    name, ro, rr = top
+    if name not in _SIGNED_SUB or len(group) != 1:
+        return top, False
+    if int(qa) >= int(qb):
+        return top, False
+    sign_convention = any(t.startswith("-") for t in tmap.values())
+    if not sign_convention:
+        return top, False
+    for cand in survivors:
+        if cand[0] in _ABS_SIBLINGS and cand[1] == ro and cand[2] == rr:
+            return cand, True
+    return top, False
+
+
 @dataclass
 class SolveResult:
     answer: str
@@ -219,13 +293,12 @@ def solve_equation(problem: Problem) -> SolveResult | None:
         return SolveResult(str(abs(int(qa) - int(qb))), "absdiff(fallback)", fmt,
                            qop, len(group), 0, True)
 
-    name, ro, rr = survivors[0]
+    (name, ro, rr), _abs_pref = _pick_survivor(survivors, group, tmap, qa, qb)
     val = _value(name, qa, qb, ro, rr)
     if val is None:
         return SolveResult(str(abs(int(qa) - int(qb))), "absdiff(fallback)", fmt,
                            qop, len(group), len(survivors), True)
     answer = _reattach(val, fmt, qop)
-    mode = {"": ""}.get("", "")
     mode = (" | rev_ops" if ro else "") + (" | rev_res" if rr else "")
     return SolveResult(answer, name + mode, fmt, qop, len(group), len(survivors), False)
 
@@ -238,6 +311,194 @@ _NICE = {
     "intdiv": "a//b", "mod": "a%b", "revdiv": "b//a", "revmod": "b%a",
     "xor": "a XOR b", "and": "a AND b", "or": "a OR b", "max": "max(a,b)", "min": "min(a,b)",
 }
+
+# Short labels for EVERY candidate op (scan lines name each candidate as checked).
+_NICE_ALL = dict(_NICE)
+_NICE_ALL.update({
+    "digabsdiff": "dig|a-b|", "digaddmod10": "dig(a+b)%10", "digsubmod10": "dig(a-b)%10",
+    "crossmul": "crossmul", "crossmulrev": "crossmulrev",
+    "digmul": "dig a*b", "digmulrev": "dig a*b rev",
+    "digsumdiff": "digsum-", "digsumsum": "digsum+",
+    "digproddiff": "digprod-", "digprodsum": "digprod+",
+    "det": "det", "absdet": "|det|",
+})
+for _m in _MODS:
+    _NICE_ALL[f"add%{_m}"] = f"(a+b)%{_m}"
+    _NICE_ALL[f"sub%{_m}"] = f"(a-b)%{_m}"
+    _NICE_ALL[f"revsub%{_m}"] = f"(b-a)%{_m}"
+
+# Fixed mode labels, in _MODE_ORDER priority order (boilerplate, identical per item).
+_MODE_LABEL = {
+    (True, True): "mode 1 (reverse each operand, compute, then reverse the result)",
+    (False, False): "mode 2 (use the numbers exactly as written)",
+    (False, True): "mode 3 (reverse only the result)",
+    (True, False): "mode 4 (reverse only the operands)",
+}
+
+
+def _expr_chain(name: str, sa: str, sb: str, v: str) -> str:
+    """Local arithmetic chain 'expr [= mid] = v' for candidate `name` on operand
+    strings sa, sb (already operand-reversed when the mode says so). The FINAL
+    value v is passed in verbatim from _base_candidates, so the displayed chain
+    can never drift from the value the solver actually matched on."""
+    a, b = int(sa), int(sb)
+    if name == "concat":
+        return f"concat({sa},{sb}) = {v}"
+    if name == "revconcat":
+        return f"concat({sb},{sa}) = {v}"
+    if name == "add":
+        return f"{sa}+{sb} = {v}"
+    if name == "absdiff":
+        return f"|{sa}-{sb}| = |{a - b}| = {v}"
+    if name == "negabsdiff":
+        return f"-|{sa}-{sb}| = -|{a - b}| = {v}"
+    if name == "sub":
+        return f"{sa}-{sb} = {v}"
+    if name == "revsub":
+        return f"{sb}-{sa} = {v}"
+    if name == "mul":
+        return f"{sa}*{sb} = {v}"
+    if name == "mul+1":
+        return f"{sa}*{sb}+1 = {a * b}+1 = {v}"
+    if name == "mul-1":
+        return f"{sa}*{sb}-1 = {a * b}-1 = {v}"
+    if name == "add+1":
+        return f"{sa}+{sb}+1 = {a + b}+1 = {v}"
+    if name == "add-1":
+        return f"{sa}+{sb}-1 = {a + b}-1 = {v}"
+    if name == "sub+1":
+        return f"{sa}-{sb}+1 = {a - b}+1 = {v}"
+    if name == "sub-1":
+        return f"{sa}-{sb}-1 = {a - b}-1 = {v}"
+    if name == "maxmodmin":
+        return f"max({sa},{sb})%min({sa},{sb}) = {max(a, b)}%{min(a, b)} = {v}"
+    if name == "intdiv":
+        return f"{sa}//{sb} = {v}"
+    if name == "mod":
+        return f"{sa}%{sb} = {v}"
+    if name == "revdiv":
+        return f"{sb}//{sa} = {v}"
+    if name == "revmod":
+        return f"{sb}%{sa} = {v}"
+    if name == "xor":
+        return f"{sa} XOR {sb} = {v}"
+    if name == "and":
+        return f"{sa} AND {sb} = {v}"
+    if name == "or":
+        return f"{sa} OR {sb} = {v}"
+    if name == "max":
+        return f"max({sa},{sb}) = {v}"
+    if name == "min":
+        return f"min({sa},{sb}) = {v}"
+    if "%" in name and name.split("%")[0] in ("add", "sub", "revsub"):
+        base, m = name.split("%")
+        if base == "add":
+            return f"({sa}+{sb})%{m} = {a + b}%{m} = {v}"
+        if base == "sub":
+            return f"({sa}-{sb})%{m} = {a - b}%{m} = {v}"
+        return f"({sb}-{sa})%{m} = {b - a}%{m} = {v}"
+    # two-digit digit-wise ops (only defined when both operands have 2 digits)
+    d1, d2, d3, d4 = int(sa[0]), int(sa[1]), int(sb[0]), int(sb[1])
+    if name == "digabsdiff":
+        return f"digits |{d1}-{d3}|,|{d2}-{d4}| -> {v}"
+    if name == "digaddmod10":
+        return f"digits ({d1}+{d3})%10,({d2}+{d4})%10 -> {v}"
+    if name == "digsubmod10":
+        return f"digits ({d1}-{d3})%10,({d2}-{d4})%10 -> {v}"
+    if name == "crossmul":
+        return f"{d1}*{d3}+{d2}*{d4} = {d1 * d3}+{d2 * d4} = {v}"
+    if name == "crossmulrev":
+        return f"{d1}*{d4}+{d2}*{d3} = {d1 * d4}+{d2 * d3} = {v}"
+    if name == "digmul":
+        return f"digits {d1}*{d3},{d2}*{d4} -> {v}"
+    if name == "digmulrev":
+        return f"digits {d1}*{d4},{d2}*{d3} -> {v}"
+    if name == "digsumdiff":
+        return f"({d1}+{d2})-({d3}+{d4}) = {d1 + d2}-{d3 + d4} = {v}"
+    if name == "digsumsum":
+        return f"({d1}+{d2})+({d3}+{d4}) = {d1 + d2}+{d3 + d4} = {v}"
+    if name == "digproddiff":
+        return f"{d1}*{d2}-{d3}*{d4} = {d1 * d2}-{d3 * d4} = {v}"
+    if name == "digprodsum":
+        return f"{d1}*{d2}+{d3}*{d4} = {d1 * d2}+{d3 * d4} = {v}"
+    if name == "det":
+        return f"{d1}*{d4}-{d2}*{d3} = {d1 * d4}-{d2 * d3} = {v}"
+    if name == "absdet":
+        return f"|{d1}*{d4}-{d2}*{d3}| = |{d1 * d4 - d2 * d3}| = {v}"
+    return f"{name}({sa},{sb}) = {v}"
+
+
+def _check_line(name: str, a: str, b: str, target: str, ro: bool, rr: bool,
+                prefix: str) -> tuple[str, bool]:
+    """One scan line: candidate `name` evaluated on example (a,b) with the
+    arithmetic shown locally, compared against `target`. The match decision is
+    computed EXACTLY like _value() so the transcript can never disagree with
+    the solver."""
+    ta, tb = (a[::-1], b[::-1]) if ro else (a, b)
+    c = _base_candidates(ta, tb)
+    if name not in c:
+        return f"{prefix}not defined for these operands -> no", False
+    v = c[name]
+    final = _rev(v) if rr else v
+    chain = _expr_chain(name, ta, tb, v)
+    if rr:
+        chain += f", rev -> {final}"
+    ok = final == target
+    return f"{prefix}{chain}; need {target} -> {'match' if ok else 'no'}", ok
+
+
+def _emit_scan(L: list[str], group: list[tuple[str, str, str]], tmap: dict,
+               qop: str, qa: str, qb: str,
+               chosen: tuple[str, bool, bool] | None, abs_pref: bool) -> bool:
+    """Append the enumerative search transcript: every candidate in the solver's
+    exact priority order (mode-outer, op-inner), each checked example by example
+    and eliminated at its first mismatch. Stops at `chosen` (== what the solver
+    picked). Returns True once chosen is reached; False if the scan exhausts all
+    modes (no-survivor fallback, never hit on the 732 train problems)."""
+    continuation = False
+    for ro, rr in _MODE_ORDER:
+        L.append(f"{_MODE_LABEL[(ro, rr)]}:")
+        if ro:
+            pairs = "; ".join(f"{a},{b} -> {a[::-1]},{b[::-1]}" for a, b, _ in group)
+            L.append(f"  operands reversed per example: {pairs}")
+        for name in _ORDER:
+            label = _NICE_ALL.get(name, name)
+            a0, b0, _o0 = group[0]
+            line, ok = _check_line(name, a0, b0, tmap[(a0, b0)], ro, rr, f"  {label}: ")
+            L.append(line)
+            if not ok:
+                continue
+            all_ok = True
+            for i, (a, b, _o) in enumerate(group[1:], start=2):
+                line, ok = _check_line(name, a, b, tmap[(a, b)], ro, rr, f"    ex{i}: ")
+                L.append(line)
+                if not ok:
+                    all_ok = False
+                    break
+            if not all_ok:
+                continue
+            # fully consistent candidate reached
+            if (name, ro, rr) == chosen:
+                if continuation:
+                    L.append(f"  => '{label}' fits the same example; by the tie policy "
+                             f"choose '{label}'.")
+                else:
+                    L.append(f"  => '{label}' reproduces every '{qop}' example. Stop the scan.")
+                return True
+            # not the chosen rule: only legal when the solver applied the
+            # single-example abs-magnitude preference (see _pick_survivor).
+            if not (abs_pref and name in _SIGNED_SUB and chosen is not None
+                    and (ro, rr) == (chosen[1], chosen[2])):
+                raise RuntimeError(
+                    f"scan/solver divergence: scan found {(name, ro, rr)}, "
+                    f"solver chose {chosen}")
+            continuation = True
+            L.append(f"  => '{label}' fits the single example. This operator writes a "
+                     f"sign marker on its output, and the query has {qa} < {qb}. Fixed "
+                     f"tie policy: with one sign-marked example, a magnitude variant "
+                     f"(|a-b| or -|a-b|) that fits the same example is preferred over "
+                     f"the signed difference -- keep scanning this mode to check them.")
+    return False
 
 
 def reasoning_equation_numeric_deduce(problem: Problem) -> str | None:
@@ -293,7 +554,9 @@ def reasoning_equation_numeric_deduce(problem: Problem) -> str | None:
         L.append("Signed outputs: " + ", ".join(tmap[(a, b)] for a, b, _ in group))
     L.append("")
 
-    # show the deduction
+    # Dead path on the 732 train problems (zero occurrences): survivors exist but
+    # the query value is undefined, or no survivors at all. Kept only for hidden
+    # robustness; never enters the corpus.
     if res.fallback:
         L.append("No single rule is consistent with all examples; falling back to "
                  f"the absolute difference: |{qa} - {qb}| = {res.answer}")
@@ -304,27 +567,49 @@ def reasoning_equation_numeric_deduce(problem: Problem) -> str | None:
     name = res.rule.split(" | ")[0]
     ro = "rev_ops" in res.rule
     rr = "rev_res" in res.rule
-    nice = _NICE.get(name, name)
-    L.append("Testing candidate rules against every example for this operator:")
-    # show the winning rule verified on each example
-    for a, b, o in group:
-        v = _value(name, a, b, ro, rr)
-        L.append(f"  {a},{b}: {nice}"
-                 + (" with reversed operands" if ro else "")
-                 + (" then reverse the result" if rr else "")
-                 + f" -> {v}  (target {tmap[(a, b)]})")
-    L.append(f"Consistent rule for '{qop}': {nice}"
-             + (" [reverse operands]" if ro else "")
-             + (" [reverse result]" if rr else "") + ".")
+    chosen = (name, ro, rr)
+    label = _NICE_ALL.get(name, name)
+
+    # Recompute the solver's pick so the transcript provably mirrors it (the
+    # abs-magnitude preference of _pick_survivor needs the survivor list).
+    survivors = _survivors(group, tmap)
+    chosen2, abs_pref = _pick_survivor(survivors, group, tmap, qa, qb)
+    if chosen2 != chosen:
+        raise RuntimeError(f"trace/solver divergence: {chosen2} vs {chosen}")
+
+    # FULL ENUMERATIVE SEARCH transcript, in the solver's exact priority order.
+    L.append("I will scan a fixed list of candidate rules in a fixed priority order, "
+             "under four operand/result reversal modes, and keep the first candidate "
+             "that reproduces every example of this operator. Each candidate is "
+             "checked example by example; one mismatch eliminates it.")
+    found = _emit_scan(L, group, tmap, qop, qa, qb, chosen, abs_pref)
+    if not found:
+        raise RuntimeError("scan exhausted without reaching the solver's rule")
     L.append("")
 
-    # apply to query
+    # re-verify the surviving rule on every example
+    mode_no = _MODE_IDX[(ro, rr)] + 1
+    L.append(f"Re-check '{label}' (mode {mode_no}) on every '{qop}' example:")
+    for a, b, _o in group:
+        line, ok = _check_line(name, a, b, tmap[(a, b)], ro, rr, f"  {a} {qop} {b}: ")
+        L.append(line)
+        if not ok:
+            raise RuntimeError("re-verify failed for the chosen rule")
+    L.append(f"All {len(group)} example(s) reproduced -> rule for '{qop}' is "
+             f"'{label}' in mode {mode_no}.")
+    L.append("")
+
+    # apply to query, step by step
     ta, tb = (qa[::-1], qb[::-1]) if ro else (qa, qb)
+    cand = _base_candidates(ta, tb)
+    v = cand[name]
     raw = _value(name, qa, qb, ro, rr)
-    L.append(f"Apply to {qa} {qop} {qb}:")
+    L.append(f"Apply '{label}' (mode {mode_no}) to {qa} {qop} {qb}:")
     if ro:
-        L.append(f"  reverse operands -> {ta}, {tb}")
-    L.append(f"  {nice} = {raw}")
+        L.append(f"  reverse operands -> {ta},{tb}")
+    L.append(f"  {_expr_chain(name, ta, tb, v)}")
+    if rr:
+        L.append(f"  reverse the result -> {_rev(v)}")
     if res.answer != raw:
         L.append(f"  re-attach sign marker -> {res.answer}")
     L.append("")
